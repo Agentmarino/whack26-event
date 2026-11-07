@@ -7,6 +7,7 @@ import type { Change, Profile, WhatIfRun } from 'shared'
 import { z } from 'zod'
 import * as E from '../engine/index.ts'
 import { askClaude, jsonIn, log, remember } from './claude.ts'
+import { WHATIF } from './schemas.ts'
 import type { Session } from './session.ts'
 import * as T from './templates.ts'
 
@@ -159,7 +160,7 @@ export async function changesFromText(text: string, profile: Profile): Promise<F
   if (windfallOnly(text)) return { unknown: true, why: 'money arriving is not a lever' }
   const cards = (profile.cards ?? []).map(c => c.name)
   const content = `The person's cards: ${cards.length ? cards.join(', ') : 'none'}.\nTheir question: ${text.trim()}`
-  const call = { purpose: 'whatif', system: SYSTEM, content, maxTokens: 300, keyInput: { text: text.trim().toLowerCase(), cards } }
+  const call = { purpose: 'whatif', system: SYSTEM, content, maxTokens: 1024 /* room for thinking as well as the JSON */, keyInput: { text: text.trim().toLowerCase(), cards }, schema: WHATIF }
   const reply = await askClaude(call)
   if (reply) {
     const parsed = Reply.safeParse(jsonIn(reply.text))

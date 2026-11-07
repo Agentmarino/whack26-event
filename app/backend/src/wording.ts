@@ -7,6 +7,7 @@ import type { AgentMessage, EngineResult } from 'shared'
 import { z } from 'zod'
 import * as E from '../engine/index.ts'
 import { askClaude, jsonIn, log } from './claude.ts'
+import { WORDING } from './schemas.ts'
 import { cacheGet, cacheKey, cacheSet } from './cache.ts'
 import { checkNumbers, checkStyle } from './checker.ts'
 import { config } from './config.ts'
@@ -98,8 +99,9 @@ async function callBatch(items: Item[], plain: boolean): Promise<Map<string, str
       purpose: 'wording',
       system: SYSTEM(plain),
       content: `${attempt ? 'Your last version broke the rules (see problemsLastTime). Fix those items.\n' : ''}Items:\n${JSON.stringify(payload, null, 1)}`,
-      maxTokens: 200 + 120 * pending.length,
+      maxTokens: 1024 + 150 * pending.length, // room for the model's thinking as well as the JSON
       cache: false, // cached per item below, not per call
+      schema: WORDING,
       timeoutMs: 30_000,
     })
     const parsed = reply ? Reply.safeParse(jsonIn(reply.text)) : null

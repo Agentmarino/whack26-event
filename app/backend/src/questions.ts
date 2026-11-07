@@ -5,6 +5,7 @@ import { Goal } from 'shared'
 import type { Bureau, Expects, Profile } from 'shared'
 import { z } from 'zod'
 import { askClaude, jsonIn, remember } from './claude.ts'
+import { GOAL } from './schemas.ts'
 import { CHIPS, type Draft, fit } from './templates.ts'
 import type { QuestionKey, Session } from './session.ts'
 
@@ -123,8 +124,9 @@ async function goalFromClaude(text: string): Promise<Goal | null> {
     purpose: 'goal',
     system: 'A person says what they hope to get from improving their UK credit. Pick the closest engine goal: "card" (a credit card), "mortgage" (buying a home), or "build" (anything else, or just a better score). Reply with JSON only: {"goal": "card" | "mortgage" | "build"}.',
     content: text.trim().slice(0, 300),
-    maxTokens: 30,
+    maxTokens: 512,
     keyInput: text.trim().toLowerCase(),
+    schema: GOAL,
   }
   const reply = await askClaude(call)
   const parsed = reply ? GoalReply.safeParse(jsonIn(reply.text)) : null

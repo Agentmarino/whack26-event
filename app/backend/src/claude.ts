@@ -1,6 +1,7 @@
 // The one place that talks to Claude. Claude never computes a number: it reads documents into the
 // engine's input, rewords templates (checked), and turns free-text what-ifs into engine levers.
 // Every call goes through the cache (data/ai-cache.json); DEMO_OFFLINE=true makes no network call.
+// Calls that must return JSON pass a schema (src/schemas.ts) and get structured output.
 
 import Anthropic from '@anthropic-ai/sdk'
 import { config } from './config.ts'
@@ -21,6 +22,11 @@ export type ClaudeCall = {
   timeoutMs?: number
   /** false = skip the per-call cache (the caller caches what passes its own checks). */
   cache?: boolean
+  /**
+   * The JSON schema the reply must follow (src/schemas.ts), sent as structured output
+   * (output_config.format). Not part of the cache key: cached replies were already checked by the caller.
+   */
+  schema?: Record<string, unknown>
 }
 
 export type ClaudeReply = { text: string; from: 'cache' | 'claude' } | null
@@ -39,6 +45,7 @@ export async function askClaude(call: ClaudeCall): Promise<ClaudeReply> {
         max_tokens: call.maxTokens ?? 1024,
         system: call.system,
         messages: [{ role: 'user', content: call.content }],
+        ...(call.schema ? { output_config: { format: { type: 'json_schema' as const, schema: call.schema } } } : {}),
       },
       { timeout: call.timeoutMs ?? 20_000 },
     )
@@ -46,6 +53,8 @@ export async function askClaude(call: ClaudeCall): Promise<ClaudeReply> {
       log(call.purpose, 'refusal')
       return null
     }
+    // A reply cut off by max_tokens may not be complete JSON: say so, and let the caller's checks decide.
+    if (res.stop_reason === 'max_tokens') log(call.purpose, `reply hit max_tokens (${call.maxTokens ?? 1024})`)
     const text = res.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')
       .map(b => b.text)

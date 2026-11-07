@@ -6,6 +6,7 @@ import type { Finding, Profile } from 'shared'
 import { z } from 'zod'
 import * as E from '../engine/index.ts'
 import { askClaude, jsonIn, log, remember } from './claude.ts'
+import { bankPayees } from './schemas.ts'
 
 export type Txn = { date: string; description: string; amount: number; type?: string; balance?: number }
 
@@ -142,7 +143,13 @@ export function parseBankCsv(text: string): { ok: true; txns: Txn[] } | { ok: fa
 
 // ---------- categories → Profile.bank ----------
 
-const ClaudeCats = z.object({ categories: z.record(z.string(), z.enum(CATEGORIES)) })
+// The reply is a list (structured output has no maps). Replies cached before that were a map: both are read.
+const Cat = z.enum(CATEGORIES)
+const ClaudeCats = z.object({
+  categories: z.union([z.array(z.object({ payee: z.string(), category: Cat })), z.record(z.string(), Cat)]),
+})
+const catEntries = (c: z.infer<typeof ClaudeCats>['categories']): [string, Category][] =>
+  Array.isArray(c) ? c.map(x => [x.payee, x.category]) : Object.entries(c)
 
 /** Ask Claude about the payees the keywords do not know. Only the names go out, never amounts. */
 async function claudeCategories(unknown: string[]): Promise<Map<string, Category>> {
@@ -153,17 +160,18 @@ async function claudeCategories(unknown: string[]): Promise<Map<string, Category
     purpose: 'bank-payees',
     system: `You sort UK bank statement payees into categories. Categories: ${CATEGORIES.join(', ')}.
 "bnpl" = buy now pay later (Klarna, Clearpay...), "payday" = payday or short-term loans, "debt_payment" = paying a credit card or loan, "other" = general shopping or anything else.
-Reply with JSON only: {"categories": {"<payee exactly as given>": "<category>"}}.`,
+Reply with JSON only: {"categories": [{"payee": "<payee exactly as given>", "category": "<category>"}]}, one entry per payee.`,
     content: `Payees:\n${list.map(p => `- ${p}`).join('\n')}`,
-    maxTokens: 60 + 25 * list.length,
+    maxTokens: 1024 + 40 * list.length, // room for the model's thinking as well as the JSON
     keyInput: list.slice().sort(),
+    schema: bankPayees(CATEGORIES),
   }
   const reply = await askClaude(call)
   const parsed = reply ? ClaudeCats.safeParse(jsonIn(reply.text)) : null
   if (parsed?.success) {
-    for (const [k, v] of Object.entries(parsed.data.categories)) if (list.includes(k)) out.set(k, v)
+    for (const [k, v] of catEntries(parsed.data.categories)) if (list.includes(k)) out.set(k, v)
     if (reply?.from === 'claude') remember(call, reply.text)
-  } else if (reply) log('bank-payees', 'reply was not {categories: {...}}')
+  } else if (reply) log('bank-payees', 'reply was not {categories: [...]}')
   return out
 }
 

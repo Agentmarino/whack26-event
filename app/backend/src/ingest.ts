@@ -14,6 +14,7 @@ import * as E from '../engine/index.ts'
 import { isoDate, parseBankCsv, readBank, type Txn } from './bank.ts'
 import { analyseProfile } from './analysis.ts'
 import { askClaude, jsonIn, log, remember } from './claude.ts'
+import { BANK_ROWS, LETTER, REPORT } from './schemas.ts'
 import { config } from './config.ts'
 import type { Sample } from './personas.ts'
 import { putUpload, type Piece } from './uploads.ts'
@@ -153,6 +154,7 @@ Reply with JSON only, in this shape:\n${REPORT_SCHEMA}`,
       maxTokens: 6000,
       keyInput: { file: sha(u) },
       timeoutMs: 120_000,
+      schema: REPORT,
     }
     const reply = await askClaude(call)
     if (!reply) return fail('credit_report', u.fileName, config.offline || !config.hasKey ? 'needs Claude (offline or no key) and not in the cache' : 'Claude gave no reply')
@@ -224,6 +226,7 @@ Never add, merge or calculate rows.`,
       maxTokens: 8000,
       keyInput: { file: sha(u) },
       timeoutMs: 120_000,
+      schema: BANK_ROWS,
     }
     const reply = await askClaude(call)
     if (!reply) return fail('bank', u.fileName, config.offline || !config.hasKey ? 'needs Claude (offline or no key) and not in the cache' : 'Claude gave no reply')
@@ -298,9 +301,10 @@ async function ingestLetter(u: Upload, kind: Kind, mediaType?: string): Promise<
 Reply with JSON only: {"lender": "<who sent it>", "product": "<what was applied for, or null>", "date": "YYYY-MM-DD or null", "cra": "Experian"|"Equifax"|"TransUnion"|null (the credit reference agency named), "reasons": ["<each reason the letter actually states, quoted briefly>"]}.
 If the letter gives no specific reason, "reasons" is []. Never guess a reason the letter does not state.`,
     content: text !== null ? `The letter:\n"""\n${text.slice(0, 8000)}\n"""` : [block!, { type: 'text' as const, text: 'Read this letter. JSON only.' }],
-    maxTokens: 500,
+    maxTokens: 1500,
     keyInput: { file: sha(u) },
     timeoutMs: 60_000,
+    schema: LETTER,
   }
   const reply = await askClaude(call)
   if (reply) {
