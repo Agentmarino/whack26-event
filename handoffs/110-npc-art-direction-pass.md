@@ -1,7 +1,7 @@
 ---
 id: 110
 title: NPC art direction pass, detailed agent at a desk, glass wall office
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
