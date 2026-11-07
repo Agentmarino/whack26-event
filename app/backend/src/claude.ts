@@ -19,15 +19,18 @@ export type ClaudeCall = {
   /** Cache key input. Default: the system prompt plus content (must be session-free). */
   keyInput?: unknown
   timeoutMs?: number
+  /** false = skip the per-call cache (the caller caches what passes its own checks). */
+  cache?: boolean
 }
 
 export type ClaudeReply = { text: string; from: 'cache' | 'claude' } | null
 
 /** Joins every `text` block and ignores `thinking` blocks. null when offline, no key, or the call fails. */
 export async function askClaude(call: ClaudeCall): Promise<ClaudeReply> {
-  const key = cacheKey(call.purpose, call.keyInput ?? [call.system, call.content])
-  const hit = cacheGet(key)
-  if (hit !== undefined) return { text: hit, from: 'cache' }
+  if (call.cache !== false) {
+    const hit = cacheGet(cacheKey(call.purpose, call.keyInput ?? [call.system, call.content]))
+    if (hit !== undefined) return { text: hit, from: 'cache' }
+  }
   if (config.offline || !config.hasKey) return null
   try {
     const res = await getClient().messages.create(

@@ -5,11 +5,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { PersonasResponse, TurnResponse, WhatIfResponse, resolveRef } from 'shared'
 import type { TurnInput, WhatIfRun } from 'shared'
 import { buildApp } from '../src/app.ts'
+import { templateWording } from '../src/messages.ts'
 import { MAX_WORDS, wordCount } from '../src/templates.ts'
 
 let app: FastifyInstance
 beforeAll(async () => {
-  app = await buildApp()
+  app = await buildApp({ wording: templateWording })
 })
 afterAll(async () => {
   await app.close()

@@ -4,34 +4,18 @@
 
 import { paperUrlFor } from 'shared'
 import type { AgentMessage, Expects, PlanId, Step, TurnInput, TurnRequest, TurnResponse, WhatIfRun } from 'shared'
+import { templateWording, type Wording } from './messages.ts'
 import * as E from '../engine/index.ts'
 import { analyseProfile, declineFor, surplusOf } from './analysis.ts'
 import { HttpError } from './errors.ts'
 import { isPersona, sample, type Sample } from './personas.ts'
 import { answer, buildQueue, question } from './questions.ts'
-import { getSession, messageId, newSession, type Session } from './session.ts'
+import { getSession, newSession, type Session } from './session.ts'
 import * as T from './templates.ts'
 import { getUpload, type Piece } from './uploads.ts'
 import { whatIfFromText } from './whatif.ts'
 
 type Reply = { step: Step; drafts: T.Draft[]; expects: Expects; whatIf?: WhatIfRun | null }
-
-/** Hook for block 3: Claude rewords the drafts that carry an `item`. Templates by default. */
-export type Wording = (s: Session, drafts: T.Draft[]) => Promise<AgentMessage[]>
-
-export const templateWording: Wording = async (s, drafts) => drafts.map(d => toMessage(s, d, 'template'))
-
-export function toMessage(s: Session, d: T.Draft, writtenBy: 'template' | 'claude', text = d.text): AgentMessage {
-  return {
-    id: messageId(s, d.base),
-    kind: d.kind,
-    text,
-    emote: d.emote,
-    gesture: d.gesture,
-    ...(d.ref ? { ref: d.ref } : {}),
-    writtenBy,
-  }
-}
 
 export async function handleTurn(req: TurnRequest, wording: Wording = templateWording): Promise<TurnResponse> {
   const input = req.input
@@ -49,7 +33,13 @@ export async function handleTurn(req: TurnRequest, wording: Wording = templateWo
   const reply = await step(s, input)
   s.step = reply.step
   s.lastExpects = reply.expects
-  const messages = await wording(s, reply.drafts)
+  const messages = await wording.word(s, reply.drafts)
+  if (wording.prewarm && s.result) {
+    // Start Claude on what comes next while the person reads this: the diagnosis after `assessing`,
+    // both plans once the diagnosis is out.
+    if (reply.step === 'assessing') wording.prewarm(s, T.diagnosis(s.result))
+    if (reply.step === 'diagnosis') for (const plan of [s.horizon, s.horizon === '3m' ? '6m' : '3m'] as const) wording.prewarm(s, T.planMessages(s.result, plan))
+  }
   return respond(s, messages, reply.expects, reply.whatIf ?? null)
 }
 

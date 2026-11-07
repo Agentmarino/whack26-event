@@ -4,7 +4,9 @@ import cors from '@fastify/cors'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { TurnRequest, WhatIfRequest } from 'shared'
 import type { WhatIfResponse } from 'shared'
-import { handleTurn, toMessage, templateWording, type Wording } from './conversation.ts'
+import { handleTurn } from './conversation.ts'
+import { toMessage, type Wording } from './messages.ts'
+import { claudeWording } from './wording.ts'
 import { HttpError } from './errors.ts'
 import { personas } from './personas.ts'
 import { getSession } from './session.ts'
@@ -16,7 +18,7 @@ const ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|10\.\d+\.\d+\.\d+|19
 export type AppOptions = { wording?: Wording; logger?: boolean }
 
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
-  const wording = opts.wording ?? templateWording
+  const wording = opts.wording ?? claudeWording
   const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 12 * 1024 * 1024 })
 
   await app.register(cors, { origin: (origin, cb) => cb(null, !origin || ORIGIN.test(origin)) })
