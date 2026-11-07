@@ -1,0 +1,87 @@
+{
+  "format": "credit-coach-report/v1",
+  "note": "MOCK DATA for the WHACK 26 prototype. Not a real person or a real bureau report.",
+  "provider": "Experian",
+  "reportDate": "2026-11-01",
+  "score": { "value": 682, "scaleMax": 999, "band": "Poor" },
+  "personal": {
+    "name": "Alex Morgan",
+    "dateOfBirth": "2001-03-14",
+    "declaredIncome": 29000,
+    "employment": "Full-time, retail assistant manager (2 years)",
+    "residentialStatus": "rent"
+  },
+  "addresses": [
+    { "address": "Flat 4, 18 Spencer Street, Coventry CV1 3EZ", "from": "2026-05-01", "current": true },
+    { "address": "27 Gulson Road, Coventry CV1 2JG", "from": "2023-08-01", "to": "2026-04-30", "current": false }
+  ],
+  "electoralRoll": [
+    { "address": "27 Gulson Road, Coventry CV1 2JG", "registered": true, "from": "2023-09-01", "to": "2026-04-30" },
+    { "address": "Flat 4, 18 Spencer Street, Coventry CV1 3EZ", "registered": false }
+  ],
+  "accounts": [
+    {
+      "lender": "Barclaycard", "type": "credit_card", "opened": "2023-03-10", "status": "open",
+      "limit": 1500, "balance": 1180, "apr": 28.9, "directDebit": false, "paymentPattern": "minimum",
+      "paymentHistory": [
+        { "month": "2025-11", "status": "OK" }, { "month": "2025-12", "status": "OK" }, { "month": "2026-01", "status": "OK" },
+        { "month": "2026-02", "status": "OK" }, { "month": "2026-03", "status": "OK" }, { "month": "2026-04", "status": "OK" },
+        { "month": "2026-05", "status": "OK" }, { "month": "2026-06", "status": "1" }, { "month": "2026-07", "status": "OK" },
+        { "month": "2026-08", "status": "OK" }, { "month": "2026-09", "status": "OK" }, { "month": "2026-10", "status": "OK" }
+      ]
+    },
+    {
+      "lender": "Aqua", "type": "credit_card", "opened": "2025-09-02", "status": "open",
+      "limit": 600, "balance": 420, "apr": 34.9, "directDebit": true, "paymentPattern": "minimum",
+      "paymentHistory": [
+        { "month": "2025-11", "status": "OK" }, { "month": "2025-12", "status": "OK" }, { "month": "2026-01", "status": "OK" },
+        { "month": "2026-02", "status": "OK" }, { "month": "2026-03", "status": "OK" }, { "month": "2026-04", "status": "OK" },
+        { "month": "2026-05", "status": "OK" }, { "month": "2026-06", "status": "OK" }, { "month": "2026-07", "status": "OK" },
+        { "month": "2026-08", "status": "OK" }, { "month": "2026-09", "status": "OK" }, { "month": "2026-10", "status": "OK" }
+      ]
+    },
+    {
+      "lender": "O2", "type": "communications", "opened": "2024-01-15", "status": "open",
+      "monthlyPayment": 28, "directDebit": true,
+      "paymentHistory": [ { "month": "2026-10", "status": "OK" } ]
+    },
+    {
+      "lender": "Monzo", "type": "current_account_overdraft", "opened": "2022-09-01", "status": "open",
+      "limit": 250, "balance": 0
+    }
+  ],
+  "searches": [
+    { "date": "2026-09-14", "organisation": "Vanquis", "purpose": "Credit card application", "type": "hard" },
+    { "date": "2026-10-02", "organisation": "Capital One", "purpose": "Credit card application", "type": "hard" },
+    { "date": "2026-10-20", "organisation": "Zopa", "purpose": "Loan quotation", "type": "soft" }
+  ],
+  "publicRecords": [],
+  "defaults": [],
+  "financialAssociates": [
+    { "name": "Jordan Morgan", "reason": "Joint current account (closed March 2024)", "stillLinked": true }
+  ],
+  "declineLetters": [
+    {
+      "date": "2026-10-03", "lender": "Capital One", "product": "Balance Transfer credit card",
+      "text": "Thank you for your application. After careful consideration we are unable to offer you a Capital One Balance Transfer card at this time. Our decision was based on information from Experian, together with our own lending criteria. You can request a copy of your credit file from Experian."
+    }
+  ],
+  "bankData": {
+    "source": "Open Banking, Monzo current account, 1 Aug - 31 Oct 2026",
+    "recurring": [
+      { "payee": "ACME Retail Ltd salary", "category": "income", "amount": 1950, "frequency": "monthly" },
+      { "payee": "Spencer Lettings (rent)", "category": "rent", "amount": 725, "frequency": "monthly", "method": "transfer" },
+      { "payee": "Coventry City Council", "category": "council_tax", "amount": 134, "frequency": "monthly", "method": "direct_debit" },
+      { "payee": "Octopus Energy", "category": "utility", "amount": 72, "frequency": "monthly", "method": "direct_debit", "fixed": false },
+      { "payee": "O2", "category": "credit_agreement", "amount": 28, "frequency": "monthly", "method": "direct_debit" },
+      { "payee": "Netflix", "category": "subscription", "amount": 10.99, "frequency": "monthly" },
+      { "payee": "Spotify", "category": "subscription", "amount": 11.99, "frequency": "monthly" },
+      { "payee": "Xbox Game Pass", "category": "subscription", "amount": 12.99, "frequency": "monthly" },
+      { "payee": "PureGym", "category": "subscription", "amount": 21.99, "frequency": "monthly" },
+      { "payee": "Klarna", "category": "bnpl", "amount": 55, "frequency": "monthly" },
+      { "payee": "Bet365", "category": "gambling", "amount": 35, "frequency": "monthly" }
+    ],
+    "averages": { "groceries": 340, "transport": 110, "eatingOut": 95 },
+    "flags": { "lateFees90d": 1, "overdraftDays90d": 9, "cashAdvances90d": 0 }
+  }
+}

@@ -1,0 +1,716 @@
+<title>Credit Coach</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working report (left) beside a chat rail (right); stacks on phones, chat first. */
+:root {
+  --bg: #eef2f3; --surface: #ffffff; --ink: #0f1f29; --muted: #5a6b74; --line: #d5dee2;
+  --accent: #0b6e69; --accent-soft: #d8ecea; --gold: #b7791f; --gold-soft: #f6e7cc;
+  --red: #b42318; --red-soft: #fbe3e0; --amber: #a15c07; --amber-soft: #fcefd6; --green: #18794e; --green-soft: #dcf2e6;
+  --user: #0f1f29; --user-fg: #ffffff;
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c1519; --surface: #13212a; --ink: #e6eef1; --muted: #93a6ae; --line: #24363f;
+  --accent: #4fc1b8; --accent-soft: #123a39; --gold: #e3a94b; --gold-soft: #3a2c12;
+  --red: #f0847a; --red-soft: #3d1a17; --amber: #f0b45a; --amber-soft: #3a2a10; --green: #5fd19a; --green-soft: #12322a;
+  --user: #e6eef1; --user-fg: #0c1519; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0c1519; --surface: #13212a; --ink: #e6eef1; --muted: #93a6ae; --line: #24363f;
+  --accent: #4fc1b8; --accent-soft: #123a39; --gold: #e3a94b; --gold-soft: #3a2c12;
+  --red: #f0847a; --red-soft: #3d1a17; --amber: #f0b45a; --amber-soft: #3a2a10; --green: #5fd19a; --green-soft: #12322a;
+  --user: #e6eef1; --user-fg: #0c1519; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 18px }
+h1 { font: 700 30px/1.05 var(--f-display); margin: 0; letter-spacing: -0.01em }
+h1 small { display: block; font: 500 13px/1.4 var(--f-body); color: var(--muted); letter-spacing: 0; margin-top: 4px }
+.personas { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { font: 500 13px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 7px 12px; border-radius: 999px; cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.chip:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start }
+@media (max-width: 940px) { .grid { grid-template-columns: minmax(0, 1fr) } .chat { order: -1; position: static !important; height: 520px !important } }
+.report { display: grid; gap: 16px; min-width: 0 }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0 }
+.eyebrow { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px }
+h2 { font: 700 20px/1.25 var(--f-display); margin: 0 0 4px; text-wrap: balance }
+.sub { color: var(--muted); margin: 0; font-size: 14px }
+.scores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px }
+.score { border-top: 3px solid var(--line); padding-top: 8px }
+.score.s3 { border-color: var(--gold) } .score.s6 { border-color: var(--accent) }
+.score b { display: block; font: 500 24px/1.1 var(--f-mono); font-variant-numeric: tabular-nums }
+.score span { font-size: 12px; color: var(--muted) }
+.chartbox { margin-top: 14px; overflow-x: auto }
+svg text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted) }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px }
+.factors { display: grid; gap: 10px; margin-top: 12px }
+.factor { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: start }
+.pill { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; padding: 3px 0; border-radius: 4px }
+.pill.red { background: var(--red-soft); color: var(--red) } .pill.amber { background: var(--amber-soft); color: var(--amber) } .pill.green { background: var(--green-soft); color: var(--green) }
+.factor h3 { margin: 0; font: 600 14px var(--f-body) } .factor p { margin: 2px 0 0; font-size: 14px; color: var(--muted) }
+.flags { margin-top: 12px; font-size: 13px; color: var(--muted) } .flags b { color: var(--ink) }
+.tabs { display: flex; gap: 6px; margin: 10px 0 12px }
+.tab { font: 500 13px var(--f-body); background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 6px 12px; border-radius: 6px; cursor: pointer }
+.tab[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent) }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0 }
+ol.steps li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 11px 0; border-top: 1px solid var(--line) }
+ol.steps li:first-child { border-top: 0 }
+.date { font: 500 12px/1.6 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums }
+.steps h4 { margin: 0; font: 600 14px var(--f-body) } .steps p { margin: 2px 0 0; font-size: 14px }
+.steps .meta { font-size: 12px; color: var(--muted); margin-top: 3px }
+.steps li.new h4::after { content: "6-month plan"; font: 500 10px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: 2px }
+.card-face { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: start; margin-top: 10px }
+.card-face .name { font: 700 18px var(--f-display) }
+.card-face .terms { font: 500 12px var(--f-mono); color: var(--muted); text-align: right; white-space: pre-line }
+.tx { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px }
+.tx li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--line); padding: 3px 0 }
+.tx li span:last-child, .tx .total span:last-child { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.tx .total { font-weight: 600; border-bottom: 0 }
+.checklist { margin-top: 14px; display: grid; gap: 6px; font-size: 14px }
+.checklist div { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center }
+.tick { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line) }
+.tick.ok { background: var(--green); border-color: var(--green) } .tick.later { border-color: var(--amber) } .tick.no { border-color: var(--red) }
+.checklist .when { font: 500 12px var(--f-mono); color: var(--muted) }
+table.contrib { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px }
+.contrib td, .contrib th { padding: 5px 0; border-bottom: 1px solid var(--line); text-align: left }
+.contrib th { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+.contrib td:last-child, .contrib th:last-child { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.note { font-size: 12px; color: var(--muted); margin-top: 10px }
+/* chat */
+.chat { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); height: calc(100vh - 40px); max-height: 860px; display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0 }
+.chat-head { padding: 14px 16px; border-bottom: 1px solid var(--line) }
+.chat-head h2 { font-size: 17px }
+.log { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px }
+.msg { max-width: 92%; padding: 9px 12px; border-radius: 10px; white-space: pre-wrap; font-size: 14px; overflow-wrap: anywhere }
+.msg.bot { background: var(--bg); align-self: flex-start; border-top-left-radius: 3px }
+.msg.me { background: var(--user); color: var(--user-fg); align-self: flex-end; border-top-right-radius: 3px }
+.msg.sys { align-self: center; background: transparent; color: var(--muted); font: 500 12px var(--f-mono); padding: 2px }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px }
+.suggest button { font: 13px var(--f-body); background: var(--accent-soft); color: var(--accent); border: 0; border-radius: 999px; padding: 5px 10px; cursor: pointer; text-align: left }
+form.send { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) }
+form.send textarea { flex: 1; min-width: 0; resize: none; height: 44px; font: 14px/1.4 var(--f-body); padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink) }
+form.send button { font: 600 14px var(--f-body); background: var(--accent); color: var(--surface); border: 0; border-radius: 8px; padding: 0 16px; cursor: pointer }
+form.send button:disabled { opacity: .5; cursor: default }
+@media (prefers-reduced-motion: no-preference) { .msg { animation: in .18s ease-out } @keyframes in { from { transform: translateY(4px); opacity: .6 } } }
+/* import + live reveal */
+.importer { display: grid; gap: 14px; padding: 28px 22px }
+.importer h2 { font-size: 26px }
+.importer .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px }
+.btn { font: 600 14px var(--f-body); border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink) }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface) }
+.btn:disabled { opacity: .5; cursor: default }
+.mockcard { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; font-size: 13px; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; padding: 12px 14px }
+.mockcard b { color: var(--ink); font-weight: 600 }
+.stages { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 12px var(--f-mono); color: var(--muted); padding: 2px 2px 0 }
+.stages span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--line); margin-right: 6px; vertical-align: 0 }
+.stages span.doing { color: var(--ink) } .stages span.doing::before { border-color: var(--gold); background: var(--gold-soft) }
+.stages span.done { color: var(--ink) } .stages span.done::before { background: var(--accent); border-color: var(--accent) }
+.found { display: grid; gap: 14px; margin-top: 12px }
+.found h3 { margin: 0 0 4px; font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
+.found ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0 }
+.found li { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 12px; padding: 5px 0; border-top: 1px solid var(--line); font-size: 14px }
+.found li span:first-child { color: var(--muted) }
+.found li.bad span:last-child { color: var(--red) } .found li.warn span:last-child { color: var(--amber) } .found li.good span:last-child { color: var(--green) }
+@media (max-width: 560px) { .found li { grid-template-columns: minmax(0, 1fr) } }
+.reveal { animation: none }
+@media (prefers-reduced-motion: no-preference) { .reveal { animation: rise .35s ease-out both } @keyframes rise { from { transform: translateY(6px); opacity: 0 } } }
+/* colour-vision palettes (Okabe-Ito based) + high contrast; symbols carry meaning too */
+:root[data-cb="rg"] { --red: #b8460b; --red-soft: #fbe0d0; --amber: #7a5a00; --amber-soft: #f6ecc9; --green: #005ea8; --green-soft: #dcebf7; --gold: #9a6b00; --gold-soft: #f6ecc9; --accent: #005ea8; --accent-soft: #dcebf7 }
+:root[data-cb="by"] { --red: #c62828; --red-soft: #fbe3e3; --amber: #8d4b00; --amber-soft: #f6e6d6; --green: #00695c; --green-soft: #d9efec; --gold: #8d4b00; --gold-soft: #f6e6d6 }
+:root[data-cb="hc"] { --bg: #ffffff; --surface: #ffffff; --ink: #000000; --muted: #1f1f1f; --line: #4d4d4d; --red: #9b0000; --red-soft: #ffffff; --amber: #5c3300; --amber-soft: #ffffff; --green: #004d1a; --green-soft: #ffffff; --accent: #003d73; --accent-soft: #e6eef7; --gold: #5c3300; --gold-soft: #fff4e0 }
+@media (prefers-color-scheme: dark) {
+  :root[data-cb="rg"]:not([data-theme="light"]) { --red: #f4995c; --red-soft: #3d2414; --amber: #e8c35a; --amber-soft: #3a3010; --green: #6fb6f0; --green-soft: #12293d; --gold: #e8c35a; --gold-soft: #3a3010; --accent: #6fb6f0; --accent-soft: #12293d }
+  :root[data-cb="by"]:not([data-theme="light"]) { --red: #ff8a80; --red-soft: #3d1a1a; --amber: #ffb36b; --amber-soft: #3a2614; --green: #4fd1bf; --green-soft: #10302c; --gold: #ffb36b; --gold-soft: #3a2614 }
+  :root[data-cb="hc"]:not([data-theme="light"]) { --bg: #000000; --surface: #000000; --ink: #ffffff; --muted: #e6e6e6; --line: #b3b3b3; --red: #ff9e9e; --red-soft: #000000; --amber: #ffd27a; --amber-soft: #000000; --green: #8ef0a8; --green-soft: #000000; --accent: #9fd0ff; --accent-soft: #0b2236; --gold: #ffd27a; --gold-soft: #2a1f00 } }
+:root[data-theme="dark"][data-cb="rg"] { --red: #f4995c; --red-soft: #3d2414; --amber: #e8c35a; --amber-soft: #3a3010; --green: #6fb6f0; --green-soft: #12293d; --gold: #e8c35a; --gold-soft: #3a3010; --accent: #6fb6f0; --accent-soft: #12293d }
+:root[data-theme="dark"][data-cb="by"] { --red: #ff8a80; --red-soft: #3d1a1a; --amber: #ffb36b; --amber-soft: #3a2614; --green: #4fd1bf; --green-soft: #10302c; --gold: #ffb36b; --gold-soft: #3a2614 }
+:root[data-theme="dark"][data-cb="hc"] { --bg: #000000; --surface: #000000; --ink: #ffffff; --muted: #e6e6e6; --line: #b3b3b3; --red: #ff9e9e; --red-soft: #000000; --amber: #ffd27a; --amber-soft: #000000; --green: #8ef0a8; --green-soft: #000000; --accent: #9fd0ff; --accent-soft: #0b2236; --gold: #ffd27a; --gold-soft: #2a1f00 }
+:root[data-cb="hc"] .pill, :root[data-cb="hc"] .panel, :root[data-cb="hc"] .chat { border: 1.5px solid currentColor }
+.wrap { zoom: var(--zoom, 1) }
+.hdr-actions { display: flex; gap: 8px; flex-wrap: wrap }
+.a11y { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 20px; margin-bottom: 16px }
+.a11y fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0 }
+.a11y legend { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px }
+.a11y label { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer }
+.seg { display: flex; flex-wrap: wrap; gap: 6px }
+.seg button { font: 600 13px var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 6px 10px; cursor: pointer }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.found li.bad span:last-child::before { content: "✕ " } .found li.warn span:last-child::before { content: "! " } .found li.good span:last-child::before { content: "✓ " }
+.tick.ok::after { content: "✓"; color: var(--surface); font: 700 11px/14px var(--f-body); display: block; text-align: center }
+.tick.no::after { content: "✕"; color: var(--red); font: 700 10px/14px var(--f-body); display: block; text-align: center }
+.mic { font: 600 14px var(--f-body); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; cursor: pointer }
+.mic[aria-pressed="true"] { background: var(--red-soft); color: var(--red); border-color: var(--red) }
+.msg .listen { display: block; margin-top: 6px; font: 500 12px var(--f-body); background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline }
+.decode ol { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px }
+.decode ol > li { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 12px; font-size: 14px }
+.decode ol > li b { display: block } .decode ol > li span.l { font: 500 11px/1.8 var(--f-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted) }
+.decode .fix { margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: var(--accent-soft); color: var(--ink) }
+.decode .fix b { color: var(--accent) }
+.decode ul.rights { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); display: grid; gap: 4px }
+.track { display: inline-block; font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; background: var(--gold-soft); color: var(--gold); padding: 3px 8px; border-radius: 4px; margin-bottom: 8px }
+.mocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+.mocks .mockcard { grid-template-columns: minmax(0, 1fr) }
+.mocks .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px }
+.typing::after { content: "▍"; animation: blink 1s steps(2) infinite; margin-left: 2px } @keyframes blink { 50% { opacity: 0 } }
+details.why { margin-top: 6px; font-size: 13px }
+details.why summary { cursor: pointer; color: var(--accent); font-weight: 600; width: max-content; list-style: none }
+details.why summary::-webkit-details-marker { display: none }
+details.why summary::before { content: "▸ "; } details.why[open] summary::before { content: "▾ " }
+details.why dl { margin: 6px 0 0; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 12px }
+details.why dt { font: 500 11px/1.9 var(--f-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted) }
+details.why dd { margin: 0; overflow-wrap: anywhere } details.why a { color: var(--accent) }
+@media (max-width: 560px) { details.why dl { grid-template-columns: minmax(0, 1fr) } details.why dd { margin-bottom: 4px } }
+.contrib td details.why { margin-top: 2px }
+.wi-controls { display: grid; gap: 12px; margin: 12px 0 16px }
+.wi-controls label { display: flex; gap: 10px; align-items: center; font-size: 14px; cursor: pointer; flex-wrap: wrap }
+.wi-controls input[type=range] { flex: 1 1 200px; accent-color: var(--accent) }
+.wi-controls output { font: 600 14px var(--f-mono); min-width: 64px }
+.wi-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px }
+.wi-out > div { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px }
+.wi-out b { display: block; font: 700 20px var(--f-mono) } .wi-out span { font-size: 12px; color: var(--muted) }
+.wi-out .up { color: var(--green) } .wi-out .down { color: var(--red) }
+.wi-list { font-size: 13px; margin: 12px 0 0; padding-left: 18px; display: grid; gap: 3px }
+.wi-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Credit Coach<small>WHACK 26 prototype · import a credit report, see why, get a plan</small></h1>
+    <div class="hdr-actions"><button class="btn" id="a11yBtn" type="button" aria-expanded="false" aria-controls="a11y">Accessibility</button><button class="btn" id="restart" type="button" hidden>Start over</button></div>
+  </header>
+  <section class="panel a11y" id="a11y" hidden aria-label="Accessibility settings">
+    <fieldset><legend>Colours</legend><div class="seg" id="cbSeg"></div></fieldset>
+    <fieldset><legend>Text size</legend><div class="seg" id="zoomSeg"></div></fieldset>
+    <fieldset><legend>Voice</legend>
+      <label><input type="checkbox" id="speakAll"> Read every reply aloud</label>
+      <label>Voice <select id="voice" aria-label="Read-aloud voice" style="min-width:0;max-width:100%;font:14px var(--f-body);padding:4px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)"></select></label>
+      <label>Speed <input type="range" id="rate" min="0.6" max="1.6" step="0.1" value="1" aria-label="Speech speed"></label>
+      <label>Pitch <input type="range" id="pitch" min="0.5" max="1.5" step="0.1" value="1" aria-label="Speech pitch"></label>
+      <button class="btn" id="testVoice" type="button" style="justify-self:start;padding:6px 12px">Test voice</button>
+      <span class="note" style="margin:0">Use the Speak button in the chat to dictate.</span></fieldset>
+    <fieldset><legend>Language</legend><label><input type="checkbox" id="plain"> Plain English (simpler replies, jargon explained)</label></fieldset>
+  </section>
+  <div class="grid">
+    <main class="report" id="report"></main>
+    <aside class="chat" aria-label="Chat">
+      <div class="chat-head"><h2>Credit Coach chat</h2><p class="sub">Import a report, then ask anything or try a "what if".</p></div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="suggest" id="suggest"></div>
+      <form class="send" id="send"><button class="mic" id="mic" type="button" aria-pressed="false" title="Dictate a message">Speak</button><textarea id="box" placeholder="Import a report to start, or ask a question" aria-label="Message"></textarea><button id="go" type="submit">Send</button></form>
+    </aside>
+  </div>
+  <input type="file" id="file" accept=".json,.txt,.csv,.md,application/json,text/plain" hidden>
+  <input type="file" id="letterFile" accept="image/*,.txt,.md,text/plain" hidden>
+</div>
+
+<script src="engine.js" charset="utf-8"></script>
+<script>
+const E = window.CreditEngine;
+let profile = null, imported = null, result = null, plan = '6m', mockText = null;
+const turns = [];
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const sleep = ms => new Promise(r => setTimeout(r, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? Math.min(ms, 60) : ms));
+
+// ---------- capabilities ----------
+let sampleFn = null, downloadsApi = null, capsReady = false;
+(async () => {
+  try { [sampleFn, downloadsApi] = await Promise.all([window.claude?.use?.('sample'), window.claude?.use?.('downloads')]); } catch (e) {}
+  capsReady = true;
+  document.querySelectorAll('.saveMock').forEach(b => b.hidden = !downloadsApi);
+})();
+
+// ---------- start screen ----------
+function startScreen() {
+  profile = imported = result = null; turns.length = 0; plan = '6m';
+  $('restart').hidden = true; $('log').textContent = ''; $('suggest').textContent = '';
+  const R = $('report'); R.textContent = '';
+  const s = el('section', 'panel importer');
+  s.append(el('p', 'eyebrow', 'Step 1'));
+  s.append(el('h2', null, 'Import a credit report'));
+  s.append(el('p', 'sub', 'We read the report, the bank data and any decline letter in it, then work out why your score is where it is and build a dated 3- and 6-month plan.'));
+  const act = el('div', 'actions');
+  const imp = el('button', 'btn primary', 'Import report…'); imp.type = 'button'; imp.onclick = () => $('file').click();
+  act.append(imp); s.append(act);
+  s.append(el('p', 'eyebrow', 'Or try a mock report (made-up people)'));
+  const mocks = el('div', 'mocks');
+  MOCKS.forEach(m => {
+    const mc = el('div', 'mockcard'); mc.append(el('b', null, m.title), el('span', null, m.line), el('span', null, m.inside));
+    const row = el('div', 'row');
+    const use = el('button', 'btn', 'Use this report'); use.type = 'button'; use.onclick = () => loadMock(m);
+    const save = el('button', 'btn saveMock', 'Save file'); save.type = 'button'; save.hidden = capsReady ? !downloadsApi : false; save.onclick = () => saveMock(m);
+    row.append(use, save); mc.append(row); mocks.append(mc);
+  });
+  s.append(mocks);
+  s.append(el('p', 'note', 'Import takes our report JSON (save the mock to see the format). Other text files are read by Claude if chat is allowed.'));
+  R.append(s);
+  addMsg('bot', 'Hi, I\'m Credit Coach. Import a credit report on the left (or use the mock one) and I\'ll walk you through it as I read it.');
+  renderSuggest();
+}
+const MOCKS = [
+  { file: 'mock-credit-report.json', title: 'Alex Morgan · fix my credit', line: 'Experian 682 / 999 · 1 Nov 2026', inside: '2 cards at 76%, a late payment, 2 hard searches, bank data, a Capital One decline letter' },
+  { file: 'mock-report-mei.json', title: 'Mei Lin · build from zero', line: 'Experian 455 / 999 · international student, 4 months in the UK', inside: 'No credit accounts yet, can\'t join the electoral roll, rent and small bills, a phone contract decline' }
+];
+const mockCache = {};
+async function getMock(m) { m = m || MOCKS[0]; if (!mockCache[m.file]) mockCache[m.file] = await (await fetch(m.file)).text(); return mockCache[m.file]; }
+async function loadMock(m) { try { await runImport(await getMock(m), m.file); } catch (e) { addMsg('bot', 'Couldn\'t load the mock report: ' + e.message); } }
+async function saveMock(m) {
+  try { await downloadsApi.save({ filename: m.file, data: await getMock(m) }); addMsg('sys', `Saved ${m.file}. Now press Import report and pick it.`); }
+  catch (e) { if (e && e.code !== 'declined') addMsg('sys', 'Saving isn\'t available here. Use "Use this report" instead.'); }
+}
+$('file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const text = await f.text(); runImport(text, f.name);
+});
+
+// ---------- import with live reveal ----------
+let importing = false;
+async function runImport(text, filename) {
+  if (importing) return; importing = true;
+  $('report').textContent = ''; $('log').textContent = ''; $('suggest').textContent = ''; turns.length = 0;
+  $('restart').hidden = false;
+  addMsg('me', 'Imported ' + filename);
+  const stagesEl = el('div', 'stages');
+  const names = ['Read report', 'Bank data', 'Decode letter', 'Diagnose', 'Plan', 'Project', 'Card ladder'];
+  const st = names.map(n => { const s = el('span', null, n); stagesEl.append(s); return s; });
+  $('report').append(stagesEl);
+  const stage = (i, state) => { st[i].className = state; };
+  try {
+    stage(0, 'doing');
+    const say = addMsg('bot', 'Reading ' + filename + '…'); say.classList.add('typing');
+    let json = null;
+    try { json = JSON.parse(text); if (!json.accounts) json = null; } catch (e) { json = null; }
+    if (!json) {
+      if (!sampleFn) throw new Error('That file isn\'t in the report format, and Claude isn\'t available here to read it. Try the mock report.');
+      say.textContent = 'This isn\'t our report format, so I\'m asking Claude to read it…';
+      const example = await getMock(MOCKS[0]);
+      json = await sampleFn.json(`Convert this credit report / bank statement text into JSON with EXACTLY the same structure and field names as the EXAMPLE. Use only facts in the text; leave arrays empty when unknown; dates as YYYY-MM-DD; "type":"hard" or "soft" for searches; payment history statuses "OK" or a number of months late. Reply with only the JSON.\n\nEXAMPLE:\n${example}\n\nTEXT:\n${text.slice(0, 30000)}`, { cache: false });
+    }
+    imported = E.parseReport(json);
+    profile = imported.profile;
+    await sleep(500);
+    say.classList.remove('typing');
+    say.textContent = `This is ${imported.fullName}'s ${imported.provider} report from ${E.fmtDate(imported.reportDate)}.`;
+
+    const fp = el('section', 'panel reveal');
+    fp.append(el('p', 'eyebrow', 'What we found'), el('h2', null, 'Read from your report, bank data and letter'));
+    const fw = el('div', 'found'); fp.append(fw); $('report').append(fp);
+    const group = async (key, title) => {
+      const items = imported.found[key]; if (!items.length) return 0;
+      const g = el('div', 'reveal'); g.append(el('h3', null, title)); const ul = el('ul'); g.append(ul); fw.append(g);
+      for (const f of items) { const li = el('li', f.tone + ' reveal'); li.append(el('span', null, f.label), el('span', null, f.value)); ul.append(li); await sleep(170); }
+      return items.length;
+    };
+    await group('report', 'Credit report · ' + imported.provider);
+    stage(0, 'done');
+    const p = profile, cards = p.cards, tl = cards.reduce((s, c) => s + c.limit, 0), tb = cards.reduce((s, c) => s + c.balance, 0);
+    addMsg('bot', `Found ${cards.length} credit card${cards.length === 1 ? '' : 's'} using ${Math.round(tb / tl * 100)}% of ${E.gbp(tl)}, ${p.lates.length} late payment${p.lates.length === 1 ? '' : 's'}, ${p.searches.length} hard search${p.searches.length === 1 ? '' : 'es'}${p.electoralRoll ? '' : ', and you\'re not on the electoral roll at your current address'}.`);
+    await sleep(500);
+    stage(1, 'doing');
+    if (await group('bank', 'Bank data · ' + (imported.bankSource || 'current account'))) {
+      const b = p.bank; const flags = [b.bnpl && 'BNPL', b.gambling && 'gambling', b.lateFees3m && 'a late fee', b.overdraftDays3m && 'overdraft use'].filter(Boolean);
+      addMsg('bot', `Your bank data shows ${E.gbp(p.netIncome)} a month coming in and ${E.gbp(b.rent)} rent.` + (flags.length ? ` I also spotted ${flags.join(', ')}.` : ''));
+    }
+    stage(1, 'done'); await sleep(400);
+    stage(2, 'doing');
+    if (await group('letter', 'Decline letter')) {
+      addMsg('bot', `${p.decline.lender} turned down your ${p.decline.product}. The letter doesn't say why, so I'm decoding it against your report and bank data…`);
+      await sleep(700);
+      const pre = E.run(profile); const dec = E.decodeDecline(pre);
+      const dp = decoderPanel(dec); dp.classList.add('reveal'); $('report').append(dp);
+      await revealChildren(dp.querySelector('ol'), 300);
+      addMsg('bot', `Decoded: ${dec.reasons.map(r => r.likelihood.toLowerCase() + ', ' + r.title.toLowerCase()).join('; ')}.\n\nThe one fix: ${dec.fix.title}. Don't reapply before ${dec.reapply.when}, and check with a soft search first.`);
+    }
+    stage(2, 'done'); await sleep(500);
+
+    // Diagnose
+    stage(3, 'doing');
+    result = E.run(profile);
+    const dg = diagnosisPanel(result, true); $('report').append(dg);
+    await revealChildren(dg.querySelector('.factors'), 260);
+    addMsg('bot', result.headline + (result.diagnosis.declineWhy && result.diagnosis.declineWhy.length ? `\n\n${p.decline.lender} probably said no because of: ${result.diagnosis.declineWhy.join(', ')}.` : ''));
+    stage(3, 'done'); await sleep(600);
+
+    // Plan
+    stage(4, 'doing');
+    const pl = planPanel(result, true); $('report').append(pl);
+    await revealChildren(pl.querySelector('ol'), 220);
+    const s3 = result.plans['3m'].steps.length, s6 = result.plans['6m'].steps.length;
+    addMsg('bot', `Your plan starts ${E.fmtDate(result.start)}: ${s3} steps over 3 months, ${s6} over 6. This week: ${result.plans['3m'].steps.filter(s => s.date - result.start < 7 * 864e5).map(s => s.title.toLowerCase()).join('; ')}.`);
+    stage(4, 'done'); await sleep(600);
+
+    // Project
+    stage(5, 'doing');
+    const sp = scorePanel(result); sp.classList.add('reveal'); $('report').append(sp);
+    const wp = whatIfPanel(result); wp.classList.add('reveal'); $('report').append(wp);
+    const a = result.plans['3m'].projection.slice(-1)[0], b6 = result.plans['6m'].projection.slice(-1)[0];
+    addMsg('bot', `Projected ${result.bureau} score: ${a.low}–${a.high} after 3 months and ${b6.low}–${b6.high} after 6, from ${p.score} today. These are estimate ranges, not promises.`);
+    stage(5, 'done'); await sleep(600);
+
+    // Ladder
+    stage(6, 'doing');
+    const lp = ladderPanel(result); lp.classList.add('reveal'); $('report').append(lp);
+    const L = result.ladder;
+    addMsg('bot', L.entry ? `Capital One: aim for the ${L.entry.name} from ${E.fmtDate(L.applyFrom)}` + (L.tx && L.tx.chosen.length ? `, with ${L.tx.chosen.map(t => t.name).join(', ')} on it (${E.gbp2(L.tx.total)} a month, paid in full).` : '.') + (L.graduateWhen ? ` You should match the Balance Transfer card's published criteria by ${L.graduateWhen}.` : '') : L.reason);
+    const ct = contribPanel(result); ct.classList.add('reveal'); $('report').append(ct);
+    stage(6, 'done');
+    await sleep(300);
+    addMsg('bot', 'That\'s everything. Ask me why anything is in the plan, or try a what-if like "what if I pay £300 a month?"');
+    renderSuggest();
+  } catch (e) {
+    addMsg('bot', (e && e.message) || 'Something went wrong reading that file.');
+    st.forEach(s => { if (s.className === 'doing') s.className = ''; });
+  } finally { importing = false; }
+}
+async function revealChildren(parent, gap) {
+  const kids = Array.from(parent.children); kids.forEach(k => k.hidden = true);
+  for (const k of kids) { k.hidden = false; k.classList.add('reveal'); await sleep(gap); }
+}
+
+// ---------- full re-render (after chat changes) ----------
+function renderAll() {
+  result = E.run(profile);
+  const R = $('report'); const keep = R.querySelector('.stages'); const found = R.querySelector('.found')?.closest('section');
+  R.textContent = ''; if (keep) R.append(keep); if (found) R.append(found);
+  const dec = E.decodeDecline(result); if (dec) R.append(decoderPanel(dec));
+  R.append(diagnosisPanel(result), planPanel(result), scorePanel(result), whatIfPanel(result), ladderPanel(result), contribPanel(result));
+  renderSuggest();
+}
+
+// ---------- explainability: "Why?" on every number ----------
+function why(b, extra) {
+  if (!b) return document.createTextNode('');
+  const d = el('details', 'why'); d.append(el('summary', null, 'Why?'));
+  const dl = el('dl');
+  const row = (k, v) => { if (v == null || v === '') return; dl.append(el('dt', null, k)); const dd = el('dd'); if (v instanceof Node) dd.append(v); else dd.textContent = v; dl.append(dd); };
+  row('Rule', b.rule ? b.rule + (b.name ? ' · ' + b.name : '') : null);
+  row('Your data', b.dataPoint);
+  if (b.weight != null) row('Weight', Math.round(b.weight * 100) + '% of the score' + (b.weightSource ? '. ' + b.weightSource : ''));
+  row('Points', b.pointsSource);
+  if (b.source) { if (b.source.url) { const a = el('a', null, b.source.label); a.href = b.source.url; a.target = '_blank'; a.rel = 'noopener'; row('Source', a); } else row('Source', b.source.label); }
+  (extra || []).forEach(([k, v]) => row(k, v));
+  d.append(dl); return d;
+}
+function projWhy(m) {
+  const b = m.because; if (!b) return why(null);
+  const parts = b.breakdown.map(x => `${x.effect} (${x.rule}) ${x.low >= 0 ? '+' : ''}${x.low} to +${x.high}`).join('; ');
+  return why({ rule: 'Projection', dataPoint: `Starts at ${b.start}. Effects active: ${parts || 'none'}.` }, [['Raw total', `+${b.rawLow} to +${b.rawHigh}`], ['After damping', `+${b.dampedLow} to +${b.dampedHigh}`], ['Method', b.method]]);
+}
+
+// ---------- what-if simulator (instant, no Claude) ----------
+function whatIfPanel(r) {
+  const s = el('section', 'panel'); s.id = 'whatif';
+  s.append(el('p', 'eyebrow', 'What if…'));
+  s.append(el('h2', null, 'Change one thing, see your timeline move'));
+  s.append(el('p', 'sub', 'Runs instantly on your device. Nothing is saved until you press Apply.'));
+  const P = r.profile, base = Math.round((r.sim.extraLater || 0) / 25) * 25;
+  const ctl = el('div', 'wi-controls'), state = { paydown: base, toggles: {} };
+  const sl = el('label'); sl.append('Extra paid off cards each month');
+  const rg = el('input'); rg.type = 'range'; rg.min = 0; rg.max = 600; rg.step = 25; rg.value = base; rg.setAttribute('aria-label', 'Extra paid off cards each month');
+  const out = el('output', null, E.gbp(base)); sl.append(rg, out); ctl.append(sl);
+  const bank = P.bank || {};
+  const toggles = [
+    bank.bnpl > 0 && ['bnpl', `Stop buy-now-pay-later (${E.gbp(bank.bnpl)}/month)`, { lever: 'stop', what: 'bnpl' }],
+    bank.gambling > 0 && ['gambling', `Stop gambling (${E.gbp(bank.gambling)}/month)`, { lever: 'stop', what: 'gambling' }],
+    bank.payday > 0 && ['payday', `Stop payday loans (${E.gbp(bank.payday)}/month)`, { lever: 'stop', what: 'payday' }],
+    !P.electoralRoll && P.canRegisterToVote !== false && ['roll', 'I\'m already registered to vote here', { lever: 'electoralRoll', value: true }],
+    (P.staleAssociates || []).length && ['assoc', 'Financial link already removed', { lever: 'removeAssociates' }]
+  ].filter(Boolean);
+  toggles.forEach(([k, label]) => { const l = el('label'); const c = el('input'); c.type = 'checkbox'; c.onchange = () => { state.toggles[k] = c.checked; update(); }; l.append(c, label); ctl.append(l); });
+  s.append(ctl);
+  const res = el('div'); s.append(res);
+  let last = null;
+  const changes = () => (state.paydown !== base ? [{ lever: 'paydown', value: state.paydown }] : []).concat(toggles.filter(([k]) => state.toggles[k]).map(t => t[2]));
+  const fmtD = (d) => (d.low >= 0 ? '+' : '') + d.low + ' / ' + (d.high >= 0 ? '+' : '') + d.high;
+  function update() {
+    const ch = changes(); res.textContent = '';
+    if (!ch.length) { last = null; res.append(el('p', 'note', 'Move the slider or tick a box.')); return; }
+    const w = last = E.whatIf(profile, ch, { start: r.start });
+    const o = el('div', 'wi-out');
+    [['After 3 months', w.after.m3, w.delta.m3], ['After 6 months', w.after.m6, w.delta.m6]].forEach(([l, v, d]) => { const x = el('div'); x.append(el('b', null, v.low + '–' + v.high), el('span', null, l + ' · '), el('span', d.high > 0 || d.low > 0 ? 'up' : d.high < 0 ? 'down' : null, fmtD(d))); o.append(x); });
+    const u = el('div'); u.append(el('b', null, w.after.under30 || 'not in 12 mo'), el('span', null, 'Cards under 30%' + (w.because.under30 ? ` (was ${w.because.under30.before || 'not in 12 mo'})` : ''))); o.append(u);
+    res.append(o);
+    const ul = el('ul', 'wi-list');
+    w.because.effectChanges.forEach(e => ul.append(el('li', null, `${e.effect}: ${e.before ? e.before.join(' to ') : 'none'} → ${e.after ? e.after.join(' to ') : 'none'} (${e.because ? e.because.rule : ''})`)));
+    if (w.because.nextCard) ul.append(el('li', null, `Balance Transfer criteria met: ${w.because.nextCard.before || 'not yet'} → ${w.because.nextCard.after || 'not yet'}`));
+    w.because.stepsAdded.forEach(t => ul.append(el('li', null, 'New step: ' + t)));
+    w.because.stepsRemoved.forEach(t => ul.append(el('li', null, 'Step gone: ' + t)));
+    if (ul.children.length) { res.append(el('p', 'eyebrow', 'Why it changed')); res.append(ul); }
+    const act = el('div', 'wi-actions');
+    const ap = el('button', 'btn primary', 'Apply to my plan'); ap.type = 'button';
+    ap.onclick = () => { profile = last.profile; addMsg('bot', 'Updated your plan: ' + last.applied.join(', ') + `. 6 months is now ${last.after.m6.low}–${last.after.m6.high}.`); renderAll(); };
+    const js = el('button', 'btn', 'Copy JSON'); js.type = 'button';
+    js.onclick = async () => { const { result: _r, profile: _p, ...lean } = last; try { await navigator.clipboard.writeText(JSON.stringify(E.toJSON(Object.assign({ changes: ch }, lean)), null, 2)); js.textContent = 'Copied'; } catch (e) { js.textContent = 'Copy failed'; } setTimeout(() => js.textContent = 'Copy JSON', 1500); };
+    act.append(ap, js); res.append(act);
+  }
+  let t = null; rg.oninput = () => { state.paydown = +rg.value; out.textContent = E.gbp(state.paydown); clearTimeout(t); t = setTimeout(update, 60); };
+  update();
+  return s;
+}
+
+// ---------- panels ----------
+function decoderPanel(d) {
+  const s = el('section', 'panel decode');
+  s.append(el('p', 'eyebrow', 'Decline letter decoded'));
+  s.append(el('h2', null, `Why ${d.lender} probably said no to your ${d.product}`));
+  s.append(el('p', 'sub', `What the letter says: "${d.stated}". Agency used: ${d.agency}. Below is our best reading, from your report and bank data.`));
+  const ol = el('ol');
+  d.reasons.forEach(r => { const li = el('li'); li.append(el('span', 'l', r.likelihood)); const b = el('div'); b.append(el('b', null, r.title), el('span', null, r.evidence)); li.append(b); ol.append(li); });
+  if (!d.reasons.length) ol.append(el('li', null, 'Nothing obvious in your report. Check it for errors.'));
+  s.append(ol);
+  const fx = el('div', 'fix'); fx.append(el('b', null, 'The one fix: ' + d.fix.title), el('div', null, d.fix.how), el('div', null, `Reapply no earlier than ${d.reapply.when}. ${d.reapply.how}`)); s.append(fx);
+  s.append(el('p', 'eyebrow', 'Your rights'));
+  const ul = el('ul', 'rights'); d.rights.forEach(t => ul.append(el('li', null, t))); s.append(ul);
+  const up = el('button', 'btn', 'Decode a different letter…'); up.type = 'button'; up.style.marginTop = '12px'; up.onclick = () => $('letterFile').click(); s.append(up);
+  return s;
+}
+$('letterFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (!profile) { addMsg('bot', 'Import a credit report first, then I can decode a letter against it.'); return; }
+  if (!sampleFn) { addMsg('bot', 'Reading a new letter needs Claude, which isn\'t available in this view.'); return; }
+  addMsg('me', 'Uploaded letter: ' + f.name);
+  const t = addMsg('bot', 'Reading the letter…'); t.classList.add('typing');
+  try {
+    const isImg = /^image\//.test(f.type);
+    const ask = 'This is a UK credit decline letter. Reply with only JSON: {"lender": string, "product": string, "date": "YYYY-MM-DD" or null, "agency": "Experian"|"Equifax"|"TransUnion"|null, "statedReason": string or null, "productId": "classic"|"bt"|"purchase"|"other"}. productId: bt for balance transfer cards, purchase for 0% purchase cards, classic for credit-builder cards, other otherwise.';
+    const j = isImg ? await sampleFn.json(ask, { images: [f], cache: false }) : await sampleFn.json(ask + '\n\nLETTER:\n' + (await f.text()).slice(0, 8000), { cache: false });
+    const months = j.date ? Math.max(0, Math.round((imported.reportDate - new Date(j.date)) / (30.4 * 864e5))) : 0;
+    profile = Object.assign({}, profile, { decline: { lender: j.lender || 'The lender', product: j.product || 'application', productId: j.productId, monthsAgo: months, agency: j.agency, statedReason: j.statedReason } });
+    t.classList.remove('typing');
+    renderAll();
+    const d = E.decodeDecline(result);
+    t.textContent = `Decoded ${d.lender}'s letter. Most likely: ${(d.reasons[0] || { title: 'nothing obvious' }).title.toLowerCase()}. The one fix: ${d.fix.title}.`;
+    speak(t.textContent);
+  } catch (err) { t.classList.remove('typing'); t.textContent = err && err.code === 'images_unavailable' ? 'This view can\'t send images to Claude. Try a text copy of the letter.' : 'I couldn\'t read that letter. Try a clearer photo or a text copy.'; }
+});
+function scorePanel(r) {
+  const p3 = r.plans['3m'].projection.slice(-1)[0], p6 = r.plans['6m'].projection.slice(-1)[0];
+  const s = el('section', 'panel');
+  s.append(el('p', 'eyebrow', `Projected ${r.bureau} score · 0–${r.scaleMax.toLocaleString('en-GB')}`));
+  s.append(el('h2', null, `From ${r.profile.score} to ${p6.low}–${p6.high} in 6 months`));
+  s.append(el('p', 'sub', 'Estimate ranges if you follow the plan. Following the 6-month plan includes a new card, which dips briefly before it helps.'));
+  const sc = el('div', 'scores');
+  [['now', 'Score now', r.profile.score + ''], ['s3', 'After 3 months', p3.low + '–' + p3.high], ['s6', 'After 6 months', p6.low + '–' + p6.high]].forEach(([c, l, v]) => { const d = el('div', 'score ' + c); d.append(el('b', null, v), el('span', null, l)); sc.append(d); });
+  s.append(sc);
+  s.append(projWhy(r.plans['6m'].projection.slice(-1)[0]));
+  const cb = el('div', 'chartbox'); cb.innerHTML = chart(r); s.append(cb);
+  const lg = el('div', 'legend'); lg.innerHTML = '<span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>6-month plan</span><span><i style="background:var(--gold-soft);border:1px solid var(--gold)"></i>3-month plan</span><span><i style="background:var(--red)"></i>one missed payment: −' + r.riskLine + '</span>';
+  s.append(lg);
+  return s;
+}
+function diagnosisPanel(r, staged) {
+  const dg = el('section', 'panel' + (staged ? ' reveal' : ''));
+  dg.append(el('p', 'eyebrow', 'Why your credit is like this'));
+  dg.append(el('h2', null, r.headline));
+  dg.append(el('p', 'sub', `Ranked by how much each factor holds you back. Monthly surplus after rent, bills, debts and everyday spending: ${E.gbp(r.cash.surplus)}.`));
+  const fl = el('div', 'factors');
+  r.diagnosis.ranked.forEach(f => { const row = el('div', 'factor'); row.append(el('span', 'pill ' + f.rag, f.rag)); const t = el('div'); t.append(el('h3', null, f.label), el('p', null, f.reason), why(f.because, [['Health', f.health != null ? f.health + '/100' : null]])); row.append(t); fl.append(row); });
+  dg.append(fl);
+  if (r.diagnosis.flags.length) { const f = el('p', 'flags'); f.innerHTML = '<b>From your spending:</b> '; f.append(r.diagnosis.flags.join(' · ')); dg.append(f); }
+  if (r.diagnosis.declineWhy && r.diagnosis.declineWhy.length) { const f = el('p', 'flags'); f.innerHTML = `<b>Why ${r.profile.decline.lender} likely said no:</b> `; f.append(r.diagnosis.declineWhy.join(' · ')); dg.append(f); }
+  return dg;
+}
+function planPanel(r, staged) {
+  const tl = el('section', 'panel' + (staged ? ' reveal' : ''));
+  tl.append(el('p', 'eyebrow', 'Your plan, step by step'));
+  if (r.build) tl.append(el('span', 'track', 'Build from zero'));
+  tl.append(el('h2', null, r.build ? (plan === '3m' ? '3 months: get on the map' : '6 months: get on the map and start a card') : plan === '3m' ? '3 months: quick wins and paydown' : '6 months: quick wins, paydown and the card ladder'));
+  const tabs = el('div', 'tabs'); tabs.setAttribute('role', 'tablist');
+  [['3m', '3 months'], ['6m', '6 months']].forEach(([k, l]) => { const b = el('button', 'tab', l); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', plan === k); b.onclick = () => { plan = k; tl.replaceWith(planPanel(result)); }; tabs.append(b); });
+  tl.append(tabs);
+  const ol = el('ol', 'steps');
+  const key = x => x.title + '|' + +x.date; const in3 = new Set(r.plans['3m'].steps.map(key));
+  r.plans[plan].steps.forEach(st => {
+    const li = el('li', plan === '6m' && !in3.has(key(st)) ? 'new' : null);
+    li.append(el('span', 'date', E.fmtDate(st.date)));
+    const b = el('div'); b.append(el('h4', null, st.title), el('p', null, st.instruction), el('p', 'meta', 'Done when: ' + st.check), why(st.because)); li.append(b); ol.append(li);
+  });
+  if (!r.plans[plan].steps.length) ol.append(el('li', null, 'Nothing urgent. Keep paying on time.'));
+  tl.append(ol);
+  return tl;
+}
+function ladderPanel(r) {
+  const L = r.ladder, cl = el('section', 'panel');
+  cl.append(el('p', 'eyebrow', 'Capital One card ladder'));
+  cl.append(el('h2', null, L.entry ? 'Your next card' : 'No new card for now'));
+  cl.append(el('p', 'sub', L.reason));
+  if (L.entry) {
+    const cf = el('div', 'card-face'); const left = el('div'); left.append(el('div', 'name', L.entry.name), el('p', 'sub', L.entry.note));
+    cf.append(left, el('div', 'terms', `${L.entry.apr}% APR rep.\n${L.entry.limit}\nfrom ${E.fmtDate(L.applyFrom)}`)); cl.append(cf);
+    if (L.saving) cl.append(el('p', null, L.saving));
+    if (L.tx && L.tx.chosen.length) {
+      cl.append(el('p', 'eyebrow', 'Put these payments on it'));
+      const ul = el('ul', 'tx');
+      L.tx.chosen.forEach(x => { const li = el('li'); li.append(el('span', null, x.name), el('span', null, E.gbp2(x.amount))); ul.append(li); });
+      const tot = el('li', 'total'); tot.append(el('span', null, `Total · ${Math.round(L.tx.total / L.tx.limitAssumed * 100)}% of a ${E.gbp(L.tx.limitAssumed)} limit`), el('span', null, E.gbp2(L.tx.total) + '/mo')); ul.append(tot);
+      cl.append(ul, el('p', 'note', 'Set a Direct Debit for the full balance so you pay £0 interest. Keep it under 30% of the limit.'));
+    }
+  }
+  if (L.graduation) {
+    cl.append(el('p', 'eyebrow', 'Next: Balance Transfer card criteria'));
+    const ck = el('div', 'checklist');
+    L.graduation.forEach(g => { const row = el('div'); const s = g.when === 'now' ? 'ok' : g.month > 0 ? 'later' : 'no'; row.append(el('span', 'tick ' + s), el('span', null, g.label), el('span', 'when', g.when)); ck.append(row); });
+    cl.append(ck, el('p', 'note', L.graduateWhen ? `All green by ${L.graduateWhen}. Then run QuickCheck (soft search). Matching published criteria isn't a guarantee: Capital One's own model is private.` : 'Not every criterion can turn green within 12 months.'));
+  }
+  return cl;
+}
+function contribPanel(r) {
+  const ct = el('section', 'panel');
+  ct.append(el('p', 'eyebrow', 'Where the 6-month projection comes from'));
+  const tb = el('table', 'contrib'); tb.innerHTML = '<thead><tr><th>Effect</th><th>Points (low–high)</th></tr></thead>';
+  const tbody = el('tbody');
+  r.contributions.forEach(c => { const tr = el('tr'); const td = el('td', null, c.label + (c.plan === '6m' ? ' (6-month plan)' : '')); td.append(why(c.because)); tr.append(td, el('td', null, (c.low >= 0 ? '+' : '') + c.low + ' to +' + c.high)); tbody.append(tr); });
+  tb.append(tbody); ct.append(tb);
+  ct.append(el('p', 'note', 'Estimates. Point figures are Experian\'s published examples on its old 0–999 scale, rescaled to your bureau; the rest are our assumptions. Larger totals are damped for diminishing returns.'));
+  return ct;
+}
+function chart(r) {
+  const W = 640, H = 220, padL = 44, padR = 12, padT = 12, padB = 26;
+  const p6 = r.plans['6m'].projection, p3 = r.plans['3m'].projection;
+  const lo = Math.min(...p6.map(x => x.low), ...p3.map(x => x.low)), hi = Math.max(...p6.map(x => x.high), ...p3.map(x => x.high));
+  const step = r.scaleMax > 800 ? 25 : 10;
+  const y0 = Math.floor((lo - step) / step) * step, y1 = Math.ceil((hi + step) / step) * step;
+  const X = m => padL + (W - padL - padR) * m / 6, Y = v => padT + (H - padT - padB) * (1 - (v - y0) / (y1 - y0));
+  const band = (pts, style) => `<polygon points="${pts.map(p => `${X(p.month)},${Y(p.high)}`).join(' ')} ${pts.slice().reverse().map(p => `${X(p.month)},${Y(p.low)}`).join(' ')}" style="${style}"/>`;
+  const mid = (pts, color, dash) => `<polyline fill="none" stroke="${color}" stroke-width="2" ${dash ? 'stroke-dasharray="5 4"' : ''} points="${pts.map(p => `${X(p.month)},${Y((p.low + p.high) / 2)}`).join(' ')}"/>`;
+  let g = ''; const ts = Math.max(step, Math.ceil((y1 - y0) / 5 / step) * step);
+  for (let v = y0; v <= y1; v += ts) g += `<line x1="${padL}" x2="${W - padR}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${padL - 6}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
+  p6.forEach(p => { g += `<text x="${X(p.month)}" y="${H - 8}" text-anchor="middle">${p.date.slice(0, 3)}</text>`; });
+  g += band(p6, 'fill:var(--accent-soft);stroke:var(--accent);stroke-width:1;fill-opacity:.9') + band(p3, 'fill:var(--gold-soft);stroke:var(--gold);stroke-width:1;fill-opacity:.85');
+  g += mid(p6, 'var(--accent)') + mid(p3, 'var(--gold)', true);
+  const last = p6[p6.length - 1]; g += `<circle cx="${X(6)}" cy="${Y((last.low + last.high) / 2)}" r="4" fill="var(--accent)"/>`;
+  const rv = r.profile.score - r.riskLine; if (rv >= y0) g += `<line x1="${X(0)}" x2="${X(0.6)}" y1="${Y(rv)}" y2="${Y(rv)}" stroke="var(--red)" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:420px;max-width:100%" role="img" aria-label="Projected score range for the 3- and 6-month plans">${g}</svg>`;
+}
+
+// ---------- chat ----------
+function addMsg(who, text) {
+  const m = el('div', 'msg ' + who, text); $('log').append(m); $('log').scrollTop = $('log').scrollHeight;
+  if (who === 'bot' && text !== 'Thinking…' && !/…$/.test(text)) { addListen(m); speak(text); }
+  return m;
+}
+function addListen(m) {
+  if (!('speechSynthesis' in window) || m.querySelector('.listen')) return;
+  const b = el('button', 'listen', 'Listen'); b.type = 'button'; b.setAttribute('aria-label', 'Read this message aloud');
+  b.onclick = () => { speechSynthesis.cancel(); speak(m.firstChild.textContent, true); };
+  m.append(b);
+}
+function renderSuggest() {
+  const S = $('suggest'); S.textContent = '';
+  const ideas = result ? ['Why is my score where it is?', `What if I pay ${E.gbp((result.sim.extraLater || 100) + 100)} a month?`, 'Why the Capital One Classic?', 'What if I register to vote today?'] : ['How does this work?', 'What\'s in the mock report?'];
+  ideas.forEach(t => { const b = el('button', null, t); b.type = 'button'; b.onclick = () => send(t); S.append(b); });
+}
+const RULES = `You are Credit Coach, a UK credit improvement assistant in a hackathon prototype. A deterministic engine on the page does all scoring, plans and projections. Your jobs:
+1. Answer the user's question in plain, friendly UK English using ONLY numbers from STATE. Be specific: name their cards, payees, amounts and dates. Max ~120 words. No markdown headings; short paragraphs or a few "- " bullets are fine. Projections are estimate ranges, say so briefly when quoting them. Never claim Capital One approval is guaranteed.
+2. If the message gives new facts about the person, or asks a "what if" (e.g. paying more per month, removing a card, registering to vote, a different score), return a profilePatch so the engine re-runs. Keep your reply short then, e.g. "Updated: ...", because the page shows the new numbers itself.
+If STATE is empty, no report has been imported yet: explain briefly that they should press "Import report…" or "Use the mock report" (a made-up Experian report for Alex Morgan with 2 cards, a late payment, 3 searches, bank data and a Capital One decline letter), and return profilePatch null.
+
+Profile fields (all optional in a patch; arrays replace whole arrays):
+name, age, grossIncome (yearly £), netIncome (monthly £), housing ("rent"|"own"|"family"), goal ("build"|"card"|"mortgage"|"loan"), bureau ("experian"|"equifax"|"transunion"), score,
+cards: [{name, limit, balance, apr, minOnly (bool), hasDD (bool), openedYears}], loans: [{name, monthly, openedYears}],
+lates: [{account, monthsAgo}], defaults: [{account, monthsAgo}], ccjs: [{monthsAgo}], searches: [monthsAgo numbers for hard searches],
+electoralRoll (bool), addresses3y, staleAssociates: [names], errorsOnReport: [strings], decline: {lender, productId, monthsAgo, product} or null,
+paydownOverride (extra £/month towards cards, for what-ifs),
+bank: {rent, rentByTransfer, councilTax, bills: [{name, amount, fixed}], subscriptions: [{name, amount}], groceries, transport, other, bnpl, gambling, payday, savings, billsInOwnName}. For bank, send the whole bank object with existing values kept.
+
+Reply with ONLY JSON: {"reply": string, "profilePatch": object or null}`;
+
+let busy = false;
+async function send(text) {
+  text = (text || '').trim(); if (!text || busy || importing) return;
+  addMsg('me', text); $('box').value = '';
+  if (!sampleFn) { addMsg('bot', capsReady ? 'Chat with Claude isn\'t available in this view, but import still works.' : 'Still connecting to Claude, try again in a few seconds.'); return; }
+  busy = true; $('go').disabled = true;
+  const thinking = addMsg('bot', 'Thinking…'); thinking.classList.add('typing');
+  const ctx = `STATE (engine output for the current person):\n${result ? E.summary(result) : '(empty)'}\n\nCURRENT PROFILE:\n${profile ? JSON.stringify(profile) : '(none)'}\n\nUSER MESSAGE:\n${text}`;
+  const input = [{ role: 'user', content: RULES + (prefs.plain ? '\n\nPLAIN ENGLISH MODE: write for a reading age of about 9. Short sentences. No jargon; if you must use a term like "utilisation", explain it in a few words.' : '') }].concat(turns.slice(-8), [{ role: 'user', content: ctx }]);
+  try {
+    const out = await sampleFn.json(input, { cache: false });
+    const before = result && result.plans['6m'].projection.slice(-1)[0];
+    let changed = false;
+    if (profile && out && out.profilePatch && typeof out.profilePatch === 'object') {
+      profile = Object.assign({}, profile, out.profilePatch, out.profilePatch.bank ? { bank: Object.assign({}, profile.bank, out.profilePatch.bank) } : {});
+      try { renderAll(); changed = true; } catch (e) { addMsg('sys', 'That change didn\'t fit the engine, so the plan stayed as it was.'); }
+    }
+    thinking.classList.remove('typing');
+    thinking.textContent = (out && out.reply) || 'Done.'; addListen(thinking); speak(thinking.textContent);
+    turns.push({ role: 'user', content: text }, { role: 'assistant', content: thinking.textContent });
+    if (changed) { const a = result.plans['3m'].projection.slice(-1)[0], b = result.plans['6m'].projection.slice(-1)[0]; addMsg('sys', `Plan updated · 3 months ${a.low}–${a.high} · 6 months ${b.low}–${b.high} (was ${before.low}–${before.high})`); }
+  } catch (e) {
+    thinking.classList.remove('typing');
+    const code = e && e.code;
+    thinking.textContent = code === 'not_granted' || code === 'sampling_disabled' ? 'Claude isn\'t allowed for this page, so chat is off. Import still works.'
+      : code === 'rate_limited' ? 'Too many messages at once. Wait a moment and send again.'
+      : code === 'invalid_json' ? 'I got a garbled answer. Send that again?' : 'Something went wrong reaching Claude. Send it again?';
+    if (code === 'not_granted' || code === 'sampling_disabled') sampleFn = null;
+  } finally { busy = false; $('go').disabled = false; }
+}
+$('send').addEventListener('submit', e => { e.preventDefault(); send($('box').value); });
+$('box').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send($('box').value); } });
+$('restart').onclick = startScreen;
+
+// ---------- accessibility ----------
+const prefs = { cb: 'none', zoom: 1, speakAll: false, rate: 1, pitch: 1, voice: '', plain: false };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem('cc-a11y') || '{}')); } catch (e) {}
+function savePrefs() { try { localStorage.setItem('cc-a11y', JSON.stringify(prefs)); } catch (e) {} }
+function applyPrefs() {
+  if (prefs.cb === 'none') document.documentElement.removeAttribute('data-cb'); else document.documentElement.setAttribute('data-cb', prefs.cb);
+  document.documentElement.style.setProperty('--zoom', prefs.zoom);
+  $('speakAll').checked = prefs.speakAll; $('rate').value = prefs.rate; $('pitch').value = prefs.pitch; $('plain').checked = prefs.plain;
+  document.querySelectorAll('#cbSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === prefs.cb));
+  document.querySelectorAll('#zoomSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === +prefs.zoom));
+}
+[['none', 'Standard'], ['rg', 'Red-green safe'], ['by', 'Blue-yellow safe'], ['hc', 'High contrast']].forEach(([v, l]) => { const b = el('button', null, l); b.type = 'button'; b.dataset.v = v; b.onclick = () => { prefs.cb = v; savePrefs(); applyPrefs(); }; $('cbSeg').append(b); });
+[[1, 'A'], [1.15, 'A+'], [1.3, 'A++'], [1.5, 'A+++']].forEach(([v, l]) => { const b = el('button', null, l); b.type = 'button'; b.dataset.v = v; b.setAttribute('aria-label', 'Text size ' + Math.round(v * 100) + '%'); b.onclick = () => { prefs.zoom = v; savePrefs(); applyPrefs(); }; $('zoomSeg').append(b); });
+$('speakAll').onchange = e => { prefs.speakAll = e.target.checked; savePrefs(); if (!prefs.speakAll && 'speechSynthesis' in window) speechSynthesis.cancel(); };
+$('rate').onchange = e => { prefs.rate = +e.target.value; savePrefs(); };
+$('pitch').onchange = e => { prefs.pitch = +e.target.value; savePrefs(); };
+$('voice').onchange = e => { prefs.voice = e.target.value; savePrefs(); speechSynthesis.cancel(); speak('Hi, this is how I will sound.', true); };
+$('testVoice').onclick = () => { if ('speechSynthesis' in window) { speechSynthesis.cancel(); speak('Hi, I\'m Credit Coach. Your score could reach seven hundred and fifty in six months.', true); } };
+function fillVoices() {
+  if (!('speechSynthesis' in window)) { $('voice').disabled = true; return; }
+  const vs = speechSynthesis.getVoices().slice().sort((a, b) => (b.lang === 'en-GB') - (a.lang === 'en-GB') || (b.lang.startsWith('en')) - (a.lang.startsWith('en')) || a.name.localeCompare(b.name));
+  const sel = $('voice'); sel.textContent = '';
+  const d = el('option', null, 'Automatic (British English)'); d.value = ''; sel.append(d);
+  vs.filter(v => v.lang.startsWith('en')).forEach(v => { const o = el('option', null, `${v.name} (${v.lang})`); o.value = v.name; sel.append(o); });
+  sel.value = vs.some(v => v.name === prefs.voice) ? prefs.voice : '';
+}
+if ('speechSynthesis' in window) { fillVoices(); speechSynthesis.onvoiceschanged = fillVoices; } else fillVoices();
+$('plain').onchange = e => { prefs.plain = e.target.checked; savePrefs(); };
+$('a11yBtn').onclick = () => { const p = $('a11y'); p.hidden = !p.hidden; $('a11yBtn').setAttribute('aria-expanded', !p.hidden); };
+applyPrefs();
+
+function speak(text, force) {
+  if (!('speechSynthesis' in window) || !(force || prefs.speakAll) || !text) return;
+  const u = new SpeechSynthesisUtterance(text.replace(/£/g, ' pounds ').replace(/–/g, ' to ')); u.lang = 'en-GB'; u.rate = prefs.rate; u.pitch = prefs.pitch;
+  const all = speechSynthesis.getVoices();
+  const v = (prefs.voice && all.find(v => v.name === prefs.voice)) || all.find(v => v.lang === 'en-GB'); if (v) { u.voice = v; u.lang = v.lang; }
+  speechSynthesis.speak(u);
+}
+// Dictation: Web Speech API where the browser allows the mic; otherwise point to the device's own dictation.
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+function dictationTip() { addMsg('sys', 'The microphone isn\'t available in this view. Use your device\'s dictation instead: on a Mac press the Fn key twice (or the mic key), on Windows press Win+H, on a phone tap the mic on the keyboard. Then press Send.'); $('box').focus(); }
+$('mic').onclick = () => {
+  if (rec) { rec.stop(); return; }
+  if (!SR) { dictationTip(); return; }
+  try {
+    rec = new SR(); rec.lang = 'en-GB'; rec.interimResults = true; rec.continuous = false;
+    let finalText = '';
+    rec.onresult = ev => { let t = ''; for (const r of ev.results) { t += r[0].transcript; if (r.isFinal) finalText = t; } $('box').value = t; };
+    rec.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed' || ev.error === 'audio-capture') dictationTip(); };
+    rec.onend = () => { $('mic').setAttribute('aria-pressed', 'false'); $('mic').textContent = 'Speak'; rec = null; if (finalText.trim()) send(finalText); };
+    rec.start(); $('mic').setAttribute('aria-pressed', 'true'); $('mic').textContent = 'Stop';
+  } catch (e) { rec = null; dictationTip(); }
+};
+startScreen();
+</script>
