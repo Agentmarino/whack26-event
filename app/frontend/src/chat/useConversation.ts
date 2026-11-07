@@ -21,6 +21,8 @@ export interface ConvState {
   result: EngineResult | null
   paperUrl: string | null
   whatIfs: Record<string, WhatIfRun>
+  /** The plan each what-if was answered for (cards keep quoting it if the person switches plan later). */
+  whatIfPlans: Record<string, PlanId>
   entries: Entry[]
   /** Messages from the last response not shown yet. */
   queue: AgentMessage[]
@@ -44,6 +46,7 @@ const initial: ConvState = {
   result: null,
   paperUrl: null,
   whatIfs: {},
+  whatIfPlans: {},
   entries: [],
   queue: [],
   currentKey: null,
@@ -101,6 +104,8 @@ function reducer(s: ConvState, a: Action): ConvState {
     case 'turn': {
       const r = a.response
       const whatIfs = r.whatIf ? { ...s.whatIfs, [r.whatIf.id]: r.whatIf } : s.whatIfs
+      const plan = planFrom(r.messages, s.plan)
+      const whatIfPlans = r.whatIf ? { ...s.whatIfPlans, [r.whatIf.id]: plan } : s.whatIfPlans
       return showNext({
         ...s,
         sessionId: r.sessionId,
@@ -109,12 +114,13 @@ function reducer(s: ConvState, a: Action): ConvState {
         result: r.result ?? s.result,
         paperUrl: r.paperUrl ?? s.paperUrl,
         whatIfs,
+        whatIfPlans,
         queue: [...s.queue, ...r.messages],
         pending: null,
         error: null,
         hasLetter: s.hasLetter || !!a.letter,
         personaId: a.personaId ?? s.personaId,
-        plan: planFrom(r.messages, s.plan),
+        plan,
       })
     }
     case 'whatif': {
@@ -122,6 +128,7 @@ function reducer(s: ConvState, a: Action): ConvState {
       return showNext({
         ...s,
         whatIfs: { ...s.whatIfs, [r.whatIf.id]: r.whatIf },
+        whatIfPlans: { ...s.whatIfPlans, [r.whatIf.id]: s.plan },
         queue: [...s.queue, ...r.messages],
         pending: null,
         error: null,
@@ -148,20 +155,25 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
   optsRef.current = opts
   /** The last request that failed, for "Try again". */
   const retryRef = useRef<(() => Promise<void>) | null>(null)
+  /** Bumped on every (re)start, synchronously: a reply to a request from before a restart is dropped. */
+  const runRef = useRef(0)
 
   const turn = useCallback(
     async (input: TurnInput, extra: { letter?: boolean; personaId?: string } = {}) => {
       const run = async () => {
+        const myRun = runRef.current
         dispatch({ type: 'pending', pending: { kind: 'turn', label: 'The agent is thinking' } })
         try {
           const response = await api.turn({
-            sessionId: stateRef.current.sessionId,
+            sessionId: input.type === 'start' ? null : stateRef.current.sessionId,
             input,
             settings: { plainEnglish: optsRef.current.plainEnglish },
           })
+          if (runRef.current !== myRun) return
           retryRef.current = null
           dispatch({ type: 'turn', response, ...extra })
         } catch (e) {
+          if (runRef.current !== myRun) return
           retryRef.current = run
           if (!(e instanceof ApiFailure)) console.error(e)
           else if (e.detail) console.info('[api]', e.detail)
@@ -178,6 +190,8 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
   )
 
   const start = useCallback(() => {
+    runRef.current += 1
+    retryRef.current = null
     dispatch({ type: 'restart' })
     void turn({ type: 'start' })
   }, [turn])
@@ -214,10 +228,12 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
     async (what: { file: File } | { text: string }, fileKind: FileKind) => {
       const name = 'file' in what ? what.file.name : 'your pasted letter'
       const run = async (): Promise<boolean> => {
+        const myRun = runRef.current
         dispatch({ type: 'pending', pending: { kind: 'upload', label: `The agent is reading ${name}` } })
         try {
           const sessionId = stateRef.current.sessionId
           const up = 'file' in what ? await api.upload(what.file, fileKind, sessionId) : await api.uploadText(what.text, fileKind, sessionId)
+          if (runRef.current !== myRun) return false
           if (!up.ok || !up.fileId) {
             dispatch({ type: 'release' })
             dispatch({ type: 'notice', text: up.error ?? "I couldn't read that one. You can try the sample instead." })
@@ -228,6 +244,14 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
           await turn({ type: 'file', fileKind, fileId: up.fileId }, { letter: fileKind === 'letter' })
           return true
         } catch (e) {
+          if (runRef.current !== myRun) return false
+          // The server refused this file (too big, wrong type, ...): say why and keep Upload / Use a sample.
+          if (e instanceof ApiFailure && e.status && e.status >= 400 && e.status < 500) {
+            retryRef.current = null
+            dispatch({ type: 'release' })
+            dispatch({ type: 'notice', text: e.message })
+            return false
+          }
           retryRef.current = async () => void (await run())
           dispatch({ type: 'error', message: e instanceof ApiFailure ? e.message : "I couldn't take that just now. Try again?" })
           return false
@@ -246,12 +270,20 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
       if (!sessionId) return
       dispatch({ type: 'you', text: label })
       const run = async () => {
+        const myRun = runRef.current
         dispatch({ type: 'pending', pending: { kind: 'whatif', label: 'The agent is working it out' } })
         try {
           const response = await api.whatIf({ sessionId, ...req } as WhatIfRequest)
+          if (runRef.current !== myRun) return
           retryRef.current = null
           dispatch({ type: 'whatif', response })
         } catch (e) {
+          if (runRef.current !== myRun) return
+          if (e instanceof ApiFailure && e.status === 404) {
+            retryRef.current = null
+            dispatch({ type: 'error', message: 'The desk lost our conversation (it restarted). Shall we start again?', sessionGone: true })
+            return
+          }
           // 409 (not checked yet) and 422 (no lever in those words) carry a friendly sentence: say it, carry on.
           if (e instanceof ApiFailure && (e.status === 409 || e.status === 422)) {
             retryRef.current = null

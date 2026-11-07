@@ -12,7 +12,7 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | Claude Code | Writing code from our handoffs | both |
 | Claude | Planning, handoffs, copy | |
 | Claude API (Anthropic) incl. web search tool | AI calls in the backend | mihael |
-| Impeccable (pbakaus/impeccable, Apache 2.0) | Claude Code design skill: UI design, critique, polish | partner |
+| Impeccable (pbakaus/impeccable, Apache 2.0) | Claude Code design skill: UI design, critique, polish | partner; mihael (114: `audit` with its `impeccable detect` checker on the source and the running page, then a polish pass) |
 | Playwright MCP (@playwright/mcp) | Lets Claude Code open and screenshot the app to check the UI | partner, mihael (108 visual and accessibility checks) |
 | Playwright library 1.56.1 (Apache-2.0) with WebKit 26 (`iPhone 15` profile) and Chromium headless shell | 109: screenshots of every state, emote and gesture, contact sheets and the iPhone/desktop checks. Run from a script outside the repo; not part of the app | mihael |
 | Pillow 12.1.1 (Python, MIT-CMU) | 109: builds the contact sheets and the pixel test (every scaled block one flat colour). Outside the repo | mihael |

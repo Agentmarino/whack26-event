@@ -1,6 +1,6 @@
 // Every setting behind one button (109 lesson: the speed row ate the dialogue box).
 import type { ReactNode } from 'react'
-import { speechAvailable } from '../chat/useSpeech'
+import { speakNow, speechAvailable } from '../chat/useSpeech'
 import type { Speed } from '../npc'
 import { useSettings, type ColourMode, type TextSize, type VoiceRate } from '../settings'
 import { Sheet } from '../ui/Sheet'
@@ -112,7 +112,10 @@ export function SettingsSheet(props: { open: boolean; onClose: () => void; onRes
             label="Read replies aloud"
             hint={speechAvailable() ? 'Uses your device’s British English voice.' : 'Not available in this browser.'}
             checked={settings.readAloud}
-            onChange={(v) => set('readAloud', v)}
+            onChange={(v) => {
+              set('readAloud', v)
+              if (v) speakNow("I'll read my replies aloud.", settings.voiceRate)
+            }}
             testId="toggle-voice"
           />
           {settings.readAloud && (

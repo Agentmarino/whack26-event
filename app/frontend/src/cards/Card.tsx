@@ -34,7 +34,7 @@ export function Card({ msg }: { msg: AgentMessage }) {
     case 'ladder':
       return <LadderCard ladder={r.ladder} />
     case 'whatif':
-      return <WhatIfCard run={r.whatIf} plan={ctx.plan} />
+      return <WhatIfCard run={r.whatIf} plan={ctx.whatIfPlans[r.whatIf.id] ?? ctx.plan} />
     case 'headline':
       return null
   }

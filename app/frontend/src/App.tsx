@@ -152,12 +152,13 @@ export default function App() {
     () => ({
       result: state.result,
       whatIfs: state.whatIfs,
+      whatIfPlans: state.whatIfPlans,
       paperUrl: state.paperUrl,
       plan: state.plan,
       showWhy: setWhy,
       openPaper: () => setSheet('paper'),
     }),
-    [state.result, state.whatIfs, state.paperUrl, state.plan],
+    [state.result, state.whatIfs, state.whatIfPlans, state.paperUrl, state.plan],
   )
 
   // ---------- dock ----------

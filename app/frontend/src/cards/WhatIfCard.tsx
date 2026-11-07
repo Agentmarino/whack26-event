@@ -12,6 +12,10 @@ export function WhatIfCard({ run, plan }: { run: WhatIfRun; plan: PlanId }) {
   const after = o.after[key]
   const delta = o.delta[key]
   const up = delta.low > 0 || delta.high > 0
+  // Taking something good away (off the roll, no rent reporting, a slider "set") can really lower it:
+  // the backend says so (templates.ts whatIfMessage), so the card shows it too. Otherwise "stays".
+  const down =
+    !up && (delta.low < 0 || delta.high < 0) && run.changes.some((c) => ('value' in c && c.value === false) || c.lever === 'set')
   const pts = o.result.plans[plan].projection
   const by = pts[pts.length - 1]?.date ?? ''
   const b = o.because
@@ -28,10 +32,10 @@ export function WhatIfCard({ run, plan }: { run: WhatIfRun; plan: PlanId }) {
         <dd className="text-[1.0625rem] tabular-nums">{range(before)}</dd>
         <dt className="text-[0.9375rem] text-ink-muted">With this</dt>
         <dd className="text-[1.1875rem] font-bold tabular-nums">
-          {up ? (
+          {up || down ? (
             <>
               {range(after)}{' '}
-              <span className="pill tone-good !px-1.5 !py-0 !text-sm">
+              <span className={`pill ${up ? 'tone-good' : 'tone-bad'} !px-1.5 !py-0 !text-sm`}>
                 {signed(delta.low)} to {signed(delta.high)}
               </span>
             </>
@@ -40,7 +44,10 @@ export function WhatIfCard({ run, plan }: { run: WhatIfRun; plan: PlanId }) {
           )}
         </dd>
       </dl>
-      {!up && <p className="mt-1.5 text-[0.9375rem] leading-snug">Your plan already gets you there, so this doesn't add points by then.</p>}
+      {!up && !down && (
+        <p className="mt-1.5 text-[0.9375rem] leading-snug">Your plan already gets you there, so this doesn't add points by then.</p>
+      )}
+      {down && <p className="mt-1.5 text-[0.9375rem] leading-snug">This would lower your estimate. Better to keep it.</p>}
       {(b.under30 || b.nextCard) && (
         <ul className="mt-2 flex flex-col gap-1 text-[0.9375rem] leading-snug">
           {b.under30 && b.under30.before !== b.under30.after && (

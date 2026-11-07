@@ -1,19 +1,22 @@
 // 114 checks the walk does not cover: the live region and canvas label, the error and upload-failure
 // states, a letter at any step, the typewriter at 1x, read aloud (speechSynthesis, en-GB), the mic
 // button, the settings sheet and colour modes. WebKit, iPhone 15. Screens to screens/check-*.png.
-//   node scripts/checks.mjs [--base http://localhost:5173]
+//   node scripts/checks.mjs [--base http://localhost:5173] [--live-base http://localhost:5175]
+// --live-base: a dev server started with VITE_USE_MOCK=false (backend up) for the HTTP error checks.
 import { devices, webkit } from 'playwright'
 import { fileURLToPath } from 'node:url'
 
 const args = process.argv.slice(2)
 const base = args.includes('--base') ? args[args.indexOf('--base') + 1] : 'http://localhost:5173'
+const liveBase = args.includes('--live-base') ? args[args.indexOf('--live-base') + 1] : null
 const out = fileURLToPath(new URL('../screens/', import.meta.url))
 const browser = await webkit.launch()
 const results = []
 const ok = (name, pass, detail = '') => results.push({ name, pass: !!pass, detail })
 
-async function open(query = '', settings = { speed: 'instant' }) {
+async function open(query = '', settings = { speed: 'instant' }, at = base, routes = null) {
   const ctx = await browser.newContext({ ...devices['iPhone 15'] })
+  if (routes) await routes(ctx)
   await ctx.addInitScript((s) => {
     try {
       localStorage.setItem('whack26.settings.v1', JSON.stringify(s))
@@ -29,7 +32,7 @@ async function open(query = '', settings = { speed: 'instant' }) {
   const errors = []
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(e.message))
-  await page.goto(`${base}/${query}`)
+  await page.goto(`${at}/${query}`)
   await page.getByTestId('dock').waitFor()
   return { ctx, page, errors }
 }
@@ -195,6 +198,52 @@ const shot = async (page, name) => {
   const explain = await page.getByTestId('term-explain').textContent()
   await shot(page, 'explain-term')
   ok('a credit term gets a tap-to-explain line', !!explain && explain.length > 40, `${word}: ${explain?.slice(0, 60)}`)
+  await ctx.close()
+}
+
+// 7. HTTP errors from the real backend's routes (needs --live-base): a refused upload keeps the inputs;
+//    a lost session on /api/whatif offers Start again (not a Try again that loops)
+if (liveBase) {
+  const refuse = async (ctx) => {
+    await ctx.route('**/api/upload', (r) => r.fulfill({ status: 413, contentType: 'application/json', body: JSON.stringify({ error: 'That file is too big. Try one under 10 MB.' }) }))
+    await ctx.route('**/api/whatif', (r) => r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Unknown session' }) }))
+  }
+  const { ctx, page } = await open('?demo=1', { speed: 'instant', demo: true }, liveBase, refuse)
+  await drain(page)
+  await page.locator(`[data-chip="Let's start"]`).click()
+  await settle(page)
+  const chooser = page.waitForEvent('filechooser')
+  await page.locator('[data-action="upload"]').click()
+  await (await chooser).setFiles({ name: 'huge.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })
+  await settle(page)
+  const notice = await page.locator('[data-entry="notice"]').last().textContent().catch(() => '')
+  ok('a refused upload (413) says why and keeps Upload / Use a sample', (await mode(page)) === 'input' && notice?.includes('too big') && (await page.locator('[data-action="sample"]').count()) === 1, notice ?? '')
+  // on to the coach with samples, then a slider what-if that meets a lost session
+  for (let i = 0; i < 80 && (await page.locator('.app').getAttribute('data-step')) !== 'coach'; i++) {
+    const m = await mode(page)
+    if (m === 'next' || m === 'continue') await page.locator(`[data-action="${m}"]`).click()
+    else if (m === 'input') {
+      if (await page.locator('[data-action="sample"]').count()) await page.locator('[data-action="sample"]').click()
+      else await page.locator('[data-chip]').first().click()
+    }
+    await settle(page)
+  }
+  await drain(page)
+  if (await page.locator('[data-chip="3 months"]').count()) {
+    await page.locator('[data-chip="3 months"]').click()
+    await settle(page)
+    await drain(page)
+  }
+  await page.locator('[data-action="whatif-sheet"]').click()
+  await page.getByTestId('paydown').focus()
+  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowRight')
+  await page.locator('[data-action="whatif-run"]').click()
+  await settle(page)
+  await shot(page, 'session-gone')
+  ok('a lost session on /api/whatif offers Start again', (await page.locator('[data-action="restart-chat"]').count()) === 1 && (await page.locator('[data-action="retry"]').count()) === 0)
+  await page.locator('[data-action="restart-chat"]').click()
+  await settle(page)
+  ok('Start again begins a new conversation', (await page.locator('.app').getAttribute('data-step')) === 'greet')
   await ctx.close()
 }
 

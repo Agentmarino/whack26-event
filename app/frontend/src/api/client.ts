@@ -52,15 +52,19 @@ export function createMockApi(opts: { latencyMs?: number } = {}): Api {
   const forceError = param() === 'error'
   const uploadFail = param() === 'uploadfail'
   const latency = opts.latencyMs ?? 450
+  // A restart bumps the generation; a slower call from before it must not move the mock state on.
+  let generation = 0
   const fail = () => {
     throw new ApiFailure(FRIENDLY, 'mock=error')
   }
   return {
     mode: 'mock',
     async turn(req) {
+      const gen = req.input.type === 'start' ? ++generation : generation
       // The analysis turn takes a little longer, so the thinking pose has time to show.
       await wait(state.at === 'assessing' ? latency * 3 : latency)
       if (forceError) fail()
+      if (gen !== generation) throw new ApiFailure('That answer was for the earlier conversation.', 'stale')
       const out = mockTurn(state, req)
       state = out.state
       return out.response

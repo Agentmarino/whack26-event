@@ -40,6 +40,10 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
   const label = (p: PlanId) => (p === '3m' ? '3-month plan' : '6-month plan')
   // the lowest point of the missed-payment line carries its label
   const dip = risk.slice(1).reduce((a, b) => (b.v < a.v ? b : a), risk[1] ?? risk[0]!)
+  // Bigger text: the short label (the key under the chart says "if you miss one payment" in full).
+  const riskLabel = k > 1 ? `−${props.riskLine} (estimate)` : `−${props.riskLine} if you miss one payment (estimate)`
+  // does it fit to the right of the dip? (about 0.55 em per character) If not, it goes to the left.
+  const dipRight = x(dip.month) + 6 + riskLabel.length * font * 0.55 > W - pad.r
 
   return (
     <article className="slip p-3" data-card="projection" aria-label="Your score estimate">
@@ -80,8 +84,16 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
         <polyline points={line(chosen.map((p) => ({ month: p.month, v: mid(p) })))} fill="none" stroke="var(--chart-a)" strokeWidth="3" />
         {/* one missed payment */}
         <polyline points={line(risk)} fill="none" stroke="var(--risk)" strokeWidth="2.5" strokeDasharray="1.5 4" strokeLinecap="round" />
-        <text x={x(dip.month) + 6} y={y(dip.v) + font + 3} fontSize={font} textAnchor="start" fill="var(--bad-ink)" fontWeight="700">
-          −{props.riskLine} if you miss one payment (estimate)
+        {/* the label sits after the dip, or before it when the dip is in the right half (bigger text) */}
+        <text
+          x={x(dip.month) + (dipRight ? -6 : 6)}
+          y={y(dip.v) + font + 3}
+          fontSize={font}
+          textAnchor={dipRight ? 'end' : 'start'}
+          fill="var(--bad-ink)"
+          fontWeight="700"
+        >
+          {riskLabel}
         </text>
         {/* end labels */}
         <text
@@ -107,7 +119,7 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
         )}
         <circle cx={x(0)} cy={y(start.low)} r="4" fill="var(--ink)" />
         {/* months: from the engine's display month, as text */}
-        {props.plans['6m'].projection.map((p) => (
+        {props.plans['6m'].projection.filter((p) => k <= 1 || p.month % 2 === 0 || p.month === months).map((p) => (
           <text key={p.month} x={x(p.month)} y={H - 6} fontSize={font} textAnchor={p.month === 0 ? 'start' : p.month === months ? 'end' : 'middle'} fill="var(--ink-muted)">
             {p.month === 0 ? 'Now' : shortMonth(p.date)}
           </text>

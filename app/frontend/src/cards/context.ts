@@ -16,6 +16,7 @@ export interface WhyTrail {
 export interface CardCtx {
   result: EngineResult | null
   whatIfs: Record<string, WhatIfRun>
+  whatIfPlans: Record<string, PlanId>
   paperUrl: string | null
   plan: PlanId
   showWhy: (trail: WhyTrail) => void

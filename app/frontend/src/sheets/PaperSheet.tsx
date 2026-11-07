@@ -1,6 +1,6 @@
 // The summary sheet the agent slides across the desk: a paper-styled overlay with the same data the
 // cards use, and a Download button for the backend's PDF (paperUrl). No PDF yet: "Summary not ready yet".
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { EngineResult, PlanId } from 'shared'
 import type { Api } from '../api/client'
 import { dayLabel, range } from '../format'
@@ -16,51 +16,56 @@ export function PaperSheet(props: {
   plan: PlanId
   planChosen: boolean
 }) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'missing'>('idle')
+  // Checked when the sheet opens, so Download is a real link the person taps (iOS Safari ignores a
+  // scripted click that comes after an await). 'missing' = 404 or no backend: "Summary not ready yet".
+  const [status, setStatus] = useState<'checking' | 'ready' | 'missing'>('checking')
+  const [tried, setTried] = useState(false)
   const r = props.result?.result
   const decline = props.result?.decline
   const plan = r?.plans[props.plan]
   const end = plan?.projection[plan.projection.length - 1]
+  const { api, paperUrl, open } = props
 
-  const download = async () => {
-    if (!props.paperUrl) {
-      setStatus('missing')
-      return
-    }
-    setStatus('loading')
-    const blob = await props.api.paper(props.paperUrl)
-    if (!blob) {
-      setStatus('missing')
-      return
-    }
-    setStatus('idle')
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'credit-summary.pdf'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 30_000)
-  }
+  const check = useCallback(async () => {
+    if (!paperUrl) return setStatus('missing')
+    setStatus('checking')
+    setStatus((await api.paper(paperUrl)) ? 'ready' : 'missing')
+  }, [api, paperUrl])
+  useEffect(() => {
+    if (!open) return
+    setTried(false)
+    void check()
+  }, [open, check])
 
   return (
     <Sheet
       open={props.open}
-      onClose={() => {
-        setStatus('idle')
-        props.onClose()
-      }}
+      onClose={props.onClose}
       title="Your credit, on one sheet"
       testId="paper-sheet"
       footer={
         <div className="flex flex-col gap-2 border-t-2 border-dashed border-paper-line pt-3">
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" className="btn btn--ink" onClick={download} disabled={status === 'loading'} data-action="download">
-              {status === 'loading' ? 'Getting it…' : 'Download'}
-            </button>
+            {status === 'ready' && paperUrl ? (
+              <a className="btn btn--ink" href={paperUrl} download="credit-summary.pdf" target="_blank" rel="noopener" data-action="download">
+                Download
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="btn btn--ink"
+                disabled={status === 'checking'}
+                onClick={() => {
+                  setTried(true)
+                  void check()
+                }}
+                data-action="download"
+              >
+                {status === 'checking' ? 'Getting it…' : 'Download'}
+              </button>
+            )}
             <p role="status" className="text-[0.9375rem] font-bold" data-testid="paper-status">
-              {status === 'missing' ? 'Summary not ready yet' : ''}
+              {status === 'missing' && tried ? 'Summary not ready yet' : ''}
             </p>
           </div>
           <p className="text-sm text-ink-muted">Estimates for a demo. Not financial advice and not a lending decision.</p>

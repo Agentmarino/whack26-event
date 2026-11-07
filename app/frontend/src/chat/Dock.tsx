@@ -116,12 +116,12 @@ export function Dock(props: {
 
         {mode.kind === 'next' && (
           <div className="flex gap-2">
-            <button type="button" className="btn btn--primary flex-1" onClick={props.onNext} data-action="next">
-              {mode.typing ? 'Show all of it' : mode.more > 0 ? `Next  (${mode.more} more)` : 'Next'}
-              <span className="next-arrow -rotate-90" aria-hidden="true" />
+            <button type="button" className="btn btn--primary min-w-0 flex-[2]" onClick={props.onNext} data-action="next">
+              <span>{mode.typing ? 'Show all of it' : mode.more > 0 ? `Next (${mode.more} more)` : 'Next'}</span>
+              <span className="next-arrow flex-none -rotate-90" aria-hidden="true" />
             </button>
             {mode.more > 1 && (
-              <button type="button" className="btn btn--quiet" onClick={props.onShowAll} data-action="show-all">
+              <button type="button" className="btn btn--quiet min-w-0 flex-1" onClick={props.onShowAll} data-action="show-all">
                 Skip to end
               </button>
             )}

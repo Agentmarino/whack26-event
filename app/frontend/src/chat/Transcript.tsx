@@ -6,6 +6,7 @@ import { resolveRef, type AgentMessage } from 'shared'
 import { Card } from '../cards/Card'
 import { useCards } from '../cards/context'
 import { CompactCard } from '../cards/CompactCard'
+import { Guard } from '../ui/Guard'
 import { ToneIcon } from '../ui/Health'
 import { termsIn, type Term } from './glossary'
 import type { ConvState, Entry } from './useConversation'
@@ -36,7 +37,15 @@ export function Transcript(props: {
 
   const last = conv.entries[conv.entries.length - 1]
   return (
-    <div ref={scroller} className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-2" data-testid="transcript">
+    <div
+      ref={scroller}
+      className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-2"
+      data-testid="transcript"
+      // focusable so a keyboard user can scroll a tall card with the arrow keys (Safari will not otherwise)
+      tabIndex={0}
+      role="region"
+      aria-label="Conversation so far. Use the arrow keys to scroll."
+    >
       <ol className="flex flex-col gap-3" aria-label="Conversation so far">
         {conv.entries.map((e) => {
           const latest = !conv.pending && !conv.error && e === last
@@ -118,7 +127,9 @@ function CurrentLine(props: { msg: AgentMessage; printed: number; typed: boolean
           </span>
         )}
       </DialogueFrame>
-      <Card msg={msg} />
+      <Guard>
+        <Card msg={msg} />
+      </Guard>
       {props.typed && terms.length > 0 && <Explain terms={terms} open={open} setOpen={setOpen} />}
     </div>
   )
@@ -157,6 +168,13 @@ function Explain(props: { terms: Term[]; open: string | null; setOpen: (f: (o: s
 
 /** Card text the glossary should look at (so "hard search" in a decline reason gets explained too). */
 function cardTexts(msg: AgentMessage, ctx: ReturnType<typeof useCards>): string[] {
+  try {
+    return cardTextsUnsafe(msg, ctx)
+  } catch {
+    return []
+  }
+}
+function cardTextsUnsafe(msg: AgentMessage, ctx: ReturnType<typeof useCards>): string[] {
   const r = resolveRef(msg.ref, ctx.result, { whatIfs: ctx.whatIfs, paperUrl: ctx.paperUrl })
   if (!r) return []
   switch (r.on) {
@@ -216,7 +234,9 @@ function AgentHistory({ msg }: { msg: AgentMessage }) {
           {msg.text}
         </p>
       )}
-      <CompactCard msg={msg} />
+      <Guard>
+        <CompactCard msg={msg} />
+      </Guard>
     </div>
   )
 }
