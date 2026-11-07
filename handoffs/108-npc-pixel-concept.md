@@ -1,7 +1,7 @@
 ---
 id: 108
 title: Pixel-art NPC credit agent, first concept (character rig, animation states, stand scene)
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
