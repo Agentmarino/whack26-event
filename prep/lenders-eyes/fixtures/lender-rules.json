@@ -1,0 +1,251 @@
+{
+  "policy": {
+    "name": "Lender's Eyes illustrative card policy v1",
+    "illustrative": true,
+    "note": "Illustrative rules written for this demo. They are NOT any real lender's model. Thresholds are our own choices, each anchored on public UK guidance from a credit reference agency, quoted below. Real lenders use their own scorecards and criteria, and Experian says there is no universal pass mark.",
+    "written": "2026-11-06",
+    "decision_rule": "decline if any rule with severity 'decline' has result 'fail'. Otherwise 'approve_likely'. 'watch' results never block; they are shown in amber.",
+    "lender_decides_quote": {
+      "quote": "It’s always the lender that decides to approve or refuse your application. Credit reference agencies like us can’t decide, and we’re not told when you’re refused or why.",
+      "source_id": "S-EXP-REFUSED"
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "R-UTIL",
+      "name": "Card balances compared with limits",
+      "severity": "decline",
+      "measures": "Revolving utilisation: sum of the latest reported balances on revolving accounts (credit and store cards) divided by the sum of their limits, as a percentage to 1 decimal place. 'Latest reported' means the newest monthly entry whose reported_on date is on or before the check date.",
+      "fail_if": "utilisation above 50.0%",
+      "watch_if": "utilisation above 25.0% and up to 50.0%",
+      "pass_if": "utilisation 25.0% or below",
+      "evidence": "The latest reported card entry, the two entries before it, every card purchase of £40 or more in the data window, and every payment into the card from the current account.",
+      "plan_logic": "Target balance = 45% of the limit (the 50% line minus a 5-point safety margin), rounded down to the pound. Projected statement balance = current card balance minus scheduled card payments before the next statement date plus scheduled card spend before it. Amount to pay = projected statement balance minus target, rounded up to the next £5. Pay by = the day before the next statement date. Clears on = that statement date plus 56 days (the cautious end of Experian's 4 to 8 weeks).",
+      "basis": [
+        {
+          "source_id": "S-EXP-UTIL",
+          "quote": "As a rule of thumb, try to keep your credit utilisation below 25% to help protect your credit score."
+        },
+        {
+          "source_id": "S-EXP-UTIL",
+          "quote": "these balances are the ones lenders see, but they may not be your most recent balances as your report can take around 4 to 8 weeks to update."
+        },
+        {
+          "source_id": "S-EXP-LIMITS",
+          "quote": "Lenders may also take into account what proportion of your ‘revolving’ credit (usually credit and store cards) you’re regularly using. For example, if you’re maxing out your credit card limit each month, this may count against you."
+        }
+      ],
+      "our_choice": "The 50% decline line and the 45% plan target are ours. Experian's 25% is used as the watch line."
+    },
+    {
+      "rule_id": "R-SRCH",
+      "name": "Recent credit applications",
+      "severity": "decline",
+      "measures": "Number of hard searches with (check date minus search date) under 90 days. Soft searches are never counted: lenders cannot see them.",
+      "fail_if": "more than 1 hard search in the last 90 days",
+      "watch_if": "never",
+      "pass_if": "0 or 1 hard search in the last 90 days (within Experian's 'one every three months')",
+      "evidence": "Every hard search in the last 90 days. Soft searches are listed as 'not counted'.",
+      "plan_logic": "Sort hard searches newest first. The rule passes once the second newest is 90 days old: clears on = second newest search date plus 90 days, if no new application is made. Action: make no credit applications before that date.",
+      "basis": [
+        {
+          "source_id": "S-EXP-REFUSED",
+          "quote": "Try to minimise the number of credit applications you make. Aim for a maximum of one every three months"
+        },
+        {
+          "source_id": "S-EXP-SEARCH",
+          "quote": "Lots of credit applications in a short space of time may make companies think you’re in financial trouble, or that you rely too much on borrowing."
+        },
+        {
+          "source_id": "S-EXP-SEARCH",
+          "quote": "Most hard searches will stay on your credit report for 12 months."
+        },
+        {
+          "source_id": "S-EQX-RET",
+          "quote": "From the date on which a search is undertaken, we retain the associated footprint for two (2) years where the search is for debt collection purposes and one (1) year for other search footprints."
+        },
+        {
+          "source_id": "S-CO-MYTHS",
+          "quote": "Most eligibility check tools use a soft search, which does not affect your score and cannot be seen by lenders."
+        }
+      ],
+      "our_choice": "The 90-day window and the 'more than 1' line are ours, from Experian's 'one every three months'. Searches stay visible for 12 months; the rule only counts the last 90 days."
+    },
+    {
+      "rule_id": "R-ROLL",
+      "name": "Electoral roll at your current address",
+      "severity": "decline",
+      "measures": "Whether any electoral roll entry on the file is at the current address.",
+      "fail_if": "no electoral roll entry at the current address",
+      "watch_if": "never",
+      "pass_if": "an electoral roll entry exists at the current address",
+      "evidence": "The current address entry, the electoral roll entries on file, and rent or deposit transactions that show the move.",
+      "plan_logic": "Register by = check date plus 3 days. If the registration date falls in August to November (the annual canvass), clears on = 1 December of that year. Otherwise clears on = registration date plus 30 days.",
+      "basis": [
+        {
+          "source_id": "S-EXP-REFUSED",
+          "quote": "The lender couldn’t confirm your identity and address. This sometimes happens if you haven’t registered on the electoral roll, or if you’ve changed your name or address recently and didn’t make the lender aware"
+        },
+        {
+          "source_id": "S-EXP-ROLL",
+          "quote": "Once you’ve registered to vote, your electoral details should automatically appear on your credit report within 30 days."
+        },
+        {
+          "source_id": "S-EXP-ROLL",
+          "quote": "It usually runs from August to November. If you registered during this time, your electoral details should appear on your report from 1 December."
+        }
+      ],
+      "our_choice": "Treating 'not on the roll at the current address' as a decline reason is ours. Many real lenders would ask for other proof of address instead."
+    },
+    {
+      "rule_id": "R-LATE",
+      "name": "Late or missed payments",
+      "severity": "decline",
+      "measures": "Age in months of the newest payment-history entry with status 1 or worse (1 = one payment behind).",
+      "fail_if": "a late or missed payment in the last 12 months",
+      "watch_if": "the newest late or missed payment is 12 to 72 months old",
+      "pass_if": "no late or missed payment on the file",
+      "evidence": "Every payment-history entry with status 1 or worse.",
+      "plan_logic": "Cannot be paid off. Drops off the file on recorded date plus 6 years. Show that date.",
+      "basis": [
+        {
+          "source_id": "S-EXP-LATE",
+          "quote": "If a late payment is recorded on your report, it will stay there for six years. However, its impact on your score will reduce as the record ages. This is because lenders usually pay more attention to your most recent credit history."
+        }
+      ],
+      "our_choice": "The 12-month decline window is ours."
+    },
+    {
+      "rule_id": "R-PUBLIC",
+      "name": "Defaults and court judgments",
+      "severity": "decline",
+      "measures": "Defaults and CCJs on the file dated in the last 6 years.",
+      "fail_if": "any default or CCJ in the last 6 years",
+      "watch_if": "never",
+      "pass_if": "none",
+      "evidence": "Each default or CCJ entry.",
+      "plan_logic": "Drops off on its date plus 6 years. A CCJ paid within one calendar month of the judgment is not recorded.",
+      "basis": [
+        {
+          "source_id": "S-EXP-DEFAULT",
+          "quote": "A default will stay on your credit file for six years from the date of default, regardless of whether you pay off the debt."
+        },
+        {
+          "source_id": "S-EXP-CCJ",
+          "quote": "A CCJ will stay on your credit report for six years from the date of the judgement."
+        }
+      ],
+      "our_choice": "Declining on any default or CCJ is ours. Some lenders, including near-prime card lenders, do consider these applicants."
+    },
+    {
+      "rule_id": "R-DTI",
+      "name": "Debt repayments compared with income",
+      "severity": "decline",
+      "measures": "Monthly credit commitments (minimum card payments plus fixed credit-agreement payments such as phone contracts and loans) divided by monthly net income. Income = mean of salary credits in the last 3 complete calendar months of transactions. Percentage to 1 decimal place.",
+      "fail_if": "above 50.0%",
+      "watch_if": "30.0% to 50.0%",
+      "pass_if": "below 30.0%",
+      "evidence": "The salary credits used and the commitment lines used.",
+      "plan_logic": "Not needed for the demo profile. If it fails: monthly commitments must fall below 50% of income; show the £ gap.",
+      "basis": [
+        {
+          "source_id": "S-EXP-DTI",
+          "quote": "Good — Below 30% debt-to-income ratio could help you get better deals. OK — 30% to 40% is an acceptable debt-to-income ratio for many lenders, although some may accept up to 49% DTI. High — Over 50% DTI is seen as too risky by many lenders, although specialist lenders may be an option."
+        }
+      ],
+      "our_choice": "Experian's DTI guide does not say gross or net income. We use net salary credits from the transactions because that is what the data shows."
+    },
+    {
+      "rule_id": "R-HCSTC",
+      "name": "Payday and other high-cost short-term loans",
+      "severity": "watch",
+      "measures": "Transactions with category 'high_cost_credit' in the data window.",
+      "fail_if": "never (watch only)",
+      "watch_if": "one or more high-cost short-term credit transactions in the data window",
+      "pass_if": "none",
+      "evidence": "Each high-cost credit transaction.",
+      "plan_logic": "No action unless watch. If watch: avoid new high-cost loans before applying.",
+      "basis": [
+        {
+          "source_id": "S-EXP-PAYDAY",
+          "quote": "try to avoid getting a payday loan if you’ve got an important credit application coming up"
+        },
+        {
+          "source_id": "S-EXP-PAYDAY",
+          "quote": "a payday loan could suggest that you’re in financial difficulty or that you’re not good at budgeting."
+        },
+        {
+          "source_id": "S-EXP-CAAS",
+          "quote": "CaaS revealed for a provider of current accounts the 10% of customers with a high-cost short-term loan – and the 2% with more than one."
+        }
+      ],
+      "our_choice": "Watch only, because Experian also says payday loans usually do not damage a score if repaid on time."
+    },
+    {
+      "rule_id": "R-OD",
+      "name": "Overdraft use",
+      "severity": "decline",
+      "measures": "Days the current account closed below minus the arranged overdraft limit, and refused-payment transactions, in the data window. Also reports days in the arranged overdraft.",
+      "fail_if": "any day beyond the arranged limit or any refused payment",
+      "watch_if": "never",
+      "pass_if": "never beyond the arranged limit and no refused payments",
+      "evidence": "Days the balance was below zero (date and lowest balance).",
+      "plan_logic": "Not needed for the demo profile.",
+      "basis": [
+        {
+          "source_id": "S-EXP-OD",
+          "quote": "An arranged overdraft is unlikely to have a major impact on your credit score as long as you don’t go beyond your overdraft limit or have payments refused."
+        }
+      ],
+      "our_choice": "Declining on going beyond the limit is ours."
+    },
+    {
+      "rule_id": "R-HIST",
+      "name": "Length of credit history",
+      "severity": "watch",
+      "measures": "Months since the oldest account on the file was opened.",
+      "fail_if": "never (watch only)",
+      "watch_if": "under 12 months",
+      "pass_if": "12 months or more",
+      "evidence": "The oldest account.",
+      "plan_logic": "Passes on oldest-opened date plus 12 months.",
+      "basis": [
+        {
+          "source_id": "S-EXP-REFUSED",
+          "quote": "Your credit history isn’t substantial enough. Lenders like to see evidence that you’ve successfully repaid credit before."
+        }
+      ],
+      "our_choice": "The 12-month line is ours."
+    }
+  ],
+  "not_included": [
+    {
+      "topic": "Gambling transactions",
+      "why": "UNVERIFIED: no primary UK source saying how lenders treat gambling transactions was retrieved on 2026-11-06 (web search was refused partway through; MoneyHelper returned HTTP 403). Do not add a gambling rule without a source."
+    },
+    {
+      "topic": "Buy now pay later",
+      "why": "Left out to keep the demo to cited rules. How BNPL shows on credit files after regulation began was not checked today."
+    },
+    {
+      "topic": "Affordability rules in FCA CONC 5.2A",
+      "why": "UNVERIFIED: the FCA Handbook page is a JavaScript app and returned no text to curl on 2026-11-06. R-DTI is based on Experian's guide instead."
+    }
+  ],
+  "sources": [
+    {"source_id": "S-EXP-UTIL", "title": "Experian: What is a credit utilisation ratio?", "url": "https://www.experian.co.uk/consumer/guides/credit-utilisation-ratio.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-LIMITS", "title": "Experian: Credit limits", "url": "https://www.experian.co.uk/consumer/credit-cards/guides/credit-limits.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-SEARCH", "title": "Experian: Searches on your report, soft and hard credit checks", "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-REFUSED", "title": "Experian: Declined credit? What you should know and what to do next", "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EQX-RET", "title": "Equifax UK: Data retention summary", "url": "https://www.equifax.co.uk/crain/retention", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-ROLL", "title": "Experian: The electoral roll and your credit score", "url": "https://www.experian.co.uk/consumer/guides/electoral-roll.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-LATE", "title": "Experian: Late payments and your credit score", "url": "https://www.experian.co.uk/consumer/guides/late-payments.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-DEFAULT", "title": "Experian: Defaults", "url": "https://www.experian.co.uk/consumer/guides/defaults.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-CCJ", "title": "Experian: County court judgments", "url": "https://www.experian.co.uk/consumer/guides/ccjs.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-DTI", "title": "Experian: Debt-to-income ratio", "url": "https://www.experian.co.uk/consumer/guides/debt-to-income-ratio.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-PAYDAY", "title": "Experian: Payday loans and your credit score", "url": "https://www.experian.co.uk/consumer/loans/guides/payday-loans.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-CAAS", "title": "Experian: How account categorisation gives lenders the true picture", "url": "https://www.experian.co.uk/blogs/latest-thinking/automated-credit-decisions/how-account-categorisation-gives-lenders-the-true-picture/", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-OD", "title": "Experian: How does an overdraft affect your credit score?", "url": "https://www.experian.co.uk/consumer/guides/overdraft-credit-score.html", "retrieved": "2026-11-06"},
+    {"source_id": "S-CO-MYTHS", "title": "Capital One UK: Credit score myths", "url": "https://www.capitalone.co.uk/blog/credit-score-myths", "retrieved": "2026-11-06"}
+  ]
+}

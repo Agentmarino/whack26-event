@@ -1,0 +1,157 @@
+{
+  "synthetic": true,
+  "note": "Answer key for the demo profile. Every value was computed on 2026-11-06 by running the rules in lender-rules.json once by hand against transactions.csv and credit-file.json. Handoffs 103 and 105 must reproduce these exactly.",
+  "as_of": "2026-11-07",
+  "before": {
+    "profile_id": "jordan-before",
+    "decision": "decline",
+    "decline_reasons": [
+      {
+        "rule_id": "R-UTIL",
+        "measured": "94.5%",
+        "must_cite_any_of": [
+          "CARD-2026-09"
+        ],
+        "evidence_ids": [
+          "CARD-2026-09",
+          "CARD-2026-08",
+          "CARD-2026-07",
+          "TX-020",
+          "TX-022",
+          "TX-024",
+          "TX-027",
+          "TX-032",
+          "TX-007",
+          "TX-030",
+          "TX-051",
+          "TX-070"
+        ],
+        "story": "Furniture and moving costs went on the card (TX-020 £520.00, TX-022 £212.50, TX-024 £95.00, TX-027 £45.00, TX-032 £57.75); only the £25 minimum went in each month (TX-007, TX-030, TX-051, TX-070). Latest reported balance £1,134.22 of £1,200 (CARD-2026-09, statement 2026-09-18, reported 2026-10-15)."
+      },
+      {
+        "rule_id": "R-SRCH",
+        "measured": "3 in 90 days",
+        "must_cite_any_of": [
+          "SRCH-01",
+          "SRCH-02",
+          "SRCH-03"
+        ],
+        "evidence_ids": [
+          "SRCH-01",
+          "SRCH-02",
+          "SRCH-03",
+          "SOFT-01"
+        ],
+        "story": "Hard searches on 2026-09-03 (65 days before as_of), 2026-10-12 (26 days) and 2026-10-29 (9 days). SOFT-01 is not counted."
+      },
+      {
+        "rule_id": "R-ROLL",
+        "measured": "not registered at current address",
+        "must_cite_any_of": [
+          "ER-01",
+          "ADDR-CUR"
+        ],
+        "evidence_ids": [
+          "ADDR-CUR",
+          "ADDR-PREV",
+          "ER-01",
+          "TX-001",
+          "TX-019",
+          "TX-023",
+          "TX-045",
+          "TX-064",
+          "TX-083"
+        ],
+        "story": "Current address ADDR-CUR from 2026-08-01. Only electoral roll entry ER-01 is at ADDR-PREV. Transactions show the move: last rent to Quadrant Student Lets TX-001 (2026-07-01), deposit to Hollis Lettings TX-019 (2026-07-29), rent to Hollis Lettings from TX-023 (2026-08-01)."
+      }
+    ],
+    "watch": [
+      {
+        "rule_id": "R-LATE",
+        "measured": "newest late payment 19 months old",
+        "evidence_ids": [
+          "PHN-2025-03"
+        ],
+        "drops_off": "2031-03-10"
+      }
+    ],
+    "pass": {
+      "R-PUBLIC": "none",
+      "R-DTI": "2.9% (commitments £57 / income £1,960.00)",
+      "R-HCSTC": "none",
+      "R-OD": "1 day overdrawn (TX-042, -£19.99), 0 beyond the £250 limit",
+      "R-HIST": "49 months (ACC-CUR opened 2022-09-12)"
+    }
+  },
+  "plan": {
+    "amount_gbp": 565,
+    "pay_by": "2026-11-17",
+    "projected_statement_balance_before_payment": 1102.2,
+    "target_balance": 540,
+    "statement_after_payment": 537.2,
+    "utilisation_after_pct": 44.8,
+    "util_clears_on": "2027-01-13",
+    "register_by": "2026-11-10",
+    "roll_clears_on": "2026-12-01",
+    "search_clears_on": "2027-01-10",
+    "approval_likely_from": "2027-01-13",
+    "affordability": {
+      "balance_now": 1230.23,
+      "bills_before_payday": 108.99,
+      "bill_lines": [
+        "TX-070 card DD £25 (next 2026-11-08)",
+        "TX-072 phone £32 (next 2026-11-10)",
+        "TX-075 gym £24.99 (next 2026-11-15)",
+        "TX-077 broadband £27 (next 2026-11-20)"
+      ],
+      "next_payday": "2026-11-28",
+      "lowest_projected": 556.24,
+      "buffer": 200,
+      "ok": true
+    },
+    "working": "Card balance now £1,127.20 (TX-085). Minus scheduled £25 Direct Debit on 2026-11-08 = £1,102.20. Target 45% of £1,200 = £540. £1,102.20 - £540 = £562.20, rounded up to the next £5 = £565. Statement 2026-11-18 = £537.20 = 44.8%. Clears 2026-11-18 + 56 days = 2027-01-13. Register by 2026-11-07 + 3 days = 2026-11-10, in the canvass months, so clears 2026-12-01. Second newest hard search 2026-10-12 + 90 days = 2027-01-10. Approval = latest of the three = 2027-01-13."
+  },
+  "after": {
+    "profile_id": "jordan-after",
+    "as_of": "2027-01-13",
+    "decision": "approve_likely",
+    "results": {
+      "R-UTIL": {
+        "result": "watch",
+        "measured": "44.8%"
+      },
+      "R-SRCH": {
+        "result": "pass",
+        "measured": "1 in 90 days"
+      },
+      "R-ROLL": {
+        "result": "pass",
+        "measured": "registered at current address"
+      },
+      "R-LATE": {
+        "result": "watch",
+        "measured": "newest late payment 22 months old"
+      },
+      "R-PUBLIC": {
+        "result": "pass",
+        "measured": "none"
+      },
+      "R-DTI": {
+        "result": "pass",
+        "measured": "2.9%"
+      },
+      "R-HCSTC": {
+        "result": "pass",
+        "measured": "none"
+      },
+      "R-OD": {
+        "result": "pass",
+        "measured": "1 day overdrawn, 0 beyond limit"
+      },
+      "R-HIST": {
+        "result": "pass",
+        "measured": "52 months"
+      }
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "note": "Closed list of advice claim types for the optional 'check the AI's advice' add-on (handoff 106). Claude only splits pasted advice into claims and picks one claim_type per claim. Code runs the data check, picks the verdict and confidence from this table, and fills the explanation template. Written 2026-11-06. Thresholds and confidences are our own illustrative choices.",
+  "verdicts": ["supported", "contradicted", "misleading", "cannot_check"],
+  "absence_evidence_ids": {
+    "FILE-ACCOUNTS": "The list of accounts on the file (used to show something is NOT on the file, e.g. a student loan)",
+    "FILE-ASSOC": "The financial associations list on the file (empty for Jordan)"
+  },
+  "claim_types": [
+    {
+      "claim_type": "AC-MULTI-APPLY",
+      "for_claude": "Advice to make several credit applications, apply to more lenders, or apply again soon.",
+      "data_check": "Count hard searches in the last 90 days (rule R-SRCH).",
+      "outcomes": [
+        {"when": "1 or more hard searches in the last 90 days", "verdict": "contradicted", "confidence": 0.9,
+         "template": "You already have {hard_90d} hard searches in the last 90 days, on {search_dates}. Each application adds another, and Experian suggests at most one every three months. A soft-search eligibility check does not show to lenders."},
+        {"when": "no hard searches in the last 90 days", "verdict": "misleading", "confidence": 0.7,
+         "template": "Each application adds a hard search, and Experian suggests at most one every three months. Apply to one lender at a time, after a soft-search eligibility check."}
+      ],
+      "evidence": "Each hard search in the last 90 days, plus sources S-EXP-REFUSED and S-CO-MYTHS.",
+      "sources": ["S-EXP-REFUSED", "S-CO-MYTHS"]
+    },
+    {
+      "claim_type": "AC-LATE-EXPIRY",
+      "for_claude": "A claim about how long late or missed payments stay on a credit file, or that one has already gone.",
+      "data_check": "Find late or missed payment entries (status 1 or worse). Drop-off date = recorded date plus 6 years.",
+      "outcomes": [
+        {"when": "a late entry exists and the claim says it is gone or lasts under 6 years", "verdict": "contradicted", "confidence": 0.95,
+         "template": "Your file still shows the late payment recorded on {late_recorded}. Experian says a late payment stays for six years, so it drops off on {late_drop}."},
+        {"when": "no late entry on the file", "verdict": "cannot_check", "confidence": null,
+         "template": "Your file has no late payments, so this does not apply to you."}
+      ],
+      "evidence": "The late entry, plus source S-EXP-LATE.",
+      "sources": ["S-EXP-LATE"]
+    },
+    {
+      "claim_type": "AC-ROLL",
+      "for_claude": "Advice to register to vote or join the electoral roll.",
+      "data_check": "Rule R-ROLL, plus the first rent or deposit payment to the current landlord.",
+      "outcomes": [
+        {"when": "R-ROLL fails", "verdict": "supported", "confidence": 0.9,
+         "template": "Your rent has gone to {landlord} since {first_rent_date}, but the electoral roll on your file is only at your previous address. Registering by {register_by} should show on your file from {roll_clears_on}."},
+        {"when": "R-ROLL passes", "verdict": "supported", "confidence": 0.6,
+         "template": "Good advice in general, and you are already on the electoral roll at your current address."}
+      ],
+      "evidence": "The first rent payment to the current landlord, ER entries, the current address, plus sources S-EXP-ROLL and S-EXP-REFUSED.",
+      "sources": ["S-EXP-ROLL", "S-EXP-REFUSED"]
+    },
+    {
+      "claim_type": "AC-PAY-BEFORE-STATEMENT",
+      "for_claude": "Advice to pay a card down before its statement date so a lower balance is reported.",
+      "data_check": "Find a revolving account with a statement_day and its latest reported entry.",
+      "outcomes": [
+        {"when": "a revolving account with a statement day exists", "verdict": "supported", "confidence": 0.7,
+         "template": "Your {card_lender} statement date is the {statement_day}th, and your file shows statement balances, for example £{latest_balance} on {latest_statement_date}. Paying before {next_statement_date} lowers the next one. Reporting dates vary by lender, and Experian says reports can take around 4 to 8 weeks to update."}
+      ],
+      "evidence": "The card account and its latest reported entry, plus source S-EXP-UTIL.",
+      "sources": ["S-EXP-UTIL"],
+      "caveat": "Confidence is 0.7 because we did not verify that every lender reports the statement balance. In our synthetic file the reported balance is the statement balance by construction."
+    },
+    {
+      "claim_type": "AC-STUDENT-LOAN",
+      "for_claude": "A claim that a student loan is hurting a credit application or credit score.",
+      "data_check": "Look for an account of type student_loan on the file.",
+      "outcomes": [
+        {"when": "no student loan on the file", "verdict": "contradicted", "confidence": 0.85,
+         "template": "There is no student loan on your file, and Capital One UK says a student loan does not directly affect your credit score. Your file shows {n_fail} other reasons instead: {fail_names}."}
+      ],
+      "evidence": "FILE-ACCOUNTS, plus source S-CO-MYTHS.",
+      "sources": ["S-CO-MYTHS"],
+      "caveat": "0.85, not higher, because a lender's own affordability check may still look at student loan deductions from pay. We do not see that."
+    },
+    {
+      "claim_type": "AC-ADDRESS-LINK",
+      "for_claude": "A claim that previous occupants, neighbours or the address itself affect your credit.",
+      "data_check": "Look at financial_associations on the file.",
+      "outcomes": [
+        {"when": "no financial associations", "verdict": "contradicted", "confidence": 0.9,
+         "template": "Your file shows no financial associations, and Capital One UK says previous occupants of your home cannot affect your credit score."}
+      ],
+      "evidence": "FILE-ASSOC, plus source S-CO-MYTHS.",
+      "sources": ["S-CO-MYTHS"]
+    },
+    {
+      "claim_type": "AC-PAYDAY",
+      "for_claude": "Advice to take a payday loan or other short-term high-cost loan.",
+      "data_check": "Count hard searches in the last 90 days (a new loan application adds one).",
+      "outcomes": [
+        {"when": "always", "verdict": "misleading", "confidence": 0.8,
+         "template": "Experian says a payday loan usually does not damage your score if repaid on time, but advises avoiding one before an important credit application. Applying would also add a hard search to the {hard_90d} you already have in the last 90 days."}
+      ],
+      "evidence": "Each hard search in the last 90 days, plus sources S-EXP-PAYDAY and S-EXP-SEARCH.",
+      "sources": ["S-EXP-PAYDAY", "S-EXP-SEARCH"]
+    },
+    {
+      "claim_type": "AC-CLOSE-CARD",
+      "for_claude": "Advice to close a credit card or have fewer cards to improve your chances.",
+      "data_check": "Count revolving accounts and their limits.",
+      "outcomes": [
+        {"when": "the card is the only revolving account", "verdict": "misleading", "confidence": 0.7,
+         "template": "Your {card_lender} is your only card and holds your whole £{limit} limit. Closing it removes that limit, and lenders look at how much of your available credit you use. Paying it down helps more."}
+      ],
+      "evidence": "The card account, plus source S-EXP-LIMITS.",
+      "sources": ["S-EXP-LIMITS"]
+    },
+    {
+      "claim_type": "AC-OTHER",
+      "for_claude": "Anything else, including market predictions, interest rate forecasts or general opinions.",
+      "data_check": "None.",
+      "outcomes": [
+        {"when": "always", "verdict": "cannot_check", "confidence": null,
+         "template": "We cannot check this against your file or transactions. Treat it as unverified."}
+      ],
+      "evidence": "None.",
+      "sources": []
+    }
+  ],
+  "extra_sources": [
+    {"source_id": "S-CO-MYTHS", "quotes": [
+      "Most eligibility check tools use a soft search, which does not affect your score and cannot be seen by lenders.",
+      "No, your student loan does not directly impact your credit score positively or negatively.",
+      "The financial history of a person is not attached to their address, and that means that the previous occupants of your house also cannot affect your credit score."
+    ], "url": "https://www.capitalone.co.uk/blog/credit-score-myths", "retrieved": "2026-11-06"},
+    {"source_id": "S-EXP-SEARCH", "quotes": [
+      "Each hard check is recorded on your report, so any company searching it will be able to see that you’ve applied for credit."
+    ], "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html", "retrieved": "2026-11-06"}
+  ]
+}

@@ -1,0 +1,1330 @@
+{
+  "_note": "One valid example response per endpoint, matching app/CONTRACT.md. Same demo story as the fixtures: SYNTHETIC person Jordan Ashby, fictional lenders. Written 2026-11-06. The R-UTIL, R-SRCH, R-ROLL and R-LATE plain_reason texts in the assess example are hand-written examples of what Claude should produce (they pass the number checker); they are not real Claude output.",
+  "GET /api/health": {
+    "status": "ok"
+  },
+  "POST /api/assess": {
+    "profile_id": "jordan-before",
+    "as_of": "2026-11-07",
+    "applicant": {
+      "name": "Jordan Ashby",
+      "synthetic": true
+    },
+    "policy": {
+      "name": "Lender's Eyes illustrative card policy v1",
+      "illustrative": true,
+      "note": "Illustrative rules based on public UK guidance from Experian, Equifax and Capital One UK. Not any real lender's model."
+    },
+    "decision": "decline",
+    "decision_line": "Declined under this illustrative policy. 3 reasons.",
+    "file_summary": {
+      "revolving_utilisation_pct": 94.5,
+      "hard_searches_90d": 3,
+      "on_roll_at_current_address": false,
+      "oldest_account_opened": "2022-09-12",
+      "monthly_income_gbp": 1960.0,
+      "dti_pct": 2.9,
+      "data_window": {
+        "from": "2026-07-01",
+        "to": "2026-11-06"
+      }
+    },
+    "rules": [
+      {
+        "rule_id": "R-UTIL",
+        "name": "Card balances compared with limits",
+        "severity": "decline",
+        "result": "fail",
+        "measured": "94.5%",
+        "threshold": "fail above 50%, watch above 25%",
+        "clears_on": "2027-01-13",
+        "plain_reason": "Your Larkfield Card was last reported at £1,134.22 against a £1,200 limit, which is 94.5%. This policy declines above 50%. The balance jumped when furniture and moving costs went on the card in late July and early August, and since then only the £25 minimum has gone in each month.",
+        "explained_by": "claude",
+        "cited_ids": [
+          "CARD-2026-09",
+          "TX-020",
+          "TX-022",
+          "TX-024",
+          "TX-070"
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "CARD-2026-09",
+            "date": "2026-09-18",
+            "label": "Larkfield Card balance, reported 2026-10-15 (limit £1,200)",
+            "amount_gbp": 1134.22
+          },
+          {
+            "kind": "file",
+            "id": "CARD-2026-08",
+            "date": "2026-08-18",
+            "label": "Larkfield Card balance, reported 2026-09-14 (limit £1,200)",
+            "amount_gbp": 1150.23
+          },
+          {
+            "kind": "file",
+            "id": "CARD-2026-07",
+            "date": "2026-07-18",
+            "label": "Larkfield Card balance, reported 2026-08-14 (limit £1,200)",
+            "amount_gbp": 235.99
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-020",
+            "date": "2026-07-30",
+            "label": "OAKLEAF FURNITURE COVENTRY (card)",
+            "amount_gbp": -520.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-022",
+            "date": "2026-07-31",
+            "label": "CASTLEFORD HOME STORE (card)",
+            "amount_gbp": -212.5
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-024",
+            "date": "2026-08-01",
+            "label": "VANSHARE MOVES (card)",
+            "amount_gbp": -95.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-027",
+            "date": "2026-08-03",
+            "label": "BRIGHTWIRE BROADBAND SETUP (card)",
+            "amount_gbp": -45.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-032",
+            "date": "2026-08-09",
+            "label": "CASTLEFORD HOME STORE (card)",
+            "amount_gbp": -57.75
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-007",
+            "date": "2026-07-08",
+            "label": "LARKFIELD CARD PAYMENT DD (current account)",
+            "amount_gbp": -25.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-030",
+            "date": "2026-08-08",
+            "label": "LARKFIELD CARD PAYMENT DD (current account)",
+            "amount_gbp": -25.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-051",
+            "date": "2026-09-08",
+            "label": "LARKFIELD CARD PAYMENT DD (current account)",
+            "amount_gbp": -25.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-070",
+            "date": "2026-10-08",
+            "label": "LARKFIELD CARD PAYMENT DD (current account)",
+            "amount_gbp": -25.0
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: What is a credit utilisation ratio?",
+            "url": "https://www.experian.co.uk/consumer/guides/credit-utilisation-ratio.html",
+            "quote": "As a rule of thumb, try to keep your credit utilisation below 25% to help protect your credit score."
+          },
+          {
+            "title": "Experian: What is a credit utilisation ratio?",
+            "url": "https://www.experian.co.uk/consumer/guides/credit-utilisation-ratio.html",
+            "quote": "these balances are the ones lenders see, but they may not be your most recent balances as your report can take around 4 to 8 weeks to update."
+          },
+          {
+            "title": "Experian: Credit limits",
+            "url": "https://www.experian.co.uk/consumer/credit-cards/guides/credit-limits.html",
+            "quote": "Lenders may also take into account what proportion of your ‘revolving’ credit (usually credit and store cards) you’re regularly using. For example, if you’re maxing out your credit card limit each month, this may count against you."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-SRCH",
+        "name": "Recent credit applications",
+        "severity": "decline",
+        "result": "fail",
+        "measured": "3 in 90 days",
+        "threshold": "fail above 1 in 90 days",
+        "clears_on": "2027-01-10",
+        "plain_reason": "Three lenders ran hard searches on your file in the last 90 days: Orbitel Mobile on 2026-09-03, Pennant Finance on 2026-10-12 and Brindlemoor Bank on 2026-10-29. This policy declines more than 1. Each new application adds another search, so applying again now would make this worse.",
+        "explained_by": "claude",
+        "cited_ids": [
+          "SRCH-01",
+          "SRCH-02",
+          "SRCH-03"
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "SRCH-01",
+            "date": "2026-09-03",
+            "label": "Hard search: Orbitel Mobile, mobile phone contract application",
+            "amount_gbp": null
+          },
+          {
+            "kind": "file",
+            "id": "SRCH-02",
+            "date": "2026-10-12",
+            "label": "Hard search: Pennant Finance, personal loan application",
+            "amount_gbp": null
+          },
+          {
+            "kind": "file",
+            "id": "SRCH-03",
+            "date": "2026-10-29",
+            "label": "Hard search: Brindlemoor Bank, credit card application",
+            "amount_gbp": null
+          },
+          {
+            "kind": "file",
+            "id": "SOFT-01",
+            "date": "2026-11-05",
+            "label": "Soft search: your own credit report check (not counted, lenders cannot see it)",
+            "amount_gbp": null
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: Declined credit? What you should know and what to do next",
+            "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html",
+            "quote": "Try to minimise the number of credit applications you make. Aim for a maximum of one every three months"
+          },
+          {
+            "title": "Experian: Searches on your report, soft and hard credit checks",
+            "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html",
+            "quote": "Lots of credit applications in a short space of time may make companies think you’re in financial trouble, or that you rely too much on borrowing."
+          },
+          {
+            "title": "Experian: Searches on your report, soft and hard credit checks",
+            "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html",
+            "quote": "Most hard searches will stay on your credit report for 12 months."
+          },
+          {
+            "title": "Equifax UK: Data retention summary",
+            "url": "https://www.equifax.co.uk/crain/retention",
+            "quote": "From the date on which a search is undertaken, we retain the associated footprint for two (2) years where the search is for debt collection purposes and one (1) year for other search footprints."
+          },
+          {
+            "title": "Capital One UK: Credit score myths",
+            "url": "https://www.capitalone.co.uk/blog/credit-score-myths",
+            "quote": "Most eligibility check tools use a soft search, which does not affect your score and cannot be seen by lenders."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-ROLL",
+        "name": "Electoral roll at your current address",
+        "severity": "decline",
+        "result": "fail",
+        "measured": "not registered at current address",
+        "threshold": "must be registered at current address",
+        "clears_on": "2026-12-01",
+        "plain_reason": "Your file shows you on the electoral roll only at your previous address. Your rent has gone to Hollis Lettings since 2026-08-01, so you have moved, but the roll has not caught up. Lenders use the roll to confirm who you are and where you live.",
+        "explained_by": "claude",
+        "cited_ids": [
+          "ER-01",
+          "ADDR-CUR",
+          "TX-023"
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "ADDR-CUR",
+            "date": "2026-08-01",
+            "label": "Current address on file: Flat 4, 27 Wrenfield Road, Coventry (synthetic)",
+            "amount_gbp": null
+          },
+          {
+            "kind": "file",
+            "id": "ADDR-PREV",
+            "date": "2023-09-20",
+            "label": "Previous address: Room 12, Quadrant House, Coventry (synthetic)",
+            "amount_gbp": null
+          },
+          {
+            "kind": "file",
+            "id": "ER-01",
+            "date": "2023-12-01",
+            "label": "Electoral roll: registered at your previous address only",
+            "amount_gbp": null
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-001",
+            "date": "2026-07-01",
+            "label": "QUADRANT STUDENT LETS RENT JUL (current account)",
+            "amount_gbp": -520.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-019",
+            "date": "2026-07-29",
+            "label": "HOLLIS LETTINGS DEPOSIT REF WR27 (current account)",
+            "amount_gbp": -830.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-023",
+            "date": "2026-08-01",
+            "label": "HOLLIS LETTINGS RENT AUG (current account)",
+            "amount_gbp": -720.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-045",
+            "date": "2026-09-01",
+            "label": "HOLLIS LETTINGS RENT SEP (current account)",
+            "amount_gbp": -720.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-064",
+            "date": "2026-10-01",
+            "label": "HOLLIS LETTINGS RENT OCT (current account)",
+            "amount_gbp": -720.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-083",
+            "date": "2026-11-01",
+            "label": "HOLLIS LETTINGS RENT NOV (current account)",
+            "amount_gbp": -720.0
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: Declined credit? What you should know and what to do next",
+            "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html",
+            "quote": "The lender couldn’t confirm your identity and address. This sometimes happens if you haven’t registered on the electoral roll, or if you’ve changed your name or address recently and didn’t make the lender aware"
+          },
+          {
+            "title": "Experian: The electoral roll and your credit score",
+            "url": "https://www.experian.co.uk/consumer/guides/electoral-roll.html",
+            "quote": "Once you’ve registered to vote, your electoral details should automatically appear on your credit report within 30 days."
+          },
+          {
+            "title": "Experian: The electoral roll and your credit score",
+            "url": "https://www.experian.co.uk/consumer/guides/electoral-roll.html",
+            "quote": "It usually runs from August to November. If you registered during this time, your electoral details should appear on your report from 1 December."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-LATE",
+        "name": "Late or missed payments",
+        "severity": "decline",
+        "result": "watch",
+        "measured": "newest late payment 19 months old",
+        "threshold": "fail if under 12 months old, watch if 12 to 72 months old",
+        "clears_on": "2031-03-10",
+        "plain_reason": "One late payment on your Ashgrove Mobile contract was recorded on 2025-03-10. It is more than 12 months old, so this policy does not decline for it, but it stays on your file until 2031-03-10.",
+        "explained_by": "claude",
+        "cited_ids": [
+          "PHN-2025-03"
+        ],
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "PHN-2025-03",
+            "date": "2025-03-10",
+            "label": "Ashgrove Mobile: payment recorded 1 month late",
+            "amount_gbp": null
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: Late payments and your credit score",
+            "url": "https://www.experian.co.uk/consumer/guides/late-payments.html",
+            "quote": "If a late payment is recorded on your report, it will stay there for six years. However, its impact on your score will reduce as the record ages. This is because lenders usually pay more attention to your most recent credit history."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-PUBLIC",
+        "name": "Defaults and court judgments",
+        "severity": "decline",
+        "result": "pass",
+        "measured": "none",
+        "threshold": "fail if any in the last 6 years",
+        "clears_on": null,
+        "plain_reason": "No defaults or court judgments on your file.",
+        "explained_by": "template",
+        "cited_ids": [],
+        "evidence": [],
+        "sources": [
+          {
+            "title": "Experian: Defaults",
+            "url": "https://www.experian.co.uk/consumer/guides/defaults.html",
+            "quote": "A default will stay on your credit file for six years from the date of default, regardless of whether you pay off the debt."
+          },
+          {
+            "title": "Experian: County court judgments",
+            "url": "https://www.experian.co.uk/consumer/guides/ccjs.html",
+            "quote": "A CCJ will stay on your credit report for six years from the date of the judgement."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-DTI",
+        "name": "Debt repayments compared with income",
+        "severity": "decline",
+        "result": "pass",
+        "measured": "2.9%",
+        "threshold": "fail above 50%, watch from 30%",
+        "clears_on": null,
+        "plain_reason": "Your credit repayments are 2.9% of your monthly income of £1,960.00. Under 30% is good.",
+        "explained_by": "template",
+        "cited_ids": [],
+        "evidence": [
+          {
+            "kind": "transaction",
+            "id": "TX-043",
+            "date": "2026-08-28",
+            "label": "HALDEN ANALYTICS LTD SALARY (current account)",
+            "amount_gbp": 1960.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-062",
+            "date": "2026-09-28",
+            "label": "HALDEN ANALYTICS LTD SALARY (current account)",
+            "amount_gbp": 1960.0
+          },
+          {
+            "kind": "transaction",
+            "id": "TX-081",
+            "date": "2026-10-28",
+            "label": "HALDEN ANALYTICS LTD SALARY (current account)",
+            "amount_gbp": 1960.0
+          },
+          {
+            "kind": "file",
+            "id": "ACC-CARD",
+            "date": "2025-01-06",
+            "label": "Larkfield Card minimum payment per month",
+            "amount_gbp": 25.0
+          },
+          {
+            "kind": "file",
+            "id": "ACC-PHONE",
+            "date": "2024-03-10",
+            "label": "Ashgrove Mobile contract payment per month",
+            "amount_gbp": 32.0
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: Debt-to-income ratio",
+            "url": "https://www.experian.co.uk/consumer/guides/debt-to-income-ratio.html",
+            "quote": "Good — Below 30% debt-to-income ratio could help you get better deals. OK — 30% to 40% is an acceptable debt-to-income ratio for many lenders, although some may accept up to 49% DTI. High — Over 50% DTI is seen as too risky by many lenders, although specialist lenders may be an option."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-HCSTC",
+        "name": "Payday and other high-cost short-term loans",
+        "severity": "watch",
+        "result": "pass",
+        "measured": "none",
+        "threshold": "watch if any",
+        "clears_on": null,
+        "plain_reason": "No payday or other high-cost short-term loans in your transactions.",
+        "explained_by": "template",
+        "cited_ids": [],
+        "evidence": [],
+        "sources": [
+          {
+            "title": "Experian: Payday loans and your credit score",
+            "url": "https://www.experian.co.uk/consumer/loans/guides/payday-loans.html",
+            "quote": "try to avoid getting a payday loan if you’ve got an important credit application coming up"
+          },
+          {
+            "title": "Experian: Payday loans and your credit score",
+            "url": "https://www.experian.co.uk/consumer/loans/guides/payday-loans.html",
+            "quote": "a payday loan could suggest that you’re in financial difficulty or that you’re not good at budgeting."
+          },
+          {
+            "title": "Experian: How account categorisation gives lenders the true picture",
+            "url": "https://www.experian.co.uk/blogs/latest-thinking/automated-credit-decisions/how-account-categorisation-gives-lenders-the-true-picture/",
+            "quote": "CaaS revealed for a provider of current accounts the 10% of customers with a high-cost short-term loan – and the 2% with more than one."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-OD",
+        "name": "Overdraft use",
+        "severity": "decline",
+        "result": "pass",
+        "measured": "1 day overdrawn, 0 beyond limit",
+        "threshold": "fail if ever beyond the arranged limit",
+        "clears_on": null,
+        "plain_reason": "You used your arranged overdraft on 1 day and never went beyond the £250 limit.",
+        "explained_by": "template",
+        "cited_ids": [],
+        "evidence": [
+          {
+            "kind": "transaction",
+            "id": "TX-042",
+            "date": "2026-08-27",
+            "label": "RAILHOP TICKETS (current account): balance went to -£19.99, arranged limit £250",
+            "amount_gbp": -96.4
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: How does an overdraft affect your credit score?",
+            "url": "https://www.experian.co.uk/consumer/guides/overdraft-credit-score.html",
+            "quote": "An arranged overdraft is unlikely to have a major impact on your credit score as long as you don’t go beyond your overdraft limit or have payments refused."
+          }
+        ]
+      },
+      {
+        "rule_id": "R-HIST",
+        "name": "Length of credit history",
+        "severity": "watch",
+        "result": "pass",
+        "measured": "49 months",
+        "threshold": "watch if under 12 months",
+        "clears_on": null,
+        "plain_reason": "Your oldest account was opened on 2022-09-12, 49 months ago.",
+        "explained_by": "template",
+        "cited_ids": [],
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "ACC-CUR",
+            "date": "2022-09-12",
+            "label": "Brookmere Bank current account opened",
+            "amount_gbp": null
+          }
+        ],
+        "sources": [
+          {
+            "title": "Experian: Declined credit? What you should know and what to do next",
+            "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html",
+            "quote": "Your credit history isn’t substantial enough. Lenders like to see evidence that you’ve successfully repaid credit before."
+          }
+        ]
+      }
+    ]
+  },
+  "POST /api/plan": {
+    "profile_id": "jordan-before",
+    "as_of": "2026-11-07",
+    "headline": "Pay £565 to your Larkfield Card by 2026-11-17 and register to vote at your new address by 2026-11-10. Make no credit applications before 2027-01-13. Under this illustrative policy you are likely to be approved from 2027-01-13.",
+    "approval_likely_from": "2027-01-13",
+    "before_you_apply": "On or after 2027-01-13, use a soft-search eligibility checker before you apply, such as a lender's own checker. Lenders cannot see soft searches.",
+    "actions": [
+      {
+        "action_id": "A1",
+        "rule_id": "R-UTIL",
+        "kind": "pay",
+        "do": "Pay £565 to your Larkfield Card",
+        "amount_gbp": 565.0,
+        "by_date": "2026-11-17",
+        "clears_on": "2027-01-13",
+        "why_this_date": "Your statement date is the 18th. Paying by 2026-11-17, after the £25 Direct Debit on 2026-11-08, makes the 2026-11-18 statement £537.20, which is 44.8% of £1,200. Experian says reports can take around 4 to 8 weeks to update, so we allow 8 weeks."
+      },
+      {
+        "action_id": "A2",
+        "rule_id": "R-ROLL",
+        "kind": "register",
+        "do": "Register to vote at Flat 4, 27 Wrenfield Road",
+        "amount_gbp": null,
+        "by_date": "2026-11-10",
+        "clears_on": "2026-12-01",
+        "why_this_date": "Registrations during the annual canvass (August to November) appear on your credit report from 1 December, per Experian."
+      },
+      {
+        "action_id": "A3",
+        "rule_id": "R-SRCH",
+        "kind": "wait",
+        "do": "Make no credit applications until at least 2027-01-10",
+        "amount_gbp": null,
+        "by_date": "2027-01-10",
+        "clears_on": "2027-01-10",
+        "why_this_date": "Your second newest hard search (Pennant Finance, 2026-10-12) is 90 days old on 2027-01-10. After that only 1 search counts."
+      }
+    ],
+    "affordability": {
+      "balance_now_gbp": 1230.23,
+      "balance_date": "2026-11-06",
+      "bills_before_payday_gbp": 108.99,
+      "next_payday": "2026-11-28",
+      "lowest_projected_balance_gbp": 556.24,
+      "buffer_gbp": 200.0,
+      "ok": true,
+      "note": "From your regular payments only: card Direct Debit £25, phone £32, gym £24.99, broadband £27. Everyday spending is not included, so we keep at least £200 spare."
+    },
+    "after": {
+      "profile_id": "jordan-after",
+      "as_of": "2027-01-13",
+      "applicant": {
+        "name": "Jordan Ashby",
+        "synthetic": true
+      },
+      "policy": {
+        "name": "Lender's Eyes illustrative card policy v1",
+        "illustrative": true,
+        "note": "Illustrative rules based on public UK guidance from Experian, Equifax and Capital One UK. Not any real lender's model."
+      },
+      "decision": "approve_likely",
+      "decision_line": "Likely approved under this illustrative policy. 2 things to watch.",
+      "file_summary": {
+        "revolving_utilisation_pct": 44.8,
+        "hard_searches_90d": 1,
+        "on_roll_at_current_address": true,
+        "oldest_account_opened": "2022-09-12",
+        "monthly_income_gbp": 1960.0,
+        "dti_pct": 2.9,
+        "data_window": {
+          "from": "2026-07-01",
+          "to": "2026-11-06"
+        }
+      },
+      "rules": [
+        {
+          "rule_id": "R-UTIL",
+          "name": "Card balances compared with limits",
+          "severity": "decline",
+          "result": "watch",
+          "measured": "44.8%",
+          "threshold": "fail above 50%, watch above 25%",
+          "clears_on": null,
+          "plain_reason": "Your cards were last reported at 44.8% of their limits. That is under this policy's 50% line but above Experian's 25% rule of thumb.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "projected",
+              "id": "CARD-2026-11",
+              "date": "2026-11-18",
+              "label": "Larkfield Card balance, projected, reported by 2027-01-13 (limit £1,200)",
+              "amount_gbp": 537.2
+            },
+            {
+              "kind": "projected",
+              "id": "CARD-2026-10",
+              "date": "2026-10-18",
+              "label": "Larkfield Card balance, projected, reported by 2026-12-13 (limit £1,200)",
+              "amount_gbp": 1118.21
+            },
+            {
+              "kind": "file",
+              "id": "CARD-2026-09",
+              "date": "2026-09-18",
+              "label": "Larkfield Card balance, reported 2026-10-15 (limit £1,200)",
+              "amount_gbp": 1134.22
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-020",
+              "date": "2026-07-30",
+              "label": "OAKLEAF FURNITURE COVENTRY (card)",
+              "amount_gbp": -520.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-022",
+              "date": "2026-07-31",
+              "label": "CASTLEFORD HOME STORE (card)",
+              "amount_gbp": -212.5
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-024",
+              "date": "2026-08-01",
+              "label": "VANSHARE MOVES (card)",
+              "amount_gbp": -95.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-027",
+              "date": "2026-08-03",
+              "label": "BRIGHTWIRE BROADBAND SETUP (card)",
+              "amount_gbp": -45.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-032",
+              "date": "2026-08-09",
+              "label": "CASTLEFORD HOME STORE (card)",
+              "amount_gbp": -57.75
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-007",
+              "date": "2026-07-08",
+              "label": "LARKFIELD CARD PAYMENT DD (current account)",
+              "amount_gbp": -25.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-030",
+              "date": "2026-08-08",
+              "label": "LARKFIELD CARD PAYMENT DD (current account)",
+              "amount_gbp": -25.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-051",
+              "date": "2026-09-08",
+              "label": "LARKFIELD CARD PAYMENT DD (current account)",
+              "amount_gbp": -25.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-070",
+              "date": "2026-10-08",
+              "label": "LARKFIELD CARD PAYMENT DD (current account)",
+              "amount_gbp": -25.0
+            },
+            {
+              "kind": "projected",
+              "id": "P-01",
+              "date": "2026-11-08",
+              "label": "LARKFIELD CARD PAYMENT DD (current account, projected)",
+              "amount_gbp": -25.0
+            },
+            {
+              "kind": "projected",
+              "id": "P-02",
+              "date": "2026-11-17",
+              "label": "LARKFIELD CARD PAYMENT, plan action A1 (current account, projected)",
+              "amount_gbp": -565.0
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: What is a credit utilisation ratio?",
+              "url": "https://www.experian.co.uk/consumer/guides/credit-utilisation-ratio.html",
+              "quote": "As a rule of thumb, try to keep your credit utilisation below 25% to help protect your credit score."
+            },
+            {
+              "title": "Experian: What is a credit utilisation ratio?",
+              "url": "https://www.experian.co.uk/consumer/guides/credit-utilisation-ratio.html",
+              "quote": "these balances are the ones lenders see, but they may not be your most recent balances as your report can take around 4 to 8 weeks to update."
+            },
+            {
+              "title": "Experian: Credit limits",
+              "url": "https://www.experian.co.uk/consumer/credit-cards/guides/credit-limits.html",
+              "quote": "Lenders may also take into account what proportion of your ‘revolving’ credit (usually credit and store cards) you’re regularly using. For example, if you’re maxing out your credit card limit each month, this may count against you."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-SRCH",
+          "name": "Recent credit applications",
+          "severity": "decline",
+          "result": "pass",
+          "measured": "1 in 90 days",
+          "threshold": "fail above 1 in 90 days",
+          "clears_on": null,
+          "plain_reason": "1 hard search in the last 90 days. This policy allows 1.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "file",
+              "id": "SRCH-01",
+              "date": "2026-09-03",
+              "label": "Hard search: Orbitel Mobile, mobile phone contract application (older than 90 days, not counted)",
+              "amount_gbp": null
+            },
+            {
+              "kind": "file",
+              "id": "SRCH-02",
+              "date": "2026-10-12",
+              "label": "Hard search: Pennant Finance, personal loan application (older than 90 days, not counted)",
+              "amount_gbp": null
+            },
+            {
+              "kind": "file",
+              "id": "SRCH-03",
+              "date": "2026-10-29",
+              "label": "Hard search: Brindlemoor Bank, credit card application (counted)",
+              "amount_gbp": null
+            },
+            {
+              "kind": "file",
+              "id": "SOFT-01",
+              "date": "2026-11-05",
+              "label": "Soft search: your own credit report check (not counted, lenders cannot see it)",
+              "amount_gbp": null
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: Declined credit? What you should know and what to do next",
+              "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html",
+              "quote": "Try to minimise the number of credit applications you make. Aim for a maximum of one every three months"
+            },
+            {
+              "title": "Experian: Searches on your report, soft and hard credit checks",
+              "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html",
+              "quote": "Lots of credit applications in a short space of time may make companies think you’re in financial trouble, or that you rely too much on borrowing."
+            },
+            {
+              "title": "Experian: Searches on your report, soft and hard credit checks",
+              "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html",
+              "quote": "Most hard searches will stay on your credit report for 12 months."
+            },
+            {
+              "title": "Equifax UK: Data retention summary",
+              "url": "https://www.equifax.co.uk/crain/retention",
+              "quote": "From the date on which a search is undertaken, we retain the associated footprint for two (2) years where the search is for debt collection purposes and one (1) year for other search footprints."
+            },
+            {
+              "title": "Capital One UK: Credit score myths",
+              "url": "https://www.capitalone.co.uk/blog/credit-score-myths",
+              "quote": "Most eligibility check tools use a soft search, which does not affect your score and cannot be seen by lenders."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-ROLL",
+          "name": "Electoral roll at your current address",
+          "severity": "decline",
+          "result": "pass",
+          "measured": "registered at current address",
+          "threshold": "must be registered at current address",
+          "clears_on": null,
+          "plain_reason": "You are on the electoral roll at your current address.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "file",
+              "id": "ADDR-CUR",
+              "date": "2026-08-01",
+              "label": "Current address on file: Flat 4, 27 Wrenfield Road, Coventry (synthetic)",
+              "amount_gbp": null
+            },
+            {
+              "kind": "file",
+              "id": "ADDR-PREV",
+              "date": "2023-09-20",
+              "label": "Previous address: Room 12, Quadrant House, Coventry (synthetic)",
+              "amount_gbp": null
+            },
+            {
+              "kind": "file",
+              "id": "ER-01",
+              "date": "2023-12-01",
+              "label": "Electoral roll: registered at your previous address only",
+              "amount_gbp": null
+            },
+            {
+              "kind": "projected",
+              "id": "ER-02",
+              "date": "2026-12-01",
+              "label": "Electoral roll: registered at your current address (projected)",
+              "amount_gbp": null
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-001",
+              "date": "2026-07-01",
+              "label": "QUADRANT STUDENT LETS RENT JUL (current account)",
+              "amount_gbp": -520.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-019",
+              "date": "2026-07-29",
+              "label": "HOLLIS LETTINGS DEPOSIT REF WR27 (current account)",
+              "amount_gbp": -830.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-023",
+              "date": "2026-08-01",
+              "label": "HOLLIS LETTINGS RENT AUG (current account)",
+              "amount_gbp": -720.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-045",
+              "date": "2026-09-01",
+              "label": "HOLLIS LETTINGS RENT SEP (current account)",
+              "amount_gbp": -720.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-064",
+              "date": "2026-10-01",
+              "label": "HOLLIS LETTINGS RENT OCT (current account)",
+              "amount_gbp": -720.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-083",
+              "date": "2026-11-01",
+              "label": "HOLLIS LETTINGS RENT NOV (current account)",
+              "amount_gbp": -720.0
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: Declined credit? What you should know and what to do next",
+              "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html",
+              "quote": "The lender couldn’t confirm your identity and address. This sometimes happens if you haven’t registered on the electoral roll, or if you’ve changed your name or address recently and didn’t make the lender aware"
+            },
+            {
+              "title": "Experian: The electoral roll and your credit score",
+              "url": "https://www.experian.co.uk/consumer/guides/electoral-roll.html",
+              "quote": "Once you’ve registered to vote, your electoral details should automatically appear on your credit report within 30 days."
+            },
+            {
+              "title": "Experian: The electoral roll and your credit score",
+              "url": "https://www.experian.co.uk/consumer/guides/electoral-roll.html",
+              "quote": "It usually runs from August to November. If you registered during this time, your electoral details should appear on your report from 1 December."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-LATE",
+          "name": "Late or missed payments",
+          "severity": "decline",
+          "result": "watch",
+          "measured": "newest late payment 22 months old",
+          "threshold": "fail if under 12 months old, watch if 12 to 72 months old",
+          "clears_on": "2031-03-10",
+          "plain_reason": "A late payment was recorded on 2025-03-10. It is older than 12 months, so it is not a decline reason here. It stays on your file until 2031-03-10.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "file",
+              "id": "PHN-2025-03",
+              "date": "2025-03-10",
+              "label": "Ashgrove Mobile: payment recorded 1 month late",
+              "amount_gbp": null
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: Late payments and your credit score",
+              "url": "https://www.experian.co.uk/consumer/guides/late-payments.html",
+              "quote": "If a late payment is recorded on your report, it will stay there for six years. However, its impact on your score will reduce as the record ages. This is because lenders usually pay more attention to your most recent credit history."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-PUBLIC",
+          "name": "Defaults and court judgments",
+          "severity": "decline",
+          "result": "pass",
+          "measured": "none",
+          "threshold": "fail if any in the last 6 years",
+          "clears_on": null,
+          "plain_reason": "No defaults or court judgments on your file.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [],
+          "sources": [
+            {
+              "title": "Experian: Defaults",
+              "url": "https://www.experian.co.uk/consumer/guides/defaults.html",
+              "quote": "A default will stay on your credit file for six years from the date of default, regardless of whether you pay off the debt."
+            },
+            {
+              "title": "Experian: County court judgments",
+              "url": "https://www.experian.co.uk/consumer/guides/ccjs.html",
+              "quote": "A CCJ will stay on your credit report for six years from the date of the judgement."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-DTI",
+          "name": "Debt repayments compared with income",
+          "severity": "decline",
+          "result": "pass",
+          "measured": "2.9%",
+          "threshold": "fail above 50%, watch from 30%",
+          "clears_on": null,
+          "plain_reason": "Your credit repayments are 2.9% of your monthly income of £1,960.00. Under 30% is good.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "transaction",
+              "id": "TX-043",
+              "date": "2026-08-28",
+              "label": "HALDEN ANALYTICS LTD SALARY (current account)",
+              "amount_gbp": 1960.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-062",
+              "date": "2026-09-28",
+              "label": "HALDEN ANALYTICS LTD SALARY (current account)",
+              "amount_gbp": 1960.0
+            },
+            {
+              "kind": "transaction",
+              "id": "TX-081",
+              "date": "2026-10-28",
+              "label": "HALDEN ANALYTICS LTD SALARY (current account)",
+              "amount_gbp": 1960.0
+            },
+            {
+              "kind": "file",
+              "id": "ACC-CARD",
+              "date": "2025-01-06",
+              "label": "Larkfield Card minimum payment per month",
+              "amount_gbp": 25.0
+            },
+            {
+              "kind": "file",
+              "id": "ACC-PHONE",
+              "date": "2024-03-10",
+              "label": "Ashgrove Mobile contract payment per month",
+              "amount_gbp": 32.0
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: Debt-to-income ratio",
+              "url": "https://www.experian.co.uk/consumer/guides/debt-to-income-ratio.html",
+              "quote": "Good — Below 30% debt-to-income ratio could help you get better deals. OK — 30% to 40% is an acceptable debt-to-income ratio for many lenders, although some may accept up to 49% DTI. High — Over 50% DTI is seen as too risky by many lenders, although specialist lenders may be an option."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-HCSTC",
+          "name": "Payday and other high-cost short-term loans",
+          "severity": "watch",
+          "result": "pass",
+          "measured": "none",
+          "threshold": "watch if any",
+          "clears_on": null,
+          "plain_reason": "No payday or other high-cost short-term loans in your transactions.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [],
+          "sources": [
+            {
+              "title": "Experian: Payday loans and your credit score",
+              "url": "https://www.experian.co.uk/consumer/loans/guides/payday-loans.html",
+              "quote": "try to avoid getting a payday loan if you’ve got an important credit application coming up"
+            },
+            {
+              "title": "Experian: Payday loans and your credit score",
+              "url": "https://www.experian.co.uk/consumer/loans/guides/payday-loans.html",
+              "quote": "a payday loan could suggest that you’re in financial difficulty or that you’re not good at budgeting."
+            },
+            {
+              "title": "Experian: How account categorisation gives lenders the true picture",
+              "url": "https://www.experian.co.uk/blogs/latest-thinking/automated-credit-decisions/how-account-categorisation-gives-lenders-the-true-picture/",
+              "quote": "CaaS revealed for a provider of current accounts the 10% of customers with a high-cost short-term loan – and the 2% with more than one."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-OD",
+          "name": "Overdraft use",
+          "severity": "decline",
+          "result": "pass",
+          "measured": "1 day overdrawn, 0 beyond limit",
+          "threshold": "fail if ever beyond the arranged limit",
+          "clears_on": null,
+          "plain_reason": "You used your arranged overdraft on 1 day and never went beyond the £250 limit.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "transaction",
+              "id": "TX-042",
+              "date": "2026-08-27",
+              "label": "RAILHOP TICKETS (current account): balance went to -£19.99, arranged limit £250",
+              "amount_gbp": -96.4
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: How does an overdraft affect your credit score?",
+              "url": "https://www.experian.co.uk/consumer/guides/overdraft-credit-score.html",
+              "quote": "An arranged overdraft is unlikely to have a major impact on your credit score as long as you don’t go beyond your overdraft limit or have payments refused."
+            }
+          ]
+        },
+        {
+          "rule_id": "R-HIST",
+          "name": "Length of credit history",
+          "severity": "watch",
+          "result": "pass",
+          "measured": "52 months",
+          "threshold": "watch if under 12 months",
+          "clears_on": null,
+          "plain_reason": "Your oldest account was opened on 2022-09-12, 52 months ago.",
+          "explained_by": "template",
+          "cited_ids": [],
+          "evidence": [
+            {
+              "kind": "file",
+              "id": "ACC-CUR",
+              "date": "2022-09-12",
+              "label": "Brookmere Bank current account opened",
+              "amount_gbp": null
+            }
+          ],
+          "sources": [
+            {
+              "title": "Experian: Declined credit? What you should know and what to do next",
+              "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html",
+              "quote": "Your credit history isn’t substantial enough. Lenders like to see evidence that you’ve successfully repaid credit before."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "POST /api/check-advice": {
+    "profile_id": "jordan-before",
+    "claims": [
+      {
+        "claim_id": "C1",
+        "quote": "Apply for two or three other cards this week, so at least one of them says yes.",
+        "claim_type": "AC-MULTI-APPLY",
+        "verdict": "contradicted",
+        "confidence": 0.9,
+        "explanation": "You already have 3 hard searches in the last 90 days, on 2026-09-03, 2026-10-12 and 2026-10-29. Each application adds another, and Experian suggests at most one every three months. A soft-search eligibility check does not show to lenders.",
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "SRCH-01",
+            "label": "Hard search 2026-09-03: Orbitel Mobile",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "SRCH-02",
+            "label": "Hard search 2026-10-12: Pennant Finance",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "SRCH-03",
+            "label": "Hard search 2026-10-29: Brindlemoor Bank",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-REFUSED",
+            "label": "Experian: Declined credit? What you should know and what to do next",
+            "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html"
+          },
+          {
+            "kind": "source",
+            "id": "S-CO-MYTHS",
+            "label": "Capital One UK: Credit score myths",
+            "url": "https://www.capitalone.co.uk/blog/credit-score-myths"
+          }
+        ]
+      },
+      {
+        "claim_id": "C2",
+        "quote": "Don't worry about the late phone payment from March 2025. Late payments drop off your file after 12 months, so it is already gone.",
+        "claim_type": "AC-LATE-EXPIRY",
+        "verdict": "contradicted",
+        "confidence": 0.95,
+        "explanation": "Your file still shows the late payment recorded on 2025-03-10. Experian says a late payment stays for six years, so it drops off on 2031-03-10.",
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "PHN-2025-03",
+            "label": "Ashgrove Mobile: payment recorded 1 month late, 2025-03-10",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-LATE",
+            "label": "Experian: Late payments and your credit score",
+            "url": "https://www.experian.co.uk/consumer/guides/late-payments.html"
+          }
+        ]
+      },
+      {
+        "claim_id": "C3",
+        "quote": "Register to vote at your new address. Lenders use the electoral roll to confirm where you live.",
+        "claim_type": "AC-ROLL",
+        "verdict": "supported",
+        "confidence": 0.9,
+        "explanation": "Your rent has gone to Hollis Lettings since 2026-08-01, but the electoral roll on your file is only at your previous address. Registering by 2026-11-10 should show on your file from 2026-12-01.",
+        "evidence": [
+          {
+            "kind": "transaction",
+            "id": "TX-023",
+            "label": "2026-08-01 HOLLIS LETTINGS RENT AUG £720.00",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "ER-01",
+            "label": "Electoral roll: previous address only",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "ADDR-CUR",
+            "label": "Current address from 2026-08-01",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-ROLL",
+            "label": "Experian: The electoral roll and your credit score",
+            "url": "https://www.experian.co.uk/consumer/guides/electoral-roll.html"
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-REFUSED",
+            "label": "Experian: Declined credit? What you should know and what to do next",
+            "url": "https://www.experian.co.uk/consumer/guides/refused-credit.html"
+          }
+        ]
+      },
+      {
+        "claim_id": "C4",
+        "quote": "Pay your card down before the statement date, so a lower balance gets reported.",
+        "claim_type": "AC-PAY-BEFORE-STATEMENT",
+        "verdict": "supported",
+        "confidence": 0.7,
+        "explanation": "Your Larkfield Card statement date is the 18th, and your file shows statement balances, for example £1,134.22 on 2026-09-18. Paying before 2026-11-18 lowers the next one. Reporting dates vary by lender, and Experian says reports can take around 4 to 8 weeks to update.",
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "ACC-CARD",
+            "label": "Larkfield Card, statement day 18",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "CARD-2026-09",
+            "label": "Statement 2026-09-18: £1,134.22",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-UTIL",
+            "label": "Experian: What is a credit utilisation ratio?",
+            "url": "https://www.experian.co.uk/consumer/guides/credit-utilisation-ratio.html"
+          }
+        ]
+      },
+      {
+        "claim_id": "C5",
+        "quote": "Your student loan is probably what is dragging your applications down.",
+        "claim_type": "AC-STUDENT-LOAN",
+        "verdict": "contradicted",
+        "confidence": 0.85,
+        "explanation": "There is no student loan on your file, and Capital One UK says a student loan does not directly affect your credit score. Your file shows 3 other reasons instead: card balances compared with limits, recent credit applications, and the electoral roll at your current address.",
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "FILE-ACCOUNTS",
+            "label": "Accounts on file: current account, credit card, phone contract",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-CO-MYTHS",
+            "label": "Capital One UK: Credit score myths",
+            "url": "https://www.capitalone.co.uk/blog/credit-score-myths"
+          }
+        ]
+      },
+      {
+        "claim_id": "C6",
+        "quote": "The previous tenant at your new flat may have had debts, and that can count against you.",
+        "claim_type": "AC-ADDRESS-LINK",
+        "verdict": "contradicted",
+        "confidence": 0.9,
+        "explanation": "Your file shows no financial associations, and Capital One UK says previous occupants of your home cannot affect your credit score.",
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "FILE-ASSOC",
+            "label": "Financial associations on file: none",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-CO-MYTHS",
+            "label": "Capital One UK: Credit score myths",
+            "url": "https://www.capitalone.co.uk/blog/credit-score-myths"
+          }
+        ]
+      },
+      {
+        "claim_id": "C7",
+        "quote": "A small payday loan to clear the card balance would boost your score quickly.",
+        "claim_type": "AC-PAYDAY",
+        "verdict": "misleading",
+        "confidence": 0.8,
+        "explanation": "Experian says a payday loan usually does not damage your score if repaid on time, but advises avoiding one before an important credit application. Applying would also add a hard search to the 3 you already have in the last 90 days.",
+        "evidence": [
+          {
+            "kind": "file",
+            "id": "SRCH-01",
+            "label": "Hard search 2026-09-03: Orbitel Mobile",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "SRCH-02",
+            "label": "Hard search 2026-10-12: Pennant Finance",
+            "url": null
+          },
+          {
+            "kind": "file",
+            "id": "SRCH-03",
+            "label": "Hard search 2026-10-29: Brindlemoor Bank",
+            "url": null
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-PAYDAY",
+            "label": "Experian: Payday loans and your credit score",
+            "url": "https://www.experian.co.uk/consumer/loans/guides/payday-loans.html"
+          },
+          {
+            "kind": "source",
+            "id": "S-EXP-SEARCH",
+            "label": "Experian: Searches on your report, soft and hard credit checks",
+            "url": "https://www.experian.co.uk/consumer/guides/searches-and-credit-checks.html"
+          }
+        ]
+      },
+      {
+        "claim_id": "C8",
+        "quote": "Card interest rates are falling, so waiting a few months should get you a better deal.",
+        "claim_type": "AC-OTHER",
+        "verdict": "cannot_check",
+        "confidence": null,
+        "explanation": "We cannot check this against your file or transactions. Treat it as unverified.",
+        "evidence": []
+      }
+    ],
+    "summary": {
+      "supported": 2,
+      "contradicted": 4,
+      "misleading": 1,
+      "cannot_check": 1
+    }
+  }
+}

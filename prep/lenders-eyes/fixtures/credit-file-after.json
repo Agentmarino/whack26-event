@@ -1,0 +1,540 @@
+{
+  "synthetic": true,
+  "note": "SYNTHETIC projected credit file for the fictional Jordan Ashby on 2027-01-13, computed from credit-file.json by applying the plan. Entries marked projected did not happen; they are what the plan expects. Assumes no new card spending except the known subscription, the minimum Direct Debit each month, no new credit applications and no interest (synthetic card).",
+  "profile_id": "jordan-after",
+  "as_of": "2027-01-13",
+  "subject": {
+    "name": "Jordan Ashby",
+    "age_band": "18-24",
+    "synthetic": true,
+    "story": "Projected: Jordan followed the plan from 2026-11-07."
+  },
+  "addresses": [
+    {
+      "entry_id": "ADDR-CUR",
+      "line": "Flat 4, 27 Wrenfield Road, Coventry (synthetic)",
+      "from": "2026-08-01",
+      "to": null,
+      "current": true
+    },
+    {
+      "entry_id": "ADDR-PREV",
+      "line": "Room 12, Quadrant House, Coventry (synthetic)",
+      "from": "2023-09-20",
+      "to": "2026-07-31",
+      "current": false
+    }
+  ],
+  "electoral_roll": [
+    {
+      "entry_id": "ER-01",
+      "address_entry_id": "ADDR-PREV",
+      "registered_from": "2023-12-01",
+      "registered_to": null
+    },
+    {
+      "entry_id": "ER-02",
+      "address_entry_id": "ADDR-CUR",
+      "registered_from": "2026-12-01",
+      "registered_to": null,
+      "projected": true,
+      "projection_note": "You register by 2026-11-10. Registrations during the annual canvass (August to November) appear from 1 December, per Experian."
+    }
+  ],
+  "accounts": [
+    {
+      "account_id": "ACC-CUR",
+      "entry_id": "ACC-CUR",
+      "lender": "Brookmere Bank",
+      "type": "current_account",
+      "revolving": false,
+      "opened": "2022-09-12",
+      "arranged_overdraft_limit_gbp": 250,
+      "monthly": [
+        {
+          "entry_id": "CUR-2026-05",
+          "month": "2026-05",
+          "status": "0",
+          "beyond_arranged_limit": false
+        },
+        {
+          "entry_id": "CUR-2026-06",
+          "month": "2026-06",
+          "status": "0",
+          "beyond_arranged_limit": false
+        },
+        {
+          "entry_id": "CUR-2026-07",
+          "month": "2026-07",
+          "status": "0",
+          "beyond_arranged_limit": false
+        },
+        {
+          "entry_id": "CUR-2026-08",
+          "month": "2026-08",
+          "status": "0",
+          "beyond_arranged_limit": false
+        },
+        {
+          "entry_id": "CUR-2026-09",
+          "month": "2026-09",
+          "status": "0",
+          "beyond_arranged_limit": false
+        },
+        {
+          "entry_id": "CUR-2026-10",
+          "month": "2026-10",
+          "status": "0",
+          "beyond_arranged_limit": false
+        }
+      ]
+    },
+    {
+      "account_id": "ACC-CARD",
+      "entry_id": "ACC-CARD",
+      "lender": "Larkfield Card",
+      "type": "credit_card",
+      "revolving": true,
+      "opened": "2025-01-06",
+      "limit_gbp": 1200,
+      "statement_day": 18,
+      "payment_due_day": 8,
+      "minimum_payment_gbp": 25,
+      "interest_note": "Synthetic simplification: this card charges no interest, so the demo maths stays visible. Real cards charge interest.",
+      "monthly": [
+        {
+          "entry_id": "CARD-2025-01",
+          "statement_date": "2025-01-18",
+          "balance_gbp": 48.2,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-02-14"
+        },
+        {
+          "entry_id": "CARD-2025-02",
+          "statement_date": "2025-02-18",
+          "balance_gbp": 96.5,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-03-17"
+        },
+        {
+          "entry_id": "CARD-2025-03",
+          "statement_date": "2025-03-18",
+          "balance_gbp": 142.1,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-04-14"
+        },
+        {
+          "entry_id": "CARD-2025-04",
+          "statement_date": "2025-04-18",
+          "balance_gbp": 118.75,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-05-15"
+        },
+        {
+          "entry_id": "CARD-2025-05",
+          "statement_date": "2025-05-18",
+          "balance_gbp": 160.3,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-06-14"
+        },
+        {
+          "entry_id": "CARD-2025-06",
+          "statement_date": "2025-06-18",
+          "balance_gbp": 132.4,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-07-15"
+        },
+        {
+          "entry_id": "CARD-2025-07",
+          "statement_date": "2025-07-18",
+          "balance_gbp": 175.6,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-08-14"
+        },
+        {
+          "entry_id": "CARD-2025-08",
+          "statement_date": "2025-08-18",
+          "balance_gbp": 149.9,
+          "limit_gbp": 600,
+          "status": "0",
+          "reported_on": "2025-09-14"
+        },
+        {
+          "entry_id": "CARD-2025-09",
+          "statement_date": "2025-09-18",
+          "balance_gbp": 188.25,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2025-10-15"
+        },
+        {
+          "entry_id": "CARD-2025-10",
+          "statement_date": "2025-10-18",
+          "balance_gbp": 164.1,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2025-11-14"
+        },
+        {
+          "entry_id": "CARD-2025-11",
+          "statement_date": "2025-11-18",
+          "balance_gbp": 201.35,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2025-12-15"
+        },
+        {
+          "entry_id": "CARD-2025-12",
+          "statement_date": "2025-12-18",
+          "balance_gbp": 246.8,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-01-14"
+        },
+        {
+          "entry_id": "CARD-2026-01",
+          "statement_date": "2026-01-18",
+          "balance_gbp": 219.45,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-02-14"
+        },
+        {
+          "entry_id": "CARD-2026-02",
+          "statement_date": "2026-02-18",
+          "balance_gbp": 180.2,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-03-17"
+        },
+        {
+          "entry_id": "CARD-2026-03",
+          "statement_date": "2026-03-18",
+          "balance_gbp": 205.6,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-04-14"
+        },
+        {
+          "entry_id": "CARD-2026-04",
+          "statement_date": "2026-04-18",
+          "balance_gbp": 172.95,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-05-15"
+        },
+        {
+          "entry_id": "CARD-2026-05",
+          "statement_date": "2026-05-18",
+          "balance_gbp": 168.4,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-06-14"
+        },
+        {
+          "entry_id": "CARD-2026-06",
+          "statement_date": "2026-06-18",
+          "balance_gbp": 210.0,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-07-15"
+        },
+        {
+          "entry_id": "CARD-2026-07",
+          "statement_date": "2026-07-18",
+          "balance_gbp": 235.99,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-08-14"
+        },
+        {
+          "entry_id": "CARD-2026-08",
+          "statement_date": "2026-08-18",
+          "balance_gbp": 1150.23,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-09-14"
+        },
+        {
+          "entry_id": "CARD-2026-09",
+          "statement_date": "2026-09-18",
+          "balance_gbp": 1134.22,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-10-15"
+        },
+        {
+          "entry_id": "CARD-2026-10",
+          "statement_date": "2026-10-18",
+          "balance_gbp": 1118.21,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2026-12-13",
+          "projected": true,
+          "projection_note": "Statement already issued on 2026-10-18 but not yet reported on 2026-11-07. Reported-on date uses the cautious 56-day rule."
+        },
+        {
+          "entry_id": "CARD-2026-11",
+          "statement_date": "2026-11-18",
+          "balance_gbp": 537.2,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2027-01-13",
+          "projected": true,
+          "projection_note": "After the £25 Direct Debit on 2026-11-08 and the planned £565 payment by 2026-11-17. Reported-on date uses the cautious 56-day rule."
+        },
+        {
+          "entry_id": "CARD-2026-12",
+          "statement_date": "2026-12-18",
+          "balance_gbp": 521.19,
+          "limit_gbp": 1200,
+          "status": "0",
+          "reported_on": "2027-02-12",
+          "projected": true,
+          "projection_note": "Subscription £8.99 on 2026-12-02 and £25 Direct Debit on 2026-12-08. Not yet reported on the check date under the 56-day rule, so the rules do not see it."
+        }
+      ]
+    },
+    {
+      "account_id": "ACC-PHONE",
+      "entry_id": "ACC-PHONE",
+      "lender": "Ashgrove Mobile",
+      "type": "communications",
+      "revolving": false,
+      "opened": "2024-03-10",
+      "monthly_payment_gbp": 32,
+      "payment_history": [
+        {
+          "entry_id": "PHN-2024-11",
+          "month": "2024-11",
+          "status": "0",
+          "recorded_on": "2024-11-10"
+        },
+        {
+          "entry_id": "PHN-2024-12",
+          "month": "2024-12",
+          "status": "0",
+          "recorded_on": "2024-12-10"
+        },
+        {
+          "entry_id": "PHN-2025-01",
+          "month": "2025-01",
+          "status": "0",
+          "recorded_on": "2025-01-10"
+        },
+        {
+          "entry_id": "PHN-2025-02",
+          "month": "2025-02",
+          "status": "0",
+          "recorded_on": "2025-02-10"
+        },
+        {
+          "entry_id": "PHN-2025-03",
+          "month": "2025-03",
+          "status": "1",
+          "recorded_on": "2025-03-10"
+        },
+        {
+          "entry_id": "PHN-2025-04",
+          "month": "2025-04",
+          "status": "0",
+          "recorded_on": "2025-04-10"
+        },
+        {
+          "entry_id": "PHN-2025-05",
+          "month": "2025-05",
+          "status": "0",
+          "recorded_on": "2025-05-10"
+        },
+        {
+          "entry_id": "PHN-2025-06",
+          "month": "2025-06",
+          "status": "0",
+          "recorded_on": "2025-06-10"
+        },
+        {
+          "entry_id": "PHN-2025-07",
+          "month": "2025-07",
+          "status": "0",
+          "recorded_on": "2025-07-10"
+        },
+        {
+          "entry_id": "PHN-2025-08",
+          "month": "2025-08",
+          "status": "0",
+          "recorded_on": "2025-08-10"
+        },
+        {
+          "entry_id": "PHN-2025-09",
+          "month": "2025-09",
+          "status": "0",
+          "recorded_on": "2025-09-10"
+        },
+        {
+          "entry_id": "PHN-2025-10",
+          "month": "2025-10",
+          "status": "0",
+          "recorded_on": "2025-10-10"
+        },
+        {
+          "entry_id": "PHN-2025-11",
+          "month": "2025-11",
+          "status": "0",
+          "recorded_on": "2025-11-10"
+        },
+        {
+          "entry_id": "PHN-2025-12",
+          "month": "2025-12",
+          "status": "0",
+          "recorded_on": "2025-12-10"
+        },
+        {
+          "entry_id": "PHN-2026-01",
+          "month": "2026-01",
+          "status": "0",
+          "recorded_on": "2026-01-10"
+        },
+        {
+          "entry_id": "PHN-2026-02",
+          "month": "2026-02",
+          "status": "0",
+          "recorded_on": "2026-02-10"
+        },
+        {
+          "entry_id": "PHN-2026-03",
+          "month": "2026-03",
+          "status": "0",
+          "recorded_on": "2026-03-10"
+        },
+        {
+          "entry_id": "PHN-2026-04",
+          "month": "2026-04",
+          "status": "0",
+          "recorded_on": "2026-04-10"
+        },
+        {
+          "entry_id": "PHN-2026-05",
+          "month": "2026-05",
+          "status": "0",
+          "recorded_on": "2026-05-10"
+        },
+        {
+          "entry_id": "PHN-2026-06",
+          "month": "2026-06",
+          "status": "0",
+          "recorded_on": "2026-06-10"
+        },
+        {
+          "entry_id": "PHN-2026-07",
+          "month": "2026-07",
+          "status": "0",
+          "recorded_on": "2026-07-10"
+        },
+        {
+          "entry_id": "PHN-2026-08",
+          "month": "2026-08",
+          "status": "0",
+          "recorded_on": "2026-08-10"
+        },
+        {
+          "entry_id": "PHN-2026-09",
+          "month": "2026-09",
+          "status": "0",
+          "recorded_on": "2026-09-10"
+        },
+        {
+          "entry_id": "PHN-2026-10",
+          "month": "2026-10",
+          "status": "0",
+          "recorded_on": "2026-10-10"
+        }
+      ]
+    }
+  ],
+  "searches": [
+    {
+      "entry_id": "SRCH-01",
+      "date": "2026-09-03",
+      "organisation": "Orbitel Mobile",
+      "type": "hard",
+      "purpose": "mobile phone contract application",
+      "visible_to_lenders": true
+    },
+    {
+      "entry_id": "SRCH-02",
+      "date": "2026-10-12",
+      "organisation": "Pennant Finance",
+      "type": "hard",
+      "purpose": "personal loan application",
+      "visible_to_lenders": true
+    },
+    {
+      "entry_id": "SRCH-03",
+      "date": "2026-10-29",
+      "organisation": "Brindlemoor Bank",
+      "type": "hard",
+      "purpose": "credit card application",
+      "visible_to_lenders": true
+    },
+    {
+      "entry_id": "SOFT-01",
+      "date": "2026-11-05",
+      "organisation": "Own credit report check",
+      "type": "soft",
+      "purpose": "you checked your own report",
+      "visible_to_lenders": false
+    }
+  ],
+  "public_records": {
+    "defaults": [],
+    "ccjs": [],
+    "insolvencies": []
+  },
+  "financial_associations": [],
+  "not_on_file_note": "Student loans, rent, income and job title do not appear on a UK credit file. Income comes from the transactions.",
+  "projected_events": [
+    {
+      "event_id": "P-01",
+      "date": "2026-11-08",
+      "account_id": "ACC-CUR",
+      "description": "LARKFIELD CARD PAYMENT DD",
+      "amount_gbp": -25.0,
+      "projected": true,
+      "why": "Existing minimum Direct Debit"
+    },
+    {
+      "event_id": "P-02",
+      "date": "2026-11-17",
+      "account_id": "ACC-CUR",
+      "description": "LARKFIELD CARD PAYMENT (plan action A1)",
+      "amount_gbp": -565.0,
+      "projected": true,
+      "why": "Plan action A1"
+    },
+    {
+      "event_id": "P-03",
+      "date": "2026-11-10",
+      "account_id": null,
+      "description": "Register to vote at Flat 4, 27 Wrenfield Road (plan action A2)",
+      "amount_gbp": null,
+      "projected": true,
+      "why": "Plan action A2"
+    },
+    {
+      "event_id": "P-04",
+      "date": "2026-11-07 to 2027-01-13",
+      "account_id": null,
+      "description": "No new credit applications (plan action A3)",
+      "amount_gbp": null,
+      "projected": true,
+      "why": "Plan action A3"
+    }
+  ]
+}

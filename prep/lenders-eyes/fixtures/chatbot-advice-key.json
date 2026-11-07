@@ -1,0 +1,109 @@
+{
+  "synthetic": true,
+  "note": "Answer key for chatbot-advice.txt (SYNTHETIC advice text written for this pack, not a real chatbot's output). Expected result of POST /api/check-advice for profile jordan-before. Handoff 106 must reproduce the claim types and verdicts; the quotes must be verbatim substrings of the advice text.",
+  "profile_id": "jordan-before",
+  "advice_file": "chatbot-advice.txt",
+  "expected": [
+    {
+      "claim_id": "C1",
+      "quote": "Apply for two or three other cards this week, so at least one of them says yes.",
+      "claim_type": "AC-MULTI-APPLY",
+      "verdict": "contradicted",
+      "confidence": 0.9,
+      "evidence_ids": [
+        "SRCH-01",
+        "SRCH-02",
+        "SRCH-03",
+        "S-EXP-REFUSED",
+        "S-CO-MYTHS"
+      ]
+    },
+    {
+      "claim_id": "C2",
+      "quote": "Don't worry about the late phone payment from March 2025. Late payments drop off your file after 12 months, so it is already gone.",
+      "claim_type": "AC-LATE-EXPIRY",
+      "verdict": "contradicted",
+      "confidence": 0.95,
+      "evidence_ids": [
+        "PHN-2025-03",
+        "S-EXP-LATE"
+      ]
+    },
+    {
+      "claim_id": "C3",
+      "quote": "Register to vote at your new address. Lenders use the electoral roll to confirm where you live.",
+      "claim_type": "AC-ROLL",
+      "verdict": "supported",
+      "confidence": 0.9,
+      "evidence_ids": [
+        "TX-023",
+        "ER-01",
+        "ADDR-CUR",
+        "S-EXP-ROLL",
+        "S-EXP-REFUSED"
+      ]
+    },
+    {
+      "claim_id": "C4",
+      "quote": "Pay your card down before the statement date, so a lower balance gets reported.",
+      "claim_type": "AC-PAY-BEFORE-STATEMENT",
+      "verdict": "supported",
+      "confidence": 0.7,
+      "evidence_ids": [
+        "ACC-CARD",
+        "CARD-2026-09",
+        "S-EXP-UTIL"
+      ]
+    },
+    {
+      "claim_id": "C5",
+      "quote": "Your student loan is probably what is dragging your applications down.",
+      "claim_type": "AC-STUDENT-LOAN",
+      "verdict": "contradicted",
+      "confidence": 0.85,
+      "evidence_ids": [
+        "FILE-ACCOUNTS",
+        "S-CO-MYTHS"
+      ]
+    },
+    {
+      "claim_id": "C6",
+      "quote": "The previous tenant at your new flat may have had debts, and that can count against you.",
+      "claim_type": "AC-ADDRESS-LINK",
+      "verdict": "contradicted",
+      "confidence": 0.9,
+      "evidence_ids": [
+        "FILE-ASSOC",
+        "S-CO-MYTHS"
+      ]
+    },
+    {
+      "claim_id": "C7",
+      "quote": "A small payday loan to clear the card balance would boost your score quickly.",
+      "claim_type": "AC-PAYDAY",
+      "verdict": "misleading",
+      "confidence": 0.8,
+      "evidence_ids": [
+        "SRCH-01",
+        "SRCH-02",
+        "SRCH-03",
+        "S-EXP-PAYDAY",
+        "S-EXP-SEARCH"
+      ]
+    },
+    {
+      "claim_id": "C8",
+      "quote": "Card interest rates are falling, so waiting a few months should get you a better deal.",
+      "claim_type": "AC-OTHER",
+      "verdict": "cannot_check",
+      "confidence": null,
+      "evidence_ids": []
+    }
+  ],
+  "summary": {
+    "supported": 2,
+    "contradicted": 4,
+    "misleading": 1,
+    "cannot_check": 1
+  }
+}
