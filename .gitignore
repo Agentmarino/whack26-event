@@ -9,3 +9,4 @@ CLAUDE.local.md
 practice/
 .claude/*.lock
 .playwright-mcp/
+app/npc-concept/refs/
