@@ -97,3 +97,15 @@ The contract's `gesture` names are partly the kit's **states**. 114 maps them li
 | `coach` | `setState('coach')` (glasses go on and stay on) |
 
 The kit's own gestures (`point-down`, `point-side`, `chin`, `tap-calc`, `open-palm`) are free for 114 to add, for example `tap-calc` on a projection. Emotes map one to one (`neutral`, `warm`, `concerned`, `pleased`).
+
+## What the backend adds (113)
+How `app/backend` behaves beyond the table above. No schema change; every message is still an `AgentMessage`.
+- **Wrong input at an upload step** (text or a chip while `expects.kind` is `file`): one nudge ("Tap Upload to hand me your credit report, or Use a sample. You can skip this too."), step unchanged
+- **A report or bank statement out of order** (for example a bank file at `ask_report`): stored, one acknowledgement, step unchanged. After `assessing` it is not used ("start again to use it")
+- **A letter after `assessing`** (at diagnosis, paper or coach): one acknowledgement, and the result is re-run so `result.decline` and the paper include it. The `decline` step only runs if it arrives before the diagnosis is answered
+- **An answer the backend can't read** (age "old enough", income "lots"): a re-ask with id `q-age-again`/`q-income-again`, step and expects unchanged. `skip` on a question takes the engine default
+- **Mei and Alex** (report files with bank data and a letter inside): `ask_bank` says "Your sample already has three months of bank data in it..." and `ask_letter` says "Your sample already has the letter from <lender> in it...". Skip or a sample both move on. Their data questions differ from Priya's (Alex: roll and Barclaycard Direct Debit; Mei: none, she can't register to vote)
+- **No report at all**: age, income, housing, goal, horizon, bureau are asked in that order (7 question turns with no data questions is the most)
+- **Coach**: after the plan, sending exactly "3 months" or "6 months" (chip or text) shows that plan again; anything else is a what-if. What-if chips are built from the data (paydown only with a card balance, BNPL or gambling only when they are in the bank data)
+- **`writtenBy`**: `claude` on the headline, reason and step messages Claude worded and the checker passed; `template` on everything else. Numbers in the text are the engine's either way
+- **Message ids** are unique per session: a repeated message gets `-2`, `-3`... on its id
