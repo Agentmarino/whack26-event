@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TurnResponse, UploadResult } from 'shared'
 import type { TurnInput } from 'shared'
 import { buildApp } from '../src/app.ts'
-import { readLetterText, toDecline } from '../src/ingest.ts'
+import { readLetterText, tidyLetter, toDecline } from '../src/ingest.ts'
 import { templateWording } from '../src/messages.ts'
 
 const data = (p: string) => readFileSync(new URL(`../data/${p}`, import.meta.url))
@@ -113,6 +113,17 @@ describe('POST /api/upload', () => {
     const again = await turn(s.sessionId, { type: 'file', fileKind: 'credit_report', fileId: 'up-nope' })
     expect(again.step).toBe('ask_report')
     expect(again.messages[0]!.text).toMatch(/couldn't find that file/)
+  })
+})
+
+describe('letter reading tidy-up', () => {
+  it('drops the lender from the product: the finding already names it', () => {
+    const l = { lender: 'Capital One', product: 'Capital One Balance Transfer credit card', date: '2026-10-06', cra: 'Experian' as const, reasons: [] }
+    expect(tidyLetter(l).product).toBe('Balance Transfer credit card')
+    expect(tidyLetter({ ...l, product: "Capital One's Classic card" }).product).toBe('Classic card')
+    expect(tidyLetter({ ...l, product: 'Balance Transfer credit card' }).product).toBe('Balance Transfer credit card')
+    expect(tidyLetter({ ...l, product: 'Capital One' }).product).toBe('Capital One')
+    expect(tidyLetter({ ...l, product: null }).product).toBeNull()
   })
 })
 

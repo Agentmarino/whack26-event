@@ -283,6 +283,13 @@ const monthsSince = (iso: string | null): number => {
   return Math.max(0, (now.getUTCFullYear() - d.getUTCFullYear()) * 12 + (now.getUTCMonth() - d.getUTCMonth()) - (now.getUTCDate() < d.getUTCDate() ? 1 : 0))
 }
 
+/** "Capital One Balance Transfer credit card" from Capital One → "Balance Transfer credit card": the lender is shown already. */
+export function tidyLetter(l: LetterRead): LetterRead {
+  const lead = new RegExp(`^${l.lender.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:'s)?\\s+`, 'i')
+  const product = l.product?.replace(lead, '').trim() || l.product
+  return { ...l, product }
+}
+
 /** A read letter → the engine's Profile.decline (same product mapping as the engine's parseReport). */
 export function toDecline(l: LetterRead): NonNullable<Profile['decline']> {
   const product = l.product ?? null
@@ -298,7 +305,7 @@ async function ingestLetter(u: Upload, kind: Kind, mediaType?: string): Promise<
   const call = {
     purpose: 'read-letter',
     system: `You read UK credit decline letters (a lender saying no to a card, loan, phone contract or mortgage).
-Reply with JSON only: {"lender": "<who sent it>", "product": "<what was applied for, or null>", "date": "YYYY-MM-DD or null", "cra": "Experian"|"Equifax"|"TransUnion"|null (the credit reference agency named), "reasons": ["<each reason the letter actually states, quoted briefly>"]}.
+Reply with JSON only: {"lender": "<who sent it>", "product": "<what was applied for, without the lender's name, or null>", "date": "YYYY-MM-DD or null", "cra": "Experian"|"Equifax"|"TransUnion"|null (the credit reference agency named), "reasons": ["<each reason the letter actually states, quoted briefly>"]}.
 If the letter gives no specific reason, "reasons" is []. Never guess a reason the letter does not state.`,
     content: text !== null ? `The letter:\n"""\n${text.slice(0, 8000)}\n"""` : [block!, { type: 'text' as const, text: 'Read this letter. JSON only.' }],
     maxTokens: 1500,
@@ -311,7 +318,7 @@ If the letter gives no specific reason, "reasons" is []. Never guess a reason th
     const parsed = LetterRead.safeParse(jsonIn(reply.text))
     // For text, the lender Claude names must be in the letter.
     if (parsed.success && (text === null || text.toLowerCase().includes(parsed.data.lender.toLowerCase()))) {
-      read = parsed.data
+      read = tidyLetter(parsed.data)
       if (reply.from === 'claude') remember(call, reply.text)
     } else log('read-letter', parsed.success ? `lender ${parsed.data.lender} not in the text` : `bad JSON: ${parsed.error.issues[0]?.message}`)
   }
