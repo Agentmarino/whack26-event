@@ -68,6 +68,34 @@ What the extension draws (`extend.ts`, base coordinates: the base is x 0..127, y
 
 Every edge row and column next to the base continues the base's own colours, so there is no visible seam. To change the setting, change `scene.ts` and `extend.ts` together; the shared constants (`LIGHTS`, `LIGHT_W`, `MULLIONS`, `FROSTED`, `WINDOW_BAND`, `buildings`, `drawTallPlant`, `shineMap`, `frostMap`) are exported from `scene.ts` for that. `NpcScene` and `useIntegerScale` still work as before for a fixed-size scene.
 
+## Camera and desk layouts (117): Cap close
+`camera.ts` is a camera over `ExtendedScene`. It crops the scene and picks a whole number of device px per scene px (k), so Cap fills the screen instead of the desk. It crops the sides and the floor before it shrinks Cap, and it never blurs (every scene pixel is k x k device pixels).
+
+```tsx
+import { ExtendedScene, frameCamera } from './npc'
+const cam = frameCamera({ w, h, dpr, framing: 'B', restBox, dockBox, bubbleTop, bubbleSide, topPad: 4, corner: { w: 56, h: 56 }, minFill: h > w ? 0.55 : 0.5 })
+<ExtendedScene camera={{ k: cam.k, left: cam.base.left, top: cam.base.top }} layout={cam.layout} reserveBottom={0} ... />
+```
+- **Landmarks** (native px, `CAP_MARKS`, `DESK_MARKS`): head top row 13, chin line 43, mouth (68, 37), head x 55..81, shoulders and arms x 45..95, torso x 48..88, desk top row 73, fingers on the keyboard to row 76, the desk strip (tray, paper and card) to row 82.
+- **Framings** (`screens/117-framing-options.png` in the app):
+  - **A, head and shoulders**: rows 12..63 above the box. The desk is behind the box.
+  - **B, waist up (default)**: rows 12..82 above the box (hands, keyboard, tray, paper and card), with the monitor in frame.
+  - **C, hands**: rows 12..76 above the box. His fingers on the keyboard show; the tray, paper and card land behind the box.
+- **How k is picked:**
+  - k fits those rows between `topPad` and `h - restBox`.
+  - It is never below what makes rows 13..72 (head top to desk top) fill `minFill` of the height. That floor is 0.55 on a phone in portrait and 0.5 elsewhere.
+  - It is never so big that his shoulders and arms (A: his torso) are wider than the stage.
+  - C is at least B's k, and A at least C's k.
+- **Placement:**
+  - Horizontally, the window centres on his head. With the logo kept, it shifts to keep the monitor through his right arm in frame. When even that span does not fit, it keeps the monitor and his far arm may be cut.
+  - Vertically, the framing's last row sits on the box's top edge. If that would push his head off the top, the head wins and the desk goes behind the box.
+  - When his head is up among the corner icons, it stays between them.
+- **Modes**: 'box' when the box at rest fits under his chin and leaves the framing's rows in view. Otherwise 'bubble': the camera frames for the inputs alone and the app shows the line in a speech bubble.
+  - The bubble goes beside his head if there is room: right first, because the monitor is on the left.
+  - On a narrow screen where the box still fits under his chin (big text on a phone), it stays 'box' over his chest and the desk.
+  - Otherwise the bubble goes above his head.
+- **Desk layouts** (`DeskLayout`, `monitorFor`; `NpcScene` / `ExtendedScene` prop `layout`, `engine.setLayout`): 'standard' is the 110 desk. **'close'** is a smaller monitor at x 29..46, y 53..67, screen 30..44 x 54..63, right next to his left arm. His arm (the engine's front pass) covers only its right bezel, never the screen. The camera picks it when the window is narrower than the standard monitor-to-arm span (91 px), so the logo stays in frame on a phone. The logo file is shown unchanged on that screen, scaled to fit as before. Only the monitor moves; the tray, keyboard, paper, card, mug and plant keep their places.
+
 ## Style
 Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`, never in the app or the repo). "Do more with less": few, chunky pixels, each one deliberate.
 

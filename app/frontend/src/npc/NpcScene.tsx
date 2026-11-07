@@ -3,7 +3,7 @@ import { describeAgent } from './describe'
 import { NpcEngine, type AgentState, type Emote, type Gesture, type NpcSnapshot } from './engine'
 import type { Background, ColorName } from './palette'
 import { NATIVE_H, NATIVE_W } from './raster'
-import { CARD_END, CARD_SIZE, PAPER_END, PAPER_SIZE, SCREEN, TRAY } from './scene'
+import { CARD_END, CARD_SIZE, monitorFor, PAPER_END, PAPER_SIZE, TRAY, type DeskLayout } from './scene'
 import type { FacialHair } from './sprites/character'
 
 export interface NpcHandle {
@@ -48,6 +48,8 @@ export interface NpcSceneProps {
   facialHair?: FacialHair | 'stubble'
   /** Office behind the glass (default 'day'). Same as calling setBackground. */
   background?: Background
+  /** 117: where the desk monitor stands: 'standard' (default) or 'close' for a tight camera (see camera.ts). */
+  layout?: DeskLayout
 }
 
 // Hit areas in native pixels for the touch/keyboard/mouse hotspots over the canvas.
@@ -59,7 +61,7 @@ const PAPER_HOT = { x: PAPER_END.x - 3, y: PAPER_END.y - 4, w: PAPER_SIZE.w + 6,
  * scaled to fit (smoothing allowed for this image only); only white margin falls outside the screen.
  */
 const LOGO_FILE = { w: 231, h: 218, art: { x: 5, y: 71, w: 221, h: 76 } }
-function logoStyle(s: number): CSSProperties {
+function logoStyle(s: number, SCREEN: { w: number; h: number }): CSSProperties {
   const box = { w: SCREEN.w * s, h: SCREEN.h * s }
   const k = Math.min((box.w * 0.86) / LOGO_FILE.art.w, (box.h * 0.8) / LOGO_FILE.art.h)
   return {
@@ -114,6 +116,8 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   useEffect(() => {
     if (props.background) engineRef.current?.setBackground(props.background)
   }, [props.background])
+  useEffect(() => engineRef.current?.setLayout(props.layout ?? 'standard'), [props.layout])
+  const SCREEN = monitorFor(props.layout ?? 'standard').screen
 
   // Put the scene's top-left corner on a whole CSS pixel. Centring can leave it at x.5 device px
   // (iPhone 15: 9.83 CSS px = 29.48 device px), and WebKit could then paint the canvas one device px
@@ -222,7 +226,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
           className="npc-logo"
           style={{ left: SCREEN.x * s, top: SCREEN.y * s, width: SCREEN.w * s, height: SCREEN.h * s, visibility: logoOk ? 'visible' : 'hidden' }}
         >
-          <img src={props.wordmarkSrc} alt="" style={logoStyle(s)} onLoad={() => setLogoOk(true)} onError={() => setLogoOk(false)} />
+          <img src={props.wordmarkSrc} alt="" style={logoStyle(s, SCREEN)} onLoad={() => setLogoOk(true)} onError={() => setLogoOk(false)} />
         </div>
       )}
       <button

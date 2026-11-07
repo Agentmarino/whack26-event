@@ -21,6 +21,12 @@ export interface ExtendedSceneProps extends Omit<NpcSceneProps, 'scale'> {
   reserveTop?: number
   /** Called when the scale or the base scene's box changes. */
   onLayout?: (l: ExtendedSceneLayout) => void
+  /**
+   * 117: a camera (camera.ts, frameCamera) instead of the fit-the-frame layout: `k` device px per scene px and
+   * the base frame's top-left in CSS px, which may be off screen (the sides and the floor cropped). reserveTop and
+   * reserveBottom are then ignored.
+   */
+  camera?: { k: number; left: number; top: number } | null
 }
 
 /** Put an element's top-left on a whole CSS px with a relative offset (same rule as NpcScene, see 109). */
@@ -39,7 +45,7 @@ const typing = () =>
   window.matchMedia('(pointer: coarse)').matches
 
 export const ExtendedScene = forwardRef<NpcHandle, ExtendedSceneProps>(function ExtendedScene(props, ref) {
-  const { reserveBottom, reserveTop = 0, onLayout, onChange, ...sceneProps } = props
+  const { reserveBottom, reserveTop = 0, onLayout, onChange, camera, ...sceneProps } = props
   const wrapRef = useRef<HTMLDivElement>(null)
   const extRef = useRef<HTMLCanvasElement>(null)
   const baseRef = useRef<HTMLDivElement>(null)
@@ -85,10 +91,15 @@ export const ExtendedScene = forwardRef<NpcHandle, ExtendedSceneProps>(function 
     }
   }, [])
 
-  const layout = useMemo(
-    () => extendedLayout(box.w, box.h, reserveTop, reserveBottom, box.dpr),
-    [box.w, box.h, box.dpr, reserveTop, reserveBottom],
-  )
+  const camK = camera?.k
+  const camL = camera?.left
+  const camT = camera?.top
+  const layout = useMemo(() => {
+    if (camK === undefined || camL === undefined || camT === undefined)
+      return extendedLayout(box.w, box.h, reserveTop, reserveBottom, box.dpr)
+    const scale = camK / box.dpr
+    return { k: camK, scale, base: { left: camL, top: camT, width: NATIVE_W * scale, height: NATIVE_H * scale } }
+  }, [box.w, box.h, box.dpr, reserveTop, reserveBottom, camK, camL, camT])
   const { k, scale, base } = layout
   const sceneBox = { width: Math.ceil(NATIVE_W * scale - 1e-6), height: Math.ceil(NATIVE_H * scale - 1e-6) }
   // The extension canvas covers the whole element (one spare CSS px for the snap), a whole number of CSS px.

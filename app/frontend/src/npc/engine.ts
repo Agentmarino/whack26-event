@@ -4,8 +4,8 @@ import { BACKGROUNDS, buildColorTable, IDX, type Background, type ColorName } fr
 import { IndexBuffer, NATIVE_H, NATIVE_W } from './raster'
 import {
   AGENT_ORIGIN, BUBBLE_AT, buildDesk, buildOffice, BUSINESS_CARD, CALC, CALCULATOR, CARD_END, CARD_START, DESK_PLANT, drawGlass,
-  drawMonitor, drawOfficeLife,
-  drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT, SCREEN,
+  drawMonitor, drawOfficeLife, monitorFor, type DeskLayout,
+  drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT,
   TRAY, TRAY_DOC,
 } from './scene'
 import {
@@ -174,6 +174,8 @@ export class NpcEngine {
   private wordmark = true
   private facialHairV: FacialHair = DEFAULT_FACIAL_HAIR
   private backgroundV: Background = 'day'
+  /** 117: where the monitor stands (a close camera uses 'close'). */
+  private layoutV: DeskLayout = 'standard'
 
   private raf = 0
   private last: number | undefined
@@ -302,6 +304,12 @@ export class NpcEngine {
   setAmbient(on: boolean) {
     this.ambient = on
     this.emit()
+  }
+  /** 117: move the monitor for a close camera ('close') or back ('standard'). */
+  setLayout(layout: DeskLayout) {
+    if (layout === this.layoutV) return
+    this.layoutV = layout
+    this.render()
   }
   /** false when the official logo image is shown on the desk monitor (the monitor then stays plain white under it). */
   setWordmarkVisible(on: boolean) {
@@ -575,7 +583,7 @@ export class NpcEngine {
 
     // 4 desk, 5 desk props (monitor with the logo area, keyboard, tray, calculator, mug, plant), 6 drop zone
     b.blitBuffer(this.desk)
-    drawMonitor(b, !this.wordmark)
+    drawMonitor(b, !this.wordmark, this.layoutV)
     b.blit(KEYBOARD_SPRITE, KEYBOARD.x, KEYBOARD.y)
     b.blit(MUG_SPRITE, MUG.x, MUG.y)
     b.blit(DESK_PLANT, PLANT.x, PLANT.y)
@@ -607,6 +615,7 @@ export class NpcEngine {
     // The logo image sits under the canvas: let the white screen show through, so arms and held
     // items drawn over the monitor stay on top of the logo.
     if (!this.wordmark) {
+      const SCREEN = monitorFor(this.layoutV).screen
       for (let y = SCREEN.y; y < SCREEN.y + SCREEN.h; y++) {
         for (let x = SCREEN.x; x < SCREEN.x + SCREEN.w; x++) {
           const i = y * NATIVE_W + x

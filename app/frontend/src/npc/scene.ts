@@ -31,6 +31,17 @@ export const CARD_END = { x: 57, y: 78 }
 /** Desk monitor. SCREEN is the lit area where NpcScene shows the official logo file. */
 export const MONITOR = { x: 5, y: 47, w: 40, h: 23 }
 export const SCREEN = { x: 7, y: 49, w: 36, h: 17 }
+/**
+ * 117: desk layouts. 'standard' is the 110 desk. 'close' is for a camera too tight for the monitor at x 5: a
+ * smaller monitor right next to Cap's left arm (his arm passes in front of its right bezel, never the screen),
+ * so the logo stays in frame. Only the monitor moves; the tray, keyboard, paper and card keep their places.
+ */
+export type DeskLayout = 'standard' | 'close'
+export const MONITOR_CLOSE = { x: 29, y: 53, w: 18, h: 15 }
+export const SCREEN_CLOSE = { x: 30, y: 54, w: 15, h: 10 }
+export function monitorFor(layout: DeskLayout) {
+  return layout === 'close' ? { monitor: MONITOR_CLOSE, screen: SCREEN_CLOSE } : { monitor: MONITOR, screen: SCREEN }
+}
 export const MUG = { x: 95, y: 69 }
 export const PLANT = { x: 107, y: 62 }
 export const BUBBLE_AT = { x: 82, y: 5 }
@@ -243,21 +254,27 @@ export function buildDesk(): IndexBuffer {
 }
 
 /** Desk monitor facing the customer: slim bezel, chin, stand. The screen is white; the logo file sits on top as DOM. */
-export function drawMonitor(b: IndexBuffer, logo: boolean) {
-  const { x, y, w, h } = MONITOR
-  b.rect(x + 17, y + h, 6, COUNTER_TOP_Y - (y + h) + 1, IDX.standFrameShade) // neck
-  b.rect(x + 18, y + h, 1, COUNTER_TOP_Y - (y + h) + 1, IDX.standFrame)
-  b.rect(x + 13, COUNTER_TOP_Y + 1, 14, 2, IDX.outline) // base on the desk
-  b.rect(x + 14, COUNTER_TOP_Y + 1, 12, 1, IDX.standFrameShade)
+export function drawMonitor(b: IndexBuffer, logo: boolean, layout: DeskLayout = 'standard') {
+  const { monitor, screen } = monitorFor(layout)
+  const { x, y, w, h } = monitor
+  const mid = x + (w >> 1)
+  b.rect(mid - 3, y + h, 6, COUNTER_TOP_Y - (y + h) + 1, IDX.standFrameShade) // neck
+  b.rect(mid - 2, y + h, 1, COUNTER_TOP_Y - (y + h) + 1, IDX.standFrame)
+  const baseW = layout === 'close' ? 10 : 14
+  b.rect(mid - (baseW >> 1), COUNTER_TOP_Y + 1, baseW, 2, IDX.outline) // base on the desk
+  b.rect(mid - (baseW >> 1) + 1, COUNTER_TOP_Y + 1, baseW - 2, 1, IDX.standFrameShade)
   b.rect(x, y, w, h, IDX.outline)
   b.rect(x + 1, y + 1, w - 2, h - 2, IDX.bezel)
   b.rect(x + 1, y + h - 3, w - 2, 2, IDX.bezelLight) // chin
-  b.rect(SCREEN.x, SCREEN.y, SCREEN.w, SCREEN.h, IDX.screenWhite)
+  b.rect(screen.x, screen.y, screen.w, screen.h, IDX.screenWhite)
   if (!logo) {
     // no logo file: a plain dashboard so the screen is not empty (never a drawn logo)
-    b.rect(SCREEN.x + 3, SCREEN.y + 3, 14, 2, IDX.brandNavy)
-    b.rect(SCREEN.x + 3, SCREEN.y + 7, 10, 1, IDX.ink)
-    for (let i = 0; i < 5; i++) b.rect(SCREEN.x + 20 + i * 3, SCREEN.y + 12 - i * 2, 2, 3 + i * 2, i === 4 ? IDX.red : IDX.brandNavyLight)
+    const big = layout === 'standard'
+    const pad = big ? 3 : 2
+    b.rect(screen.x + pad, screen.y + pad, big ? 14 : 7, 2, IDX.brandNavy)
+    b.rect(screen.x + pad, screen.y + (big ? 7 : 5), big ? 10 : 5, 1, IDX.ink)
+    if (big) for (let i = 0; i < 5; i++) b.rect(screen.x + 20 + i * 3, screen.y + 12 - i * 2, 2, 3 + i * 2, i === 4 ? IDX.red : IDX.brandNavyLight)
+    else for (let i = 0; i < 3; i++) b.rect(screen.x + 9 + i * 2, screen.y + 7 - i * 2, 1, 2 + i * 2, i === 2 ? IDX.red : IDX.brandNavyLight)
   }
 }
 
