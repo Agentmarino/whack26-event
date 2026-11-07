@@ -21,6 +21,13 @@ export const KEYBOARD = { x: 58, y: 76, w: 22, h: 5 }
 export const PAPER_SIZE = { w: 20, h: 5 }
 export const PAPER_START = { x: 59, y: 74 }
 export const PAPER_END = { x: 59, y: 78 }
+/**
+ * 115: Cap's business card. Smaller than the sheet, same slide (same rows and hand). It sits left of the
+ * sheet's column so the flat hand (native x 66 to 75) rests on its right end and the rest of it shows.
+ */
+export const CARD_SIZE = { w: 14, h: 5 }
+export const CARD_START = { x: 57, y: 74 }
+export const CARD_END = { x: 57, y: 78 }
 /** Desk monitor. SCREEN is the lit area where NpcScene shows the official logo file. */
 export const MONITOR = { x: 5, y: 47, w: 40, h: 23 }
 export const SCREEN = { x: 7, y: 49, w: 36, h: 17 }
@@ -299,6 +306,15 @@ export const PAPER = sprite([
   'kpqqqqqqqqqqqqqqqqpk',
   'kPPPPPPPPPPPPPPPPPPk',
   'kkkkkkkkkkkkkkkkkkkk',
+])
+
+/** 115: the business card on the desk: white face, a red band at the left end, a navy name line. */
+export const BUSINESS_CARD = sprite([
+  'kkkkkkkkkkkkkk',
+  'krr]]]]]]]]]]k',
+  'krr]uuuuu]]]]k',
+  'kRRWWWWWWWWWWk',
+  'kkkkkkkkkkkkkk',
 ])
 
 export const DROP_ARROW = sprite([

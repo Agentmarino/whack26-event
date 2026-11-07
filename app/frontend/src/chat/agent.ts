@@ -10,6 +10,12 @@ export function presentMessage(npc: NpcHandle | null, msg: AgentMessage) {
   if (!npc) return
   window.clearTimeout(settleTimer)
   npc.emote(msg.emote)
+  // 115: the business card message is not spoken. If his card is still sliding (Next tapped early), let it land.
+  if (msg.kind === 'card') {
+    const s = npc.snapshot()
+    if (!(s?.state === 'slide-card' && s.card === 'sliding')) npc.setState('idle')
+    return
+  }
   switch (msg.gesture) {
     case 'none':
       npc.setState('talking')
@@ -24,6 +30,10 @@ export function presentMessage(npc: NpcHandle | null, msg: AgentMessage) {
       settleTimer = window.setTimeout(() => {
         if (npc.snapshot()?.state === 'receive-document') npc.setState('reading')
       }, npc.settleIn() + 150)
+      break
+    case 'slide-card':
+      // 115: the same push as slide-paper with his business card; the app opens the card overlay when it lands.
+      npc.setState('slide-card')
       break
     case 'coach':
       // The switch (glasses on, planner up) plays once; later coach lines keep the pose.

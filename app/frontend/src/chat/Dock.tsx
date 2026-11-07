@@ -2,6 +2,7 @@
 // Next while the agent is talking, then the inputs his last message `expects`.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Expects, FileKind } from 'shared'
+import { ChipIcon } from './chipIcons'
 import { MicButton } from './Mic'
 
 export type DockMode =
@@ -40,8 +41,11 @@ export function Dock(props: {
   onOffline: () => void
   /** Coach mode: opens the what-if sliders, shown first in the quick replies. */
   onSliders?: () => void
+  /** 115: big friendly chips with an icon each: one per row ('list', the opening) or a grid ('grid', goals). */
+  big?: 'list' | 'grid'
 }) {
-  const { mode } = props
+  const { mode, big } = props
+  const chipClass = big ? 'chip chip--big' : 'chip'
   const ref = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState('')
@@ -135,10 +139,16 @@ export function Dock(props: {
         )}
 
         {mode.kind === 'input' && mode.expects.kind === 'choice' && (
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Choose an answer">
+          <div
+            className={big === 'list' ? 'chips--list' : big === 'grid' ? 'chips--grid' : 'flex flex-wrap gap-2'}
+            role="group"
+            aria-label="Choose an answer"
+            data-chips={big ?? 'normal'}
+          >
             {(mode.expects.chips ?? []).map((c) => (
-              <button key={c} type="button" className="chip" onClick={() => props.onChip(c, 'choice')} data-chip={c}>
-                {c}
+              <button key={c} type="button" className={chipClass} onClick={() => props.onChip(c, 'choice')} data-chip={c}>
+                {big && <ChipIcon chip={c} />}
+                {big ? <span>{c}</span> : c}
               </button>
             ))}
             {mode.expects.optional && (
@@ -152,7 +162,12 @@ export function Dock(props: {
         {mode.kind === 'input' && mode.expects.kind === 'text' && (
           <div className="flex flex-col gap-2">
             {((mode.expects.chips && mode.expects.chips.length > 0) || props.onSliders) && (
-              <div className="hscroll -mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5" role="group" aria-label="Quick replies">
+              <div
+                className={big ? 'chips--grid' : 'hscroll -mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5'}
+                role="group"
+                aria-label="Quick replies"
+                data-chips={big ?? 'normal'}
+              >
                 {props.onSliders && (
                   <button type="button" className="btn flex-none" onClick={props.onSliders} data-action="whatif-sheet">
                     <svg width="14" height="14" viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" fill="currentColor">
@@ -162,8 +177,9 @@ export function Dock(props: {
                   </button>
                 )}
                 {(mode.expects.chips ?? []).map((c) => (
-                  <button key={c} type="button" className="chip" onClick={() => props.onChip(c, 'choice')} data-chip={c}>
-                    {c}
+                  <button key={c} type="button" className={chipClass} onClick={() => props.onChip(c, 'choice')} data-chip={c}>
+                    {big && <ChipIcon chip={c} />}
+                    {big ? <span>{c}</span> : c}
                   </button>
                 ))}
               </div>

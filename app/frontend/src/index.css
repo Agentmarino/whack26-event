@@ -42,6 +42,11 @@
   --you-bg: #1b2a3b;
   --you-edge: #d03027;
 
+  /* 115: Cap's business card. Pure white so the official logo file's white ground disappears into it. */
+  --card-face: #ffffff;
+  --card-band: #004977;
+  --card-stripe: #d03027;
+
   --font-pixel: 'Press Start 2P', ui-monospace, monospace;
   --font-body: 'Atkinson Hyperlegible', 'Avenir Next', 'Segoe UI', sans-serif;
 }
@@ -93,6 +98,9 @@
   --risk: #000000;
   --you-bg: #000000;
   --you-edge: #ffffff;
+  --card-face: #ffffff;
+  --card-band: #000000;
+  --card-stripe: #000000;
 }
 
 @theme inline {
@@ -433,6 +441,272 @@ dialog.sheet--dark {
   color: var(--text);
   background: var(--panel);
   border-color: var(--edge);
+}
+
+/* ---------------- 115: big friendly chips (opening and goals) ---------------- */
+.chip--big {
+  gap: 0.75rem;
+  padding: 0.25rem 0.875rem 0.25rem 0.3125rem;
+  font-size: 1.0625rem;
+  line-height: 1.2;
+}
+.chip__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  color: var(--accent-text);
+  background: var(--accent);
+}
+.chip__icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.chips--list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+/* Never taller than about 40% of the screen (text at 150% on a phone): the chips scroll inside the dock,
+   so the question above and the text box below stay in view. */
+.chips--list,
+.chips--grid {
+  max-height: 42dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* room for the focus ring inside the scroller */
+  margin: -0.5rem -0.5rem 0;
+  padding: 0.5rem;
+}
+.chips--list > .chip {
+  width: 100%;
+}
+.chips--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr));
+  gap: 0.5rem;
+}
+
+/* ---------------- 115: Cap's business card ---------------- */
+dialog.bizcard-dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  overscroll-behavior: contain;
+}
+dialog.bizcard-dialog::backdrop {
+  background: transparent;
+}
+.bizcard-dialog__shade {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 10, 16, 0.86);
+}
+.bizcard-dialog__stage {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+}
+.bizcard {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  width: min(100%, 22rem);
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+  padding: 1.25rem 1.375rem 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--card-face);
+  border: 0.1875rem solid var(--halo);
+  box-shadow: 0.375rem 0.375rem 0 0 rgba(0, 0, 0, 0.5);
+  transform-origin: 0 0;
+}
+:root[data-colour='contrast'] .bizcard {
+  border-color: #ffffff;
+  outline: 0.1875rem solid #000000;
+}
+/* The logo file's artwork is the box (5, 71) to (226, 147) of 231x218 on white: show that box, unchanged. */
+.bizcard__logo {
+  position: relative;
+  width: 62%;
+  aspect-ratio: 221 / 76;
+  overflow: hidden;
+}
+.bizcard__logo img {
+  position: absolute;
+  left: calc(-5 / 221 * 100%);
+  top: calc(-71 / 76 * 100%);
+  width: calc(231 / 221 * 100%);
+  height: auto;
+  max-width: none;
+}
+.bizcard__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.125rem;
+}
+.bizcard__portrait {
+  display: block;
+  flex: none;
+  box-shadow: 0 0 0 0.1875rem var(--halo);
+}
+.bizcard__who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+}
+.bizcard__name {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 2.75rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+}
+.bizcard__rule {
+  width: 2.5rem;
+  height: 0.375rem;
+  background: var(--card-stripe);
+}
+.bizcard__title {
+  font-family: var(--font-pixel);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.bizcard__line {
+  font-size: 1.1875rem;
+  line-height: 1.35;
+  color: var(--ink-muted);
+}
+.bizcard__band {
+  align-self: stretch;
+  height: 1.5rem;
+  margin: 0.25rem -1.375rem 0;
+  background: var(--card-band);
+  border-top: 0.375rem solid var(--card-stripe);
+}
+.bizcard-dialog__hint {
+  flex: none;
+}
+/* Text at 150%: keep the whole card on a phone screen where it fits */
+:root[data-text-size='150'] .bizcard-dialog__stage,
+:root[data-text-size='150'] .bizcard,
+:root[data-text-size='150'] .bizcard__body {
+  gap: 0.75rem;
+}
+:root[data-text-size='150'] .bizcard__who {
+  gap: 0.375rem;
+}
+:root[data-text-size='150'] .bizcard__name {
+  font-size: min(2.75rem, 52px); /* the name is already big; 66px would push the card off a phone */
+}
+:root[data-text-size='150'] .bizcard__band {
+  height: 1rem;
+}
+@media (min-width: 40rem) {
+  .bizcard {
+    width: min(100%, 46rem);
+    align-items: stretch;
+    gap: 1.75rem;
+    padding: 2rem 2.25rem 0;
+    text-align: left;
+  }
+  .bizcard__who {
+    align-items: flex-start;
+  }
+  .bizcard__logo {
+    width: 17rem;
+  }
+  .bizcard__body {
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
+  .bizcard__name {
+    font-size: 4rem;
+  }
+  .bizcard__title {
+    font-size: 1rem;
+  }
+  .bizcard__line {
+    font-size: 1.5rem;
+  }
+  .bizcard__band {
+    height: 1.75rem;
+    margin: 0.5rem -2.25rem 0;
+  }
+}
+
+/* The card in the chat history: a small white card you can open again. */
+.bizcard-row {
+  display: flex;
+  width: 100%;
+  max-width: 22rem;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+  color: var(--ink);
+  text-align: left;
+  padding-bottom: 0.875rem;
+  background: var(--card-face);
+  border: 0.1875rem solid var(--halo);
+  box-shadow: inset 0 -0.375rem 0 0 var(--card-band), 0.25rem 0.25rem 0 0 rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+:root[data-colour='contrast'] .bizcard-row {
+  border-color: #ffffff;
+  outline: 0.1875rem solid #000000;
+}
+.bizcard-row:active {
+  transform: translateY(1px);
+}
+.bizcard-row__portrait {
+  display: block;
+  flex: none;
+  box-shadow: 0 0 0 0.125rem var(--halo);
+}
+.bizcard-row__name {
+  font-family: var(--font-pixel);
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+.bizcard-row__open {
+  flex: none;
+  padding: 0.375rem 0.5rem;
+  font-family: var(--font-pixel);
+  font-size: 0.625rem;
+  line-height: 1.2;
+  color: var(--paper);
+  background: var(--ink);
 }
 
 ::selection {

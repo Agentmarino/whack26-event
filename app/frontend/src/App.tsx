@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileKind, Persona } from 'shared'
 import { createApi, createMockApi, mockFromEnv, type Api } from './api/client'
+import { BusinessCardOverlay, CARD_TEXT, type Rect } from './cards/BusinessCard'
 import { CardContext, type CardCtx, type WhyTrail } from './cards/context'
 import { lineDone, presentError, presentMessage, presentWaiting } from './chat/agent'
 import { Dock, type DockMode } from './chat/Dock'
 import { AGENT_NAME, Transcript } from './chat/Transcript'
 import { useConversation } from './chat/useConversation'
 import { useSpeech } from './chat/useSpeech'
-import { NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion, useTypewriter, type NpcHandle } from './npc'
+import {
+  NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion, useTypewriter, type FacialHair, type NpcHandle,
+  type NpcSnapshot,
+} from './npc'
 import { useSettings } from './settings'
 import { PaperSheet } from './sheets/PaperSheet'
 import { LetterSheet, PersonaSheet, WhySheet } from './sheets/PickSheets'
@@ -15,6 +19,9 @@ import { SettingsSheet } from './sheets/SettingsSheet'
 import { WhatIfSheet } from './sheets/WhatIfSheet'
 
 const LOGO = '/brand/capital-one-logo.png'
+const FACIAL_HAIR: FacialHair = 'moustache-stubble'
+/** 115: the card rests on the desk this long after it lands, then grows into the full card. */
+const CARD_REST_MS = 220
 const DISCLAIMER = 'Estimates for a demo. Not financial advice and not a lending decision.'
 
 function useMedia(query: string) {
@@ -66,7 +73,8 @@ export default function App() {
   }, [api, conv])
 
   // ---------- typewriter for the current line ----------
-  const instant = reduced || settings.demo || settings.speed === 'instant'
+  // The business card is not typed out (and does not move his mouth): it is a card, not a line.
+  const instant = reduced || settings.demo || settings.speed === 'instant' || current?.msg.kind === 'card'
   const tw = useTypewriter(current?.msg.text ?? '', current?.key ?? 'none', {
     speed: settings.speed,
     instant,
@@ -121,6 +129,76 @@ export default function App() {
     return () => window.clearTimeout(id)
   }, [settings.demo, typed, state.queue.length, state.pending, state.expects, conv])
 
+  // ---------- 115: Cap's business card ----------
+  // It opens by itself once per conversation: when the card he slides lands on the desk (at once with
+  // reduced motion), or when a `card` message shows without a slide. The history row opens it again.
+  // Keyed by the conversation run, not reset in an effect: with a fast backend the restart and the first
+  // turn can land in one render, and the card must still open.
+  const [bizCard, setBizCard] = useState<{ origin: Rect | null; text: string; run: number } | null>(null)
+  const runNow = useRef(state.run)
+  runNow.current = state.run
+  const cardShownFor = useRef(-1)
+  const cardTimer = useRef({ id: 0, run: -1 })
+  const cardPhase = useRef<NpcSnapshot['card']>('none')
+  const cardText = () => state.queue.find((m) => m.kind === 'card')?.text || (current?.msg.kind === 'card' ? current.msg.text : '') || CARD_TEXT
+  const cardTextRef = useRef(cardText)
+  cardTextRef.current = cardText
+  useEffect(() => {
+    // a new conversation (restart, offline switch): drop a card still waiting or open from the last one
+    if (cardTimer.current.run !== state.run) window.clearTimeout(cardTimer.current.id)
+    setBizCard((b) => (b && b.run !== state.run ? null : b))
+  }, [state.run])
+  const onNpcChange = useCallback(
+    (s: NpcSnapshot) => {
+      const was = cardPhase.current
+      cardPhase.current = s.card
+      const run = runNow.current
+      if (s.card !== 'landed' || was === 'landed' || cardShownFor.current === run) return
+      cardShownFor.current = run
+      const origin = npc.current?.cardRect() ?? null
+      window.clearTimeout(cardTimer.current.id)
+      const id = window.setTimeout(
+        () => {
+          npc.current?.clearCard()
+          setBizCard({ origin, text: cardTextRef.current(), run })
+        },
+        reduced ? 0 : CARD_REST_MS,
+      )
+      cardTimer.current = { id, run }
+    },
+    [reduced],
+  )
+  useEffect(() => () => window.clearTimeout(cardTimer.current.id), [])
+  useEffect(() => {
+    if (current?.msg.kind !== 'card' || cardShownFor.current === state.run) return
+    if (npc.current?.snapshot()?.card === 'sliding') return // it opens when it lands
+    cardShownFor.current = state.run
+    setBizCard({ origin: null, text: current.msg.text || CARD_TEXT, run: state.run })
+  }, [current?.key]) // eslint-disable-line react-hooks/exhaustive-deps
+  const focusDock = useRef(false)
+  const putCardAway = () => {
+    setBizCard(null)
+    focusDock.current = true
+    // The intro: putting the card away moves on to the card message, so its reply chip shows at once.
+    if (state.queue[0]?.kind === 'card' && !state.pending) {
+      if (current && !tw.done) tw.finish()
+      npc.current?.stopTalking()
+      conv.advance()
+    }
+  }
+  // Focus back to the reply area once it has re-rendered (and after the key or tap that closed the card
+  // has finished, so it cannot press the new chip).
+  useEffect(() => {
+    if (bizCard || !focusDock.current) return
+    focusDock.current = false
+    const id = window.setTimeout(() => {
+      document
+        .querySelector<HTMLElement>('[data-testid="dock"] button:not([disabled]), [data-testid="dock"] input:not([type=file])')
+        ?.focus({ preventScroll: true })
+    }, 0)
+    return () => window.clearTimeout(id)
+  }, [bizCard, state.currentKey])
+
   const restart = useCallback(() => {
     npc.current?.reset()
     conv.start()
@@ -157,6 +235,8 @@ export default function App() {
       plan: state.plan,
       showWhy: setWhy,
       openPaper: () => setSheet('paper'),
+      openBusinessCard: (origin, text) => setBizCard({ origin, text, run: runNow.current }),
+      facialHair: FACIAL_HAIR,
     }),
     [state.result, state.whatIfs, state.whatIfPlans, state.paperUrl, state.plan],
   )
@@ -176,13 +256,16 @@ export default function App() {
               ? { kind: 'continue' }
               : { kind: 'input', expects: state.expects }
 
-  const showLetter = !!state.step && state.step !== 'ask_letter' && !state.hasLetter && !state.pending
+  // Not during the intro: the card has the stage to itself.
+  const showLetter = !!state.step && state.step !== 'ask_letter' && state.step !== 'intro' && !state.hasLetter && !state.pending && !bizCard
   const inCoach = state.step === 'coach' && planChosen
 
   // One polite live region for the agent's lines and status changes.
   const lastEntry = state.entries[state.entries.length - 1]
   const announce = current
-    ? `${AGENT_NAME} says: ${current.msg.text}`
+    ? current.msg.kind === 'card'
+      ? `${AGENT_NAME}'s business card: ${current.msg.text || CARD_TEXT}`
+      : `${AGENT_NAME} says: ${current.msg.text}`
     : state.pending
       ? `${state.pending.label}.`
       : state.error
@@ -210,10 +293,11 @@ export default function App() {
             scale={scale}
             reducedMotion={reduced}
             wordmarkSrc={LOGO}
-            facialHair="moustache-stubble"
+            facialHair={FACIAL_HAIR}
             background="day"
             onFileDrop={onTrayFile}
             onPaperClick={() => setSheet('paper')}
+            onChange={onNpcChange}
           />
           {showLetter && (
             <button type="button" className="scene-btn left-2" onClick={() => setSheet('letter')} data-action="letter">
@@ -234,7 +318,7 @@ export default function App() {
           </button>
         </div>
 
-        <main className="app__chat" aria-label="Conversation with the credit agent">
+        <main className="app__chat" aria-label="Conversation with Cap, the credit coach">
           <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live">
             {announce}
           </p>
@@ -253,6 +337,7 @@ export default function App() {
             onRestart={restart}
             onOffline={() => setApi(createMockApi())}
             onSliders={inCoach ? () => setSheet('whatif') : undefined}
+            big={state.step === 'opening' ? 'list' : state.step === 'goals' ? 'grid' : undefined}
           />
           <footer className="flex-none px-3 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-[0.6875rem] leading-tight text-muted" data-testid="disclaimer">
             {DISCLAIMER}
@@ -315,6 +400,9 @@ export default function App() {
           }}
         />
         <WhySheet trail={why} onClose={() => setWhy(null)} />
+        {bizCard && (
+          <BusinessCardOverlay origin={bizCard.origin} text={bizCard.text} reduced={reduced} facialHair={FACIAL_HAIR} onClose={putCardAway} />
+        )}
       </div>
     </CardContext.Provider>
   )

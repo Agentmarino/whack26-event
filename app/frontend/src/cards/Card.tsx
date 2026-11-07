@@ -2,6 +2,7 @@
 // A ref that does not resolve renders nothing: the message text still stands on its own.
 import { resolveRef, type AgentMessage } from 'shared'
 import { ToneIcon } from '../ui/Health'
+import { BusinessCardRow, CARD_TEXT } from './BusinessCard'
 import { useCards } from './context'
 import { DeclineCard } from './DeclineCard'
 import { LadderCard } from './LadderCard'
@@ -12,6 +13,11 @@ import { WhatIfCard } from './WhatIfCard'
 
 export function Card({ msg }: { msg: AgentMessage }) {
   const ctx = useCards()
+  // 115: Cap's business card has no ref; its text is what a screen reader hears.
+  if (msg.kind === 'card') {
+    const text = msg.text || CARD_TEXT
+    return <BusinessCardRow text={text} facialHair={ctx.facialHair} onOpen={(from) => ctx.openBusinessCard(from, text)} />
+  }
   const r = resolveRef(msg.ref, ctx.result, { whatIfs: ctx.whatIfs, paperUrl: ctx.paperUrl })
   if (!r) {
     // The paper message before paperUrl arrives still gets its sheet.

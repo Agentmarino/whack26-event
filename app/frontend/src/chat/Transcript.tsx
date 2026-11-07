@@ -1,7 +1,7 @@
 // The chat column: a short history, then the agent's current line in the dialogue box with its card.
 // Agent text is real DOM text. The current line types out visually (aria-hidden spans); the screen
 // reader copy lives in the app's one polite live region (App.tsx), so each line is read once, in full.
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { resolveRef, type AgentMessage } from 'shared'
 import { Card } from '../cards/Card'
 import { useCards } from '../cards/context'
@@ -11,7 +11,7 @@ import { ToneIcon } from '../ui/Health'
 import { termsIn, type Term } from './glossary'
 import type { ConvState, Entry } from './useConversation'
 
-export const AGENT_NAME = 'Credit agent'
+export const AGENT_NAME = 'Cap'
 
 export function Transcript(props: {
   conv: ConvState
@@ -26,14 +26,28 @@ export function Transcript(props: {
   // Keep the newest thing in view: the whole of it if it fits (history peeks above), else its top.
   // Instant, not smooth: the previous card folds into a one-line step as the new one lands, and a
   // smooth scroll would race that.
-  useLayoutEffect(() => {
+  const pinLatest = useCallback(() => {
     const box = scroller.current
     const el = box?.querySelector<HTMLElement>('[data-latest]')
     if (!box || !el) return
     const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
     const fits = el.offsetHeight <= box.clientHeight - 8
     box.scrollTop = fits ? box.scrollHeight - box.clientHeight : Math.max(0, top - 12)
-  }, [tail])
+  }, [])
+  useLayoutEffect(pinLatest, [tail, pinLatest])
+  // 115: the dock grows when its inputs arrive (the big opening chips): keep the newest line in view.
+  useEffect(() => {
+    const box = scroller.current
+    if (!box || typeof ResizeObserver === 'undefined') return
+    let h = box.clientHeight
+    const ro = new ResizeObserver(() => {
+      if (box.clientHeight === h) return
+      h = box.clientHeight
+      pinLatest()
+    })
+    ro.observe(box)
+    return () => ro.disconnect()
+  }, [pinLatest])
 
   const last = conv.entries[conv.entries.length - 1]
   return (
@@ -109,6 +123,15 @@ function CurrentLine(props: { msg: AgentMessage; printed: number; typed: boolean
   const { msg } = props
   const ctx = useCards()
   const [open, setOpen] = useState<string | null>(null)
+  // 115: the business card is not a spoken line: it shows as the card itself (the live region reads its text).
+  if (msg.kind === 'card')
+    return (
+      <div className="flex flex-col gap-2.5 pt-1" data-kind={msg.kind} data-message-id={msg.id}>
+        <Guard>
+          <Card msg={msg} />
+        </Guard>
+      </div>
+    )
   const terms = termsIn(msg.text, ...cardTexts(msg, ctx))
   const chars = [...msg.text]
   return (
@@ -226,9 +249,11 @@ function AgentHistory({ msg }: { msg: AgentMessage }) {
   const ctx = useCards()
   // A step folds into its one-line card; if its ref does not resolve, the text stands on its own.
   const stepLine = msg.kind === 'step' && resolveRef(msg.ref, ctx.result)?.on === 'step'
+  // The business card row carries its own text (as its accessible name).
+  const textLine = !stepLine && msg.kind !== 'card'
   return (
     <div className="flex flex-col gap-2" data-entry="agent" data-kind={msg.kind}>
-      {!stepLine && (
+      {textLine && (
         <p className="text-[1.0625rem] leading-snug text-muted">
           <span className="sr-only">{AGENT_NAME}: </span>
           {msg.text}

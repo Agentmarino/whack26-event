@@ -7,9 +7,10 @@ export { DialogueBox, type DialogueBoxProps, type DialogueLine } from './Dialogu
 export { DebugPanel, type DebugPanelProps } from './DebugPanel'
 export { useIntegerScale, usePrefersReducedMotion, useTypewriter, type Speed } from './hooks'
 export { describeAgent } from './describe'
+export { NpcPortrait, type NpcPortraitProps } from './Portrait'
 export {
   AGENT_STATES, EMOTES, GESTURES, NpcEngine, SEQUENCE_MS, STEP_MS,
-  type AgentState, type Emote, type Gesture, type NpcSnapshot, type PaperState,
+  type AgentState, type CardState, type Emote, type Gesture, type NpcSnapshot, type PaperState,
 } from './engine'
 export { BACKGROUND_NAMES, BACKGROUNDS, PALETTE_DEF, UI_COLORS, type Background, type ColorName } from './palette'
 export { DEFAULT_FACIAL_HAIR, FACIAL_HAIR, type FacialHair } from './sprites/character'

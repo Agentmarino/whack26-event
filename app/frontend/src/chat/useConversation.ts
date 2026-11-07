@@ -162,7 +162,7 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
     async (input: TurnInput, extra: { letter?: boolean; personaId?: string } = {}) => {
       const run = async () => {
         const myRun = runRef.current
-        dispatch({ type: 'pending', pending: { kind: 'turn', label: 'The agent is thinking' } })
+        dispatch({ type: 'pending', pending: { kind: 'turn', label: 'Cap is thinking' } })
         try {
           const response = await api.turn({
             sessionId: input.type === 'start' ? null : stateRef.current.sessionId,
@@ -229,7 +229,7 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
       const name = 'file' in what ? what.file.name : 'your pasted letter'
       const run = async (): Promise<boolean> => {
         const myRun = runRef.current
-        dispatch({ type: 'pending', pending: { kind: 'upload', label: `The agent is reading ${name}` } })
+        dispatch({ type: 'pending', pending: { kind: 'upload', label: `Cap is reading ${name}` } })
         try {
           const sessionId = stateRef.current.sessionId
           const up = 'file' in what ? await api.upload(what.file, fileKind, sessionId) : await api.uploadText(what.text, fileKind, sessionId)
@@ -271,7 +271,7 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
       dispatch({ type: 'you', text: label })
       const run = async () => {
         const myRun = runRef.current
-        dispatch({ type: 'pending', pending: { kind: 'whatif', label: 'The agent is working it out' } })
+        dispatch({ type: 'pending', pending: { kind: 'whatif', label: 'Cap is working it out' } })
         try {
           const response = await api.whatIf({ sessionId, ...req } as WhatIfRequest)
           if (runRef.current !== myRun) return
