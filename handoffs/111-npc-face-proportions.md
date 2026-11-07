@@ -96,21 +96,35 @@ The user picked option C (moustache with light stubble) and the day background. 
      - `pnpm exec tsc -b` exit 0; `pnpm lint` (oxlint) exit 0.
   - I looked at the iPhone and desktop page screenshots: no overflow or clipping, and the logo sits on the moved monitor.
 - Proportions vs style-ref-1 (as a share of the face height, hairline to chin outline, measured on the ref's pixels: hairline y 104, chin y 239, face 128 px wide):
-  - **Face width to height:** ref 0.95 (0.85 from the temple hairline), ours 17:21 = 0.81, the 4:5 the handoff asked for.
-  - **Eye line:** ref 0.39, ours 0.45.
-  - **Mouth line:** ref 0.77, ours 0.79.
-  - Ours is a little narrower than the ref, and the eyes sit a little lower, nearer the middle as the handoff describes.
+  - **Face width to height:** ref 0.95 (0.85 from the temple hairline). Ours now 19:21 = 0.90; the first pass was 17:21 = 0.81.
+  - **Eye line:** ref 0.39. Ours now 0.40; the first pass was 0.45.
+  - **Mouth line:** ref 0.77, ours 0.79 (unchanged).
 - Reviewer (fresh-context `reviewer` agent on `git diff main...mihael/111`): it found nothing blocking.
   - **Checks it ran:** tsc, lint and build all clean. It parsed every sprite (all rows the right width, all palette chars known), confirmed the geometry move has no stale hard-coded y, confirmed the `'stubble'` alias is the only remaining use of the old name, and found the scope clean.
   - **Fixed:**
     - The coach "glasses on" hand (`toFace2L`) had not moved up with the eyes and landed on the cheek. It is now at the left eye (checked in a render at 300 and 500 ms).
     - Stale comments: eye row 0, the neutral-eyes row in the emote table, and the "pot hidden by the monitor" comment.
   - **Noted:** `default.png` and `iphone-reduced-motion.png` are the same picture, because both are the idle scene with defaults and reduced motion. That is expected.
+- Follow-up 1 (user, 2026-11-07, after the first RESULT): "widen the face to about 0.9 width to height (2 px wider, keep the height) and move the eyes and brows up 1 to 2 px so the eye line sits at about 0.40 of the face height, like style-ref-1".
+  - **Done:**
+    - Face skin is 19 x 21 (columns 4-22).
+    - Head grid is 27 x 31 with centre column 13, at `HEAD_POS` (11, -5), so the centre stays at box x 24.
+    - Ears, hair volume and sideburns moved out 1 px each side. The chin is 9 px (the same taper as before).
+    - Eyes and brows moved up 1 px: eyes on rows 16-18, brows on row 14, eye line 0.40. 2 px would have been 0.36, so 1 px was enough.
+    - Blush sits right under the eyes on row 19.
+    - The eyes, brows, mouth, moustache, stubble and glasses layers were re-placed. The mouth line stays on row 25.
+    - The coach glasses-on hand still lands on the left eye (render at 300 ms).
+  - **Verification (all on the final code):**
+    - `pnpm exec tsc -b` exit 0, `pnpm lint` exit 0.
+    - Contact sheets: `node shots.mjs iphone w-iphone` and `node shots.mjs desktop w-desktop` give 30 frames each. iPhone metrics `{"dpr":3,"cssRect":[5,52,384,288],"canvas":[1152,864],"scrollW":393,"clientW":393}`, console vite lines only. `sheet.py` → `big (3132, 4956)`, `small (1182, 1910)`, desktop `big (2108, 3420)`.
+    - Pixel test: iPhone `state-idle`, `state-greeting`, `state-asking`, `state-coach`, `option-moustache-stubble` and `default`, plus desktop `default`, all report `not flat outside the logo screen: 0`.
+    - iPhone checks: sample conversation `{"result":"done","seconds":34.681,"statesSeen":[8 states],"consoleErrorsAndWarnings":[]}`, reduced motion `{"distinctIdleFramesOver3s":1,"unprintedChars":0}`, all touch targets OK, no horizontal scroll, tray tap opens the picker with no errors.
+    - `screens/compare-face.png` re-made (local only): the eye lines of both faces now meet on the same guide line.
+  - **Screens updated:** `contact-sheet`, `contact-sheet-small`, `contact-sheet-desktop`, `default`, `options`, `backgrounds`, `iphone-page`, `iphone-reply-focused`, `iphone-reduced-motion`, `desktop-1440`. `ART-GUIDE.md` has the new head numbers.
 - Open issues / follow-ups:
-  - If the user wants the face as wide as style-ref-1 (about 0.9), widen the skin to 19 columns. One change in the design script: the per-row `FACE` outline.
   - Not checked on a real iPhone (emulation only), same as 109 and 110.
   - `app/DISCLOSURES.md` got one 111 row (see Files changed); Mihael may want to confirm that when merging.
-  - Follow-ups needed after the first prompt (prompt deltas): none from the user in this session.
+  - Follow-ups needed after the first prompt (prompt deltas): one. The handoff's "about 4:5" for the face was narrower than style-ref-1 itself (about 0.9 to 0.95), and its eye line came out lower than the ref's. Next time, give the target ratios measured on the ref (width to height about 0.9, eye line about 0.40 of the face height) instead of 4:5.
   - Two deviations from the handoff's wording:
     1. Seating the colleagues "at a desk" needed the frosted band moved down 5 px, otherwise it covered their arms.
     2. The handoff's own scope rule kept the gitignore line for `compare-face.png` in `app/npc-concept/.gitignore`, not the root one.
