@@ -41,8 +41,7 @@ export function Sheet(props: {
         <div className="flex flex-col gap-4 bg-[inherit] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <header className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              {props.tag && <p className={props.dark ? 'slip__tag !text-muted' : 'slip__tag'}>{props.tag}</p>}
-              <h2 id={titleId} className={props.dark ? 'slip__title !text-text mt-1' : 'slip__title mt-1'}>
+              <h2 id={titleId} className={props.dark ? 'slip__title !text-text pt-3' : 'slip__title pt-3'}>
                 {props.title}
               </h2>
             </div>

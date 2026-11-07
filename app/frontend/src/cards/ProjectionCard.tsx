@@ -43,7 +43,7 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
 
   return (
     <article className="slip p-3" data-card="projection" aria-label="Your score estimate">
-      <p className="slip__tag">Your {props.bureau} score · estimate</p>
+      <h3 className="slip__title">Your {props.bureau} score, estimated</h3>
       {/* The agent's line says the range in words; the card adds the picture and the other plan. */}
       <p className="sr-only">
         {range(end)} by {end.date} on your {label(props.plan)}, from {start.low} now. An estimate, not a promise.

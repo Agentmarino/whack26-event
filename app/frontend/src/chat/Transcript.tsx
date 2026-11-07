@@ -127,7 +127,7 @@ function CurrentLine(props: { msg: AgentMessage; printed: number; typed: boolean
 function Explain(props: { terms: Term[]; open: string | null; setOpen: (f: (o: string | null) => string | null) => void }) {
   const { terms, open, setOpen } = props
   return (
-    <div className="border-l-[0.25rem] border-[var(--focus)] pl-3" data-testid="explain">
+    <div className="px-1" data-testid="explain">
       <div className="flex flex-wrap items-center gap-x-2">
         <span className="text-sm text-muted">Explain:</span>
         {terms.map((t) => (
@@ -177,7 +177,7 @@ function HistoryEntry({ entry }: { entry: Entry }) {
   if (entry.type === 'you')
     return (
       <div className="ml-auto flex max-w-[85%] flex-col items-end gap-1" data-entry="you">
-        <p className="border-r-[0.25rem] border-you-edge bg-you px-3 py-2 text-[1.0625rem] leading-snug text-text">
+        <p className="border-2 border-you-edge bg-you px-3 py-2 text-[1.0625rem] leading-snug text-text">
           <span className="sr-only">You: </span>
           {entry.text}
         </p>
@@ -194,7 +194,7 @@ function HistoryEntry({ entry }: { entry: Entry }) {
     )
   if (entry.type === 'notice')
     return (
-      <p className="flex items-start gap-2 border-l-[0.25rem] border-[var(--warn-edge)] bg-panel px-3 py-2 text-[1.0625rem] leading-snug" data-entry="notice">
+      <p className="flex items-start gap-2 border-2 border-[var(--warn-edge)] bg-panel px-3 py-2 text-[1.0625rem] leading-snug" data-entry="notice">
         <span className="mt-1 text-[var(--warn-edge)]">
           <ToneIcon tone="warn" />
         </span>
@@ -211,7 +211,7 @@ function AgentHistory({ msg }: { msg: AgentMessage }) {
   return (
     <div className="flex flex-col gap-2" data-entry="agent" data-kind={msg.kind}>
       {!stepLine && (
-        <p className="border-l-[0.25rem] border-muted/60 pl-3 text-[1.0625rem] leading-snug text-muted">
+        <p className="text-[1.0625rem] leading-snug text-muted">
           <span className="sr-only">{AGENT_NAME}: </span>
           {msg.text}
         </p>

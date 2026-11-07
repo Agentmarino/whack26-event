@@ -17,11 +17,13 @@ export function StepCard(props: { step: PlanStep; plan: PlanId; stepIndex: numbe
     <article className="slip p-3" data-card="step" aria-label={`Step ${props.stepIndex + 1} of ${props.total}: ${step.title}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="slip__tag">
-            Step {props.stepIndex + 1} of {props.total}
-            {week ? ` · week ${week}` : ''}
+          <h3 className="text-[1.1875rem] font-bold leading-snug">{step.title}</h3>
+          <p className="mt-1 text-[0.9375rem] leading-snug">
+            <span className="font-pixel text-[0.6875rem] text-[var(--bad-ink)]">{dayLabel(step.date)}</span>
+            <span className="text-ink-muted">
+              {week ? ` · week ${week}` : ''} · step {props.stepIndex + 1} of {props.total}
+            </span>
           </p>
-          <p className="mt-1.5 font-pixel text-[0.6875rem] leading-relaxed text-[var(--bad-ink)]">{dayLabel(step.date)}</p>
         </div>
         <WhyButton
           label={step.title}
@@ -39,8 +41,7 @@ export function StepCard(props: { step: PlanStep; plan: PlanId; stepIndex: numbe
           }
         />
       </div>
-      <h3 className="mt-1 text-[1.1875rem] font-bold leading-snug">{step.title}</h3>
-      <p className="mt-1.5 text-[1.0625rem] leading-snug">{step.instruction}</p>
+      <p className="mt-2 text-[1.0625rem] leading-snug">{step.instruction}</p>
       <dl className="mt-2.5 flex flex-col gap-1.5 border-t-2 border-dashed border-paper-line pt-2.5 text-[0.9375rem] leading-snug">
         {worksOn && (
           <div className="flex gap-2">
@@ -69,7 +70,7 @@ function WhyButton({ onClick, label }: { onClick: () => void; label: string }) {
 export function StepLine(props: { step: PlanStep; plan: PlanId; stepIndex: number; total: number }) {
   return (
     <details className="group" data-card="step-line">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 border-l-[0.25rem] border-muted/60 py-1 pl-3 text-[1.0625rem] leading-snug text-muted [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 py-1 text-[1.0625rem] leading-snug text-muted [&::-webkit-details-marker]:hidden">
         <span className="w-[5.25rem] flex-none font-bold text-text">{dayLabel(props.step.date)}</span>
         <span className="min-w-0 flex-1">{props.step.title}</span>
         <span aria-hidden="true" className="next-arrow flex-none -rotate-90 text-muted group-open:rotate-0" />

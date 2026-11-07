@@ -51,7 +51,6 @@ export function PaperSheet(props: {
         setStatus('idle')
         props.onClose()
       }}
-      tag="Capital One desk · summary"
       title="Your credit, on one sheet"
       testId="paper-sheet"
       footer={
@@ -73,10 +72,10 @@ export function PaperSheet(props: {
       ) : (
         <div className="flex flex-col gap-4 text-[1.0625rem] leading-snug">
           <section>
-            <p className="slip__tag">
-              {r.bureau} score {r.profile.score ?? '–'} of {r.scaleMax}
+            <p className="text-[1.1875rem] font-bold">{r.headline}</p>
+            <p className="mt-1 text-[0.9375rem] text-ink-muted">
+              Your {r.bureau} score today: {r.profile.score ?? '–'} out of {r.scaleMax}
             </p>
-            <p className="mt-1 text-[1.1875rem] font-bold">{r.headline}</p>
           </section>
           <section>
             <h3 className="slip__tag">What holds it back</h3>

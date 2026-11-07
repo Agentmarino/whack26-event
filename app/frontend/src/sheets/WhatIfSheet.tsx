@@ -83,8 +83,7 @@ export function WhatIfSheet(props: {
     <Sheet
       open={props.open}
       onClose={props.onClose}
-      tag={`What if · your ${props.plan === '3m' ? '3-month' : '6-month'} plan`}
-      title="Try a change"
+      title={`Try a change to your ${props.plan === '3m' ? '3-month' : '6-month'} plan`}
       testId="whatif-sheet"
       footer={
         <div className="flex flex-col gap-2 border-t-2 border-dashed border-paper-line pt-3">

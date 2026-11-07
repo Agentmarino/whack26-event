@@ -65,7 +65,7 @@ function Toggle(props: { label: string; hint?: ReactNode; checked: boolean; onCh
 export function SettingsSheet(props: { open: boolean; onClose: () => void; onRestart: () => void; apiMode: 'mock' | 'live' }) {
   const { settings, set } = useSettings()
   return (
-    <Sheet open={props.open} onClose={props.onClose} tag="Make it work for you" title="Settings" testId="settings-sheet">
+    <Sheet open={props.open} onClose={props.onClose} title="Settings" testId="settings-sheet">
       <div className="flex flex-col gap-5">
         <Choice<Speed>
           legend="Text speed"

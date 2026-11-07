@@ -183,7 +183,7 @@ body {
   min-width: 2.75rem;
   padding: 0 0.625rem;
   font-family: var(--font-pixel);
-  font-size: 0.5625rem;
+  font-size: 0.6875rem;
   line-height: 1.3;
   color: var(--text);
   background: var(--panel);
@@ -204,7 +204,7 @@ body {
   display: inline-block;
   padding: 0.4375rem 0.625rem;
   font-family: var(--font-pixel);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   line-height: 1.2;
   color: var(--accent-text);
   background: var(--accent);
@@ -249,7 +249,7 @@ body {
 }
 .slip__tag {
   font-family: var(--font-pixel);
-  font-size: 0.5625rem;
+  font-size: 0.6875rem;
   line-height: 1.4;
   letter-spacing: 0.02em;
   color: var(--ink-muted);
@@ -332,9 +332,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   font-family: var(--font-pixel);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   line-height: 1.4;
   text-align: center;
   cursor: pointer;
@@ -432,6 +432,14 @@ dialog.sheet--dark {
   color: var(--text);
   background: var(--panel);
   border-color: var(--edge);
+}
+
+::selection {
+  color: #000000;
+  background: var(--focus);
+}
+.field {
+  caret-color: var(--focus);
 }
 
 .sr-only {

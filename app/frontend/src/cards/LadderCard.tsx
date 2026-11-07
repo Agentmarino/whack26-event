@@ -8,8 +8,7 @@ export function LadderCard({ ladder }: { ladder: Ladder }) {
   if (!e)
     return (
       <article className="slip p-3" data-card="ladder" aria-label="Your next card">
-        <p className="slip__tag">Your next card</p>
-        <p className="mt-1.5 text-[1.0625rem] font-bold leading-snug">No new card for now</p>
+        <h3 className="slip__title">No new card for now</h3>
         <p className="mt-1 text-[1.0625rem] leading-snug">{ladder.reason}</p>
       </article>
     )
@@ -17,9 +16,8 @@ export function LadderCard({ ladder }: { ladder: Ladder }) {
   const pct = tx && tx.limitAssumed > 0 ? Math.round((tx.total / tx.limitAssumed) * 100) : null
   return (
     <article className="slip p-3" data-card="ladder" aria-label={`Your next card: ${e.name}`}>
-      <p className="slip__tag">Your next card · Capital One</p>
-      <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3 className="slip__title">{e.name}</h3>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="slip__title">Next card: {e.name}</h3>
         <p className="text-[0.9375rem] font-bold">{e.apr}% APR</p>
       </div>
       <p className="mt-1 text-[0.9375rem] leading-snug text-ink-muted">
@@ -76,9 +74,9 @@ export function LadderCard({ ladder }: { ladder: Ladder }) {
           )}
         </section>
       )}
-      <p className="mt-3 flex items-start gap-2 bg-paper-shade p-2 text-[0.9375rem] leading-snug">
-        <span className="font-bold">Check with QuickCheck first.</span>
-        <span>It's a soft search: it shows you your chances and leaves no mark on your file.</span>
+      <p className="mt-3 bg-paper-shade p-2 text-[0.9375rem] leading-snug">
+        <span className="font-bold">Check with QuickCheck first.</span> It's a soft search: it shows you your chances and
+        leaves no mark on your file.
       </p>
     </article>
   )

@@ -13,7 +13,7 @@ export function PersonaSheet(props: {
   onPick: (p: Persona) => void
 }) {
   return (
-    <Sheet open={props.open} onClose={props.onClose} tag="Use a sample" title="Pick a sample person" testId="persona-sheet">
+    <Sheet open={props.open} onClose={props.onClose} title="Pick a sample person" testId="persona-sheet">
       <p className="text-[1.0625rem] leading-snug">Each sample is a made-up person with a real-looking credit file. Nothing here is a credit search.</p>
       {props.error ? (
         <div className="flex flex-col items-start gap-2">
@@ -58,7 +58,7 @@ export function LetterSheet(props: {
   const pasteId = useId()
   const [text, setText] = useState('')
   return (
-    <Sheet open={props.open} onClose={props.onClose} tag="Turned down?" title="Have a decline letter?" testId="letter-sheet">
+    <Sheet open={props.open} onClose={props.onClose} title="Have a decline letter?" testId="letter-sheet">
       <p className="text-[1.0625rem] leading-snug">
         Hand it over at any point. I'll keep going where we are, then explain why they likely said no once I've seen your results.
       </p>
@@ -129,12 +129,12 @@ function linkify(text: string) {
 
 export function WhySheet({ trail, onClose }: { trail: WhyTrail | null; onClose: () => void }) {
   return (
-    <Sheet open={!!trail} onClose={onClose} tag={trail?.tag ?? 'Why'} title={trail?.title ?? ''} testId="why-sheet">
+    <Sheet open={!!trail} onClose={onClose} title={trail ? `Why: ${trail.title}` : ''} testId="why-sheet">
       {trail && (
         <>
           <dl className="flex flex-col gap-3">
             {trail.rows.map((row) => (
-              <div key={row.label} className="border-l-[0.1875rem] border-paper-line pl-3">
+              <div key={row.label}>
                 <dt className="slip__tag">{row.label}</dt>
                 <dd className="mt-1 text-[1.0625rem] leading-snug [overflow-wrap:anywhere]">{linkify(row.value)}</dd>
               </div>

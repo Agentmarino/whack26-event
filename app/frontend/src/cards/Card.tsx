@@ -43,7 +43,7 @@ export function Card({ msg }: { msg: AgentMessage }) {
 function FlagsCard({ flags }: { flags: string[] }) {
   return (
     <article className="slip p-3.5" data-card="flags" aria-label="Spending that stands out">
-      <p className="slip__tag">In your spending</p>
+      <h3 className="slip__tag">In your spending</h3>
       <ul className="mt-2 flex flex-col gap-1.5">
         {flags.map((f) => (
           <li key={f} className="flex items-center gap-2 text-[1.0625rem] leading-snug">
@@ -70,8 +70,7 @@ function PaperCard() {
         <rect x="2" y="6" width="3" height="1" fill="var(--ink-muted)" />
       </svg>
       <div className="min-w-0 flex-1">
-        <p className="slip__tag">On one sheet</p>
-        <p className="mt-1 text-[1.0625rem] font-bold leading-snug">Your summary</p>
+        <h3 className="text-[1.0625rem] font-bold leading-snug">Your summary, on one sheet</h3>
         <p className="text-sm text-ink-muted">It's on the desk too. Tap the sheet.</p>
       </div>
       <button type="button" className="btn btn--ink flex-none" onClick={openPaper} data-action="open-paper">

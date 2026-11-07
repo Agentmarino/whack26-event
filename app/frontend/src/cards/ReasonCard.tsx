@@ -20,12 +20,7 @@ export function ReasonCard({ factor, rank, total = 3, said }: { factor: Factor; 
   return (
     <article className="slip p-3" aria-label={`Reason ${rank + 1}: ${factor.label}`} data-card="reason">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="slip__tag">
-            Reason {rank + 1} of {Math.max(total, rank + 1)}
-          </p>
-          <h3 className="slip__title mt-1.5">{factor.label}</h3>
-        </div>
+        <h3 className="slip__title min-w-0 pt-1">{factor.label}</h3>
         <button
           type="button"
           className="btn btn--ink-quiet flex-none"
@@ -52,7 +47,9 @@ export function ReasonCard({ factor, rank, total = 3, said }: { factor: Factor; 
         <div className="w-24 flex-none">
           <HealthMeter rag={factor.rag} health={factor.health} />
         </div>
-        <p className="text-sm text-ink-muted">Counts for about {pct}%</p>
+        <p className="text-sm text-ink-muted">
+          Counts for about {pct}% · reason {rank + 1} of {Math.max(total, rank + 1)}
+        </p>
       </div>
       {repeat && <p className="mt-2.5 text-[1.0625rem] leading-snug">{factor.reason}</p>}
       <ul className="mt-2.5 flex flex-wrap gap-1.5" aria-label="From your data">

@@ -29,9 +29,8 @@ export function DeclineCard({ decline, part }: { decline: DeclineDecoded; part?:
     <article className="slip p-3.5" data-card={`decline${part ? `-${part}` : ''}`} aria-label="About your decline">
       {show('reasons') && (
         <section>
-          <p className="slip__tag">Why they likely said no</p>
-          <h3 className="slip__title mt-2">
-            {decline.lender}
+          <h3 className="slip__title">
+            Why {decline.lender} likely said no
             {decline.product ? <span className="mt-1 block font-body text-[0.9375rem] font-bold text-ink-muted">{decline.product}</span> : null}
           </h3>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[0.9375rem]">
@@ -42,7 +41,7 @@ export function DeclineCard({ decline, part }: { decline: DeclineDecoded; part?:
           </dl>
           <ol className="mt-3 flex flex-col gap-2.5">
             {decline.reasons.map((r) => (
-              <li key={r.id} className="border-l-[0.1875rem] border-paper-line pl-3">
+              <li key={r.id}>
                 <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
                   <Dots n={LIKELY_DOTS[r.likelihood] ?? 1} />
                   {r.likelihood}
@@ -56,21 +55,21 @@ export function DeclineCard({ decline, part }: { decline: DeclineDecoded; part?:
       )}
       {show('fix') && (
         <section className={part ? undefined : 'mt-4 border-t-2 border-dashed border-paper-line pt-3'}>
-          <p className="slip__tag">The one fix</p>
+          <h3 className="slip__tag">The one fix</h3>
           <p className="mt-2 text-[1.0625rem] font-bold leading-snug">{decline.fix.title}</p>
           <p className="mt-1 text-[0.9375rem] leading-snug">{decline.fix.how}</p>
         </section>
       )}
       {show('reapply') && (
         <section className={part ? undefined : 'mt-4 border-t-2 border-dashed border-paper-line pt-3'}>
-          <p className="slip__tag">When to apply again</p>
+          <h3 className="slip__tag">When to apply again</h3>
           <p className="mt-2 font-pixel text-sm leading-relaxed">Not before {decline.reapply.when}</p>
           <p className="mt-1 text-[0.9375rem] leading-snug">{decline.reapply.how}</p>
         </section>
       )}
       {show('rights') && (
         <section className={part ? undefined : 'mt-4 border-t-2 border-dashed border-paper-line pt-3'}>
-          <p className="slip__tag">Your rights</p>
+          <h3 className="slip__tag">Your rights</h3>
           <ul className="mt-2 flex list-none flex-col gap-2 text-[0.9375rem] leading-snug">
             {decline.rights.map((r) => (
               <li key={r} className="flex gap-2">

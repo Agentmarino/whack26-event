@@ -17,7 +17,7 @@ export function WhatIfCard({ run, plan }: { run: WhatIfRun; plan: PlanId }) {
   const b = o.because
   return (
     <article className="slip p-3" data-card="whatif" aria-label="What if">
-      <p className="slip__tag">What if · estimate</p>
+      <h3 className="slip__tag">What if · estimate</h3>
       <ul className="mt-1.5 flex flex-col gap-0.5 text-[1.0625rem] font-bold leading-snug">
         {o.applied.map((a) => (
           <li key={a}>{a}</li>
