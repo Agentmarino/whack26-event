@@ -27,7 +27,9 @@ export default function App() {
   const lineId = useRef(0)
   const lineDone = useRef<(() => void) | null>(null)
   const skipWait = useRef<(() => void) | null>(null)
+  const skipRequested = useRef(false)
   const runToken = useRef(0)
+  const dropTimer = useRef(0)
 
   const say = useCallback((text: string, nextChips: string[] = []) => {
     lineId.current += 1
@@ -41,7 +43,15 @@ export default function App() {
     lineDone.current?.()
     skipWait.current?.()
     setHasNext(false)
+    skipRequested.current = false
     setSample((s) => (s === 'running' ? 'idle' : s))
+    if (document.body.dataset.sample === 'running') document.body.dataset.sample = 'stopped'
+  }, [])
+
+  /** Next button or any chip during the sample: move on now instead of waiting. */
+  const advanceSample = useCallback(() => {
+    if (skipWait.current) skipWait.current()
+    else skipRequested.current = true
   }, [])
 
   const playSample = useCallback(async () => {
@@ -49,12 +59,23 @@ export default function App() {
     const live = () => runToken.current === token
     const wait = (ms: number) =>
       new Promise<void>((resolve) => {
-        const id = window.setTimeout(resolve, ms)
-        skipWait.current = () => {
+        if (skipRequested.current) {
+          skipRequested.current = false
+          resolve()
+          return
+        }
+        const finish = () => {
           window.clearTimeout(id)
+          skipWait.current = null
           resolve()
         }
+        const id = window.setTimeout(finish, ms)
+        skipWait.current = () => {
+          skipRequested.current = false
+          finish()
+        }
       })
+    skipRequested.current = false
     setSample('running')
     document.body.dataset.sample = 'running'
     const h = npc.current!
@@ -84,7 +105,8 @@ export default function App() {
     h.emote('warm')
     h.setState('receive-document')
     say(`Thank you. I have ${file.name}. Let me read it.`)
-    window.setTimeout(() => h.snapshot()?.state === 'receive-document' && h.setState('reading'), h.settleIn() + 1200)
+    window.clearTimeout(dropTimer.current)
+    dropTimer.current = window.setTimeout(() => h.snapshot()?.state === 'receive-document' && h.setState('reading'), h.settleIn() + 1200)
   }, [say, stopSample])
 
   const onPaperClick = useCallback(() => {
@@ -98,10 +120,14 @@ export default function App() {
       void playSample()
       return
     }
+    if (sample === 'running') {
+      advanceSample()
+      return
+    }
     stopSample()
     npc.current?.setState('listening')
     say(`Noted: "${text}". I'll keep that in mind.`)
-  }, [playSample, say, stopSample])
+  }, [advanceSample, playSample, sample, say, stopSample])
 
   // D toggles the debug panel (not while typing).
   useEffect(() => {
@@ -151,7 +177,7 @@ export default function App() {
               lineDone.current = null
             }}
             hasNext={hasNext}
-            onNext={() => skipWait.current?.()}
+            onNext={advanceSample}
             chips={chips}
             onChip={onReply}
             onSubmit={onReply}
@@ -185,12 +211,22 @@ export default function App() {
             <section>
               <h3>Sample</h3>
               <div className="npc-debug__grid">
-                <button type="button" data-npc-action="play-sample" onClick={() => void playSample()}>Play sample conversation</button>
+                <button
+                  type="button"
+                  data-npc-action="play-sample"
+                  onClick={(e) => {
+                    if (e.detail > 0) e.currentTarget.blur() // mouse click: let Space reach the dialogue
+                    void playSample()
+                  }}
+                >
+                  Play sample conversation
+                </button>
                 <button type="button" data-npc-action="stop-sample" onClick={stopSample}>Stop</button>
                 <button
                   type="button"
                   data-npc-action="test-line"
-                  onClick={() => {
+                  onClick={(e) => {
+                    if (e.detail > 0) e.currentTarget.blur()
                     stopSample()
                     npc.current?.setState('talking')
                     say(TEST_LINE)

@@ -77,7 +77,7 @@ export const ARM_POSES = {
   readL: arm(9, 40, 16, 42, 'grip'),
   readR: arm(38, 40, 31, 42, 'grip'),
   chinR: arm(37, 40, 27, 23, 'grip'),
-  pointDownR: arm(42, 36, 46, 46, 'pointDown'),
+  pointDownR: arm(41, 41, 29, 55, 'pointDown'),
   pointSideR: arm(41, 31, 47, 30, 'pointRight'),
   tapUpR: arm(42, 41, 50, 51, 'pointDown'),
   tapDownR: arm(42, 42, 50, 53, 'pointDown', true),
@@ -87,13 +87,16 @@ export const ARM_POSES = {
   toFace2L: arm(8, 30, 13, 15, 'grip'),
 } satisfies Record<string, ArmPose>
 
-interface HeldItem { key: ItemKey; x: number; y: number }
+/** x, y are local coords, or an offset from the hand when attached to an arm. */
+interface HeldItem { key: ItemKey; x: number; y: number; attach?: 'L' | 'R' }
 interface Frame {
   L: ArmPose
   R: ArmPose
   items: HeldItem[]
   eyes?: EyeKey
   brows?: BrowKey
+  /** Eyebrows that win over the emote (asking: up), except for 'concerned'. */
+  browsForce?: BrowKey
   headDy: number
   tilt: number
   lean: number
@@ -233,6 +236,7 @@ export class NpcEngine {
   }
   clearPaper() {
     this.paper = 'none'
+    this.paperHover = false
     this.emit()
   }
   setAmbient(on: boolean) {
@@ -254,6 +258,7 @@ export class NpcEngine {
     this.colors = buildColorTable(overrides)
   }
   reset() {
+    this.paperHover = false
     this.mode = 'checker'
     this.trayDoc = false
     this.paper = 'none'
@@ -371,13 +376,13 @@ export class NpcEngine {
       case 'asking':
         f.L = A.palmL
         f.tilt = 0.09
-        f.brows = 'raised'
+        f.browsForce = 'raised'
         f.eyes = 'open'
         break
       case 'receive-document': {
         f.L = seq(T, [[0, A.reach1L], [200, A.reach2L], [450, A.reach3L], [700, A.reach2LDoc], [950, A.reach1LDoc], [1200, A.holdDocL]])
         if (T >= 200 && T < 950) f.lean = -2
-        if (T >= 600) f.items.push({ key: 'docSmall', x: f.L.hand.x - 4, y: f.L.hand.y - 10 })
+        if (T >= 600) f.items.push({ key: 'docSmall', x: -4, y: -10, attach: 'L' })
         f.eyes = T < 700 ? 'down-left' : 'open'
         break
       }
@@ -395,7 +400,7 @@ export class NpcEngine {
         f.bubbleDots = rm ? 3 : 1 + (Math.floor(st / 400) % 3)
         break
       case 'explaining':
-        f.R = !rm && Math.floor(st / 450) % 2 === 1 ? { ...A.pointDownR, hand: pt(46, 47) } : A.pointDownR
+        f.R = !rm && Math.floor(st / 450) % 2 === 1 ? { ...A.pointDownR, hand: pt(29, 56) } : A.pointDownR
         f.eyes = 'open'
         break
       case 'slide-paper': {
@@ -410,7 +415,7 @@ export class NpcEngine {
         f.L = seq(T, [[0, A.toFace1L], [250, A.toFace2L], [600, A.restL]])
         if (T >= 850) {
           f.R = A.plannerR
-          f.items.push({ key: 'planner', x: A.plannerR.hand.x - 5, y: A.plannerR.hand.y - 9 })
+          f.items.push({ key: 'planner', x: -5, y: -9, attach: 'R' })
         }
         f.glance = T >= 1300
         break
@@ -428,8 +433,7 @@ export class NpcEngine {
     // An arm that leaves a two-handed document hands it to the other hand.
     if (f.items.some((i) => i.key === 'docHeld')) {
       f.items = f.items.filter((i) => i.key !== 'docHeld')
-      const keep = usesR ? A.readL : A.readR
-      f.items.push({ key: 'docSmall', x: keep.hand.x - 4, y: keep.hand.y - 10 })
+      f.items.push({ key: 'docSmall', x: -4, y: -10, attach: usesR ? 'L' : 'R' })
     }
     if (usesR) f.items = f.items.filter((i) => i.key !== 'planner')
     f.glance = false
@@ -557,7 +561,8 @@ export class NpcEngine {
     hb.blit(EYES[this.eyesFor(f)], m + EYES_POS.x, EYES_POS.y)
     if (this.mode === 'coach') hb.blit(GLASSES, m + GLASSES_POS.x, GLASSES_POS.y)
     const face = EMOTE_FACE[this.emoteV]
-    hb.blit(BROWS[face.brows ?? f.brows ?? 'neutral'], m + BROWS_POS.x, BROWS_POS.y)
+    const brows = f.browsForce && this.emoteV !== 'concerned' ? f.browsForce : face.brows ?? f.brows ?? 'neutral'
+    hb.blit(BROWS[brows], m + BROWS_POS.x, BROWS_POS.y)
     hb.blit(MOUTHS[this.mouthFor()], m + MOUTH_POS.x, MOUTH_POS.y)
     const s = { w: hb.w, h: hb.h, px: hb.px }
     if (f.tilt) this.screen.blitShear(s, ox + HEAD_POS.x - m, oy + HEAD_POS.y, f.tilt, HEAD.h - 1)
@@ -583,8 +588,9 @@ export class NpcEngine {
       b.thickLine(cx, cy, cx, cy, 2, 1, IDX.shirt)
     }
     for (const it of f.items) {
-      const grounded = it.key === 'docSmall' && f.L.grounded
-      const p = place(pt(it.x, it.y), grounded)
+      const holder = it.attach === 'L' ? f.L : it.attach === 'R' ? f.R : null
+      const at = holder ? pt(holder.hand.x + it.x, holder.hand.y + it.y) : pt(it.x, it.y)
+      const p = place(at, !!holder?.grounded)
       b.blit(ITEMS[it.key], p.x, p.y)
     }
     for (const [, a] of arms) {

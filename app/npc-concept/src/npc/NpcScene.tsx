@@ -135,7 +135,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
         aria-label="Document tray. Choose a file to hand to the agent, or drop one anywhere on the page."
         data-npc-hotspot="tray"
         onClick={() => fileRef.current?.click()}
-        onFocus={() => engineRef.current?.setDropHover(true)}
+        onFocus={(e) => e.currentTarget.matches(':focus-visible') && engineRef.current?.setDropHover(true)}
         onBlur={() => engineRef.current?.setDropHover(false)}
       />
       <input
@@ -145,6 +145,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
         tabIndex={-1}
         onChange={(e) => {
           const file = e.target.files?.[0]
+          engineRef.current?.setDropHover(false)
           if (file) propsRef.current.onFileDrop?.(file)
           e.target.value = ''
         }}

@@ -96,10 +96,12 @@ export function DialogueBox(props: DialogueBoxProps) {
       <div className="npc-dialogue__body" onClick={advance}>
         <p className="npc-dialogue__text" aria-live="polite" aria-atomic="true">
           <span key={line.id}>
-            <span className="npc-sr-only">{line.speaker} says: </span>
-            {chars.map((c, i) => (
-              <span key={i} className={i < tw.printed ? undefined : 'npc-unprinted'}>{c}</span>
-            ))}
+            <span className="npc-sr-only">{line.speaker} says: {line.text}</span>
+            <span aria-hidden="true">
+              {chars.map((c, i) => (
+                <span key={i} className={i < tw.printed ? undefined : 'npc-unprinted'}>{c}</span>
+              ))}
+            </span>
           </span>
         </p>
         {showNext && (

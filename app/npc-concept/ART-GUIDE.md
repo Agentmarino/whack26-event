@@ -118,8 +118,9 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 ## Animation system
 - Fixed step: 60 updates per second (`STEP_MS`), driven by `requestAnimationFrame` with an accumulator. Timing does not depend on the display's refresh rate. Positions are whole pixels.
 - API: `setState(state)`, `emote(emote)`, `gesture(gesture)`, `talk(char)`, `stopTalking()`, `setTrayDoc`, `setDropHover`, `clearPaper`, `setPalette`, `reset`, `settleIn()` (ms until a one-shot state has finished), `snapshot()`.
-- Emotes and gestures combine with any state. A non-neutral emote wins the eyebrows; the state's preferred eyebrows (asking: raised, thinking: quizzical) show with `neutral`.
-- Idle never freezes: breathing bob, blinks and glances run in every state unless reduced motion is on.
+- Emotes and gestures combine with any state. A non-neutral emote wins the eyebrows, except in `asking`, which keeps its eyebrows up unless the emote is `concerned` (whose eyebrows are already raised at the inner ends). `thinking` shows quizzical eyebrows with `neutral`.
+- Idle never freezes: the breathing bob and blinks run in every state unless reduced motion is on. Glances run in `idle`, after the wave in `greeting` and after the switch in `coach` (other states fix the eyes).
+- `setState()` clears any running gesture, so call `gesture()` after `setState()`, not before.
 
 ## States: frames and timings
 | State | Frames | Timing |
@@ -132,7 +133,7 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 | `receive-document` | arm 6 keyframes: reach 1, reach 2, take, back 2, back 1, hold | 0, 200, 450, 700, 950, 1200 ms; document leaves the tray at 600 ms; lean 2 px from 200 to 950 ms |
 | `reading` | both hands hold the document (1); eyes 4 (down-left, down, down-right, half) | one line every 1.5 s (450, 450, 450, 150 ms) |
 | `thinking` | hand to chin (1); eyes up-right; bubble dots 3 | dots step every 400 ms |
-| `explaining` | point down (2: tap +1 px) | 450 ms per frame |
+| `explaining` | point down at the front-centre of the counter, where the summary lands and towards the chat's reason cards below (2: tap +1 px) | 450 ms per frame |
 | `slide-paper` | push hand follows the sheet (12 positions), retract (1), glow 4 | push 250 to 1000 ms, retract to 1200 ms, glow 1000 to 1600 ms (once); sheet clickable from 1000 ms |
 | `coach` | hand to face 2, glasses on, rest, planner up | 0, 250, glasses at 450, 600, 850 ms; glasses stay on in every later state (coach mode) |
 
@@ -176,14 +177,14 @@ Left and right always mean screen left and right.
 ## Accessibility
 The brief is Capital One's "Make credit accessible", so the agent has to work for everyone.
 
-**Dialogue is real text.** `DialogueBox` renders the whole line as DOM text inside `<p aria-live="polite" aria-atomic="true">`. The typewriter only changes a class on characters not yet printed (`color: transparent`), never the text itself, so a screen reader hears each line once, in full, prefixed with "Agent says:". Characters do not jump between lines while typing, because the space for the whole line is already reserved.
+**Dialogue is real text.** `DialogueBox` renders each line as DOM text inside `<p aria-live="polite" aria-atomic="true">`. The live region holds one plain copy of the line for screen readers ("Agent says: ...", visually hidden), next to the visible typing layer, which is `aria-hidden` and built from one span per character. The typewriter only changes a class on characters not yet printed (`color: transparent`), never the text, so a screen reader hears each line once, in full, and reads it as normal text afterwards. Characters do not jump between lines while typing, because the space for the whole line is already reserved.
 
 **The canvas describes itself.** The canvas has `role="img"` and an `aria-label` rebuilt from the engine snapshot on every state, emote or scene change (`describe.ts`), for example: "Credit agent at the Capital One stand, reading your document line by line. Expression: concerned but kind. A summary sheet is at the front of the counter."
 
 **Keyboard.** Every control is a native button, radio or input with a visible focus ring (3px `#ffd84d`, offset 2 to 3px):
 | Control | Keys |
 |---|---|
-| Drop zone (tray) | Tab to it (it lights up like a drag), Enter or Space opens the file picker; picking a file fires `onFileDrop` just like a drop |
+| Drop zone (tray) | Tab to it (keyboard focus lights it up like a drag), Enter or Space opens the file picker; picking a file fires `onFileDrop` just like a drop |
 | Summary sheet (once it is on the counter) | Tab to it, Enter or Space fires `onPaperClick` |
 | Next / show whole line | Tab to the arrow button, or press Space anywhere outside a control |
 | Text speed | Tab to the group, arrow keys switch 1x, 2x and Instant |

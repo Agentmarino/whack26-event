@@ -74,7 +74,11 @@ export function useTypewriter(
   })
 
   useEffect(() => {
-    if (done) return
+    if (done) {
+      if (st.key === lineKey) return
+      const id = window.setTimeout(() => setSt({ key: lineKey, n: text.length }), 0)
+      return () => window.clearTimeout(id)
+    }
     if (instant) {
       const id = window.setTimeout(() => setSt({ key: lineKey, n: text.length }), 0)
       return () => window.clearTimeout(id)
@@ -89,7 +93,7 @@ export function useTypewriter(
       setSt({ key: lineKey, n: printed + 1 })
     }, delay)
     return () => window.clearTimeout(id)
-  }, [printed, done, instant, text, lineKey, opts.speed])
+  }, [printed, done, instant, text, lineKey, opts.speed, st.key])
 
   useEffect(() => {
     if (done) onDone.current?.()
