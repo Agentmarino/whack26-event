@@ -4,7 +4,7 @@
   "walk": [
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "I want to get ready before I apply"
@@ -12,7 +12,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "questions",
         "messages": [
           {
@@ -50,7 +50,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "Capital One Classic"
@@ -58,7 +58,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "ask_report",
         "messages": [
           {
@@ -84,7 +84,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "sample",
           "fileKind": "credit_report",
@@ -93,7 +93,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "ask_bank",
         "messages": [
           {
@@ -127,7 +127,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "sample",
           "fileKind": "bank"
@@ -135,7 +135,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "goals",
         "messages": [
           {
@@ -148,13 +148,10 @@
           },
           {
             "id": "ready-card",
-            "kind": "ladder",
+            "kind": "text",
             "text": "The Classic is a credit-builder card. You could check it on QuickCheck from Jan 2027. It's a soft search, so it won't leave a mark.",
             "emote": "pleased",
             "gesture": "explaining",
-            "ref": {
-              "on": "ladder"
-            },
             "writtenBy": "template"
           },
           {
@@ -186,7 +183,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "The Classic card"
@@ -194,7 +191,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "goals",
         "messages": [
           {
@@ -220,7 +217,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "3 months"
@@ -228,7 +225,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "questions",
         "messages": [
           {
@@ -255,7 +252,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "Yes, I can"
@@ -263,7 +260,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "questions",
         "messages": [
           {
@@ -290,7 +287,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "No"
@@ -298,7 +295,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "assessing",
         "messages": [
           {
@@ -320,14 +317,14 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "skip"
         }
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "diagnosis",
         "messages": [
           {
@@ -410,7 +407,7 @@
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "What can I do?"
@@ -418,7 +415,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "paper",
         "messages": [
           {
@@ -439,14 +436,14 @@
             "Make me a plan"
           ]
         },
-        "paperUrl": "/api/paper/243e8626-0a7c-45ed-ab15-32cc86abfc2d.pdf",
+        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
         "branch": "prepare",
         "result": null
       }
     },
     {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "Make me a plan"
@@ -454,7 +451,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "coach",
         "messages": [
           {
@@ -473,7 +470,7 @@
             "6 months"
           ]
         },
-        "paperUrl": "/api/paper/243e8626-0a7c-45ed-ab15-32cc86abfc2d.pdf",
+        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
         "branch": "prepare",
         "result": null
       }
@@ -482,7 +479,7 @@
   "coach": {
     "plan3m": {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "3 months"
@@ -490,7 +487,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "coach",
         "messages": [
           {
@@ -699,14 +696,14 @@
           "placeholder": "What if I…",
           "allowVoice": true
         },
-        "paperUrl": "/api/paper/243e8626-0a7c-45ed-ab15-32cc86abfc2d.pdf",
+        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
         "branch": "prepare",
         "result": null
       }
     },
     "plan6m": {
       "request": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "input": {
           "type": "choice",
           "value": "6 months"
@@ -714,7 +711,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
         "step": "coach",
         "messages": [
           {
@@ -962,7 +959,7 @@
           "placeholder": "What if I…",
           "allowVoice": true
         },
-        "paperUrl": "/api/paper/243e8626-0a7c-45ed-ab15-32cc86abfc2d.pdf",
+        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
         "branch": "prepare",
         "result": null
       }
@@ -970,7 +967,7 @@
     "whatIfs": {
       "paydown": {
         "request": {
-          "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
           "input": {
             "type": "choice",
             "value": "What if I pay £300 a month?"
@@ -978,7 +975,7 @@
         },
         "resultKey": "r3",
         "response": {
-          "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
           "step": "coach",
           "messages": [
             {
@@ -1004,7 +1001,7 @@
             "placeholder": "What if I…",
             "allowVoice": true
           },
-          "paperUrl": "/api/paper/243e8626-0a7c-45ed-ab15-32cc86abfc2d.pdf",
+          "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
           "whatIf": {
             "id": "wi-1",
             "text": "What if I pay £300 a month?",
@@ -2732,7 +2729,7 @@
       },
       "bnpl": {
         "request": {
-          "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
           "input": {
             "type": "choice",
             "value": "What if I stop buy now, pay later?"
@@ -2740,7 +2737,7 @@
         },
         "resultKey": "r3",
         "response": {
-          "sessionId": "243e8626-0a7c-45ed-ab15-32cc86abfc2d",
+          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
           "step": "coach",
           "messages": [
             {
@@ -2766,7 +2763,7 @@
             "placeholder": "What if I…",
             "allowVoice": true
           },
-          "paperUrl": "/api/paper/243e8626-0a7c-45ed-ab15-32cc86abfc2d.pdf",
+          "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
           "whatIf": {
             "id": "wi-2",
             "text": "What if I stop buy now, pay later?",

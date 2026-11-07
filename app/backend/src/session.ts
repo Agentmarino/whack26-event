@@ -64,6 +64,8 @@ export type Session = {
   /** From the goals step. */
   targetCard: string | null
   targetScore: number | null
+  /** The final engine run is done (after the goals); before it, late files are still used. */
+  finalDone: boolean
 }
 
 const sessions = new Map<string, Session>()
@@ -99,6 +101,7 @@ export function newSession(): Session {
     declineShown: false,
     targetCard: null,
     targetScore: null,
+    finalDone: false,
   }
   sessions.set(s.id, s)
   return s

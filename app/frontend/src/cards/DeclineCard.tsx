@@ -34,7 +34,7 @@ export function DeclineCard({ decline, part }: { decline: DeclineDecoded; part?:
             {decline.product ? <span className="mt-1 block font-body text-[0.9375rem] font-bold text-ink-muted">{decline.product}</span> : null}
           </h3>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[0.9375rem]">
-            <dt className="text-ink-muted">The letter said</dt>
+            <dt className="text-ink-muted">Reason given</dt>
             <dd className="font-bold">{decline.stated}</dd>
             <dt className="text-ink-muted">Agency used</dt>
             <dd className="font-bold">{decline.agency}</dd>

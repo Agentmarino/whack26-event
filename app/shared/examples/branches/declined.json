@@ -4,7 +4,7 @@
   "walk": [
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "I've been declined already"
@@ -12,7 +12,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "ask_letter",
         "messages": [
           {
@@ -46,7 +46,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "sample",
           "fileKind": "letter",
@@ -55,7 +55,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "ask_report",
         "messages": [
           {
@@ -89,7 +89,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "sample",
           "fileKind": "credit_report"
@@ -97,7 +97,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "ask_bank",
         "messages": [
           {
@@ -131,7 +131,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "sample",
           "fileKind": "bank"
@@ -139,7 +139,7 @@
       },
       "resultKey": "r1",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "decline",
         "messages": [
           {
@@ -212,7 +212,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "What can I do?"
@@ -220,7 +220,7 @@
       },
       "resultKey": "r1",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "goals",
         "messages": [
           {
@@ -284,7 +284,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "The Balance Transfer card"
@@ -292,7 +292,7 @@
       },
       "resultKey": "r1",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "goals",
         "messages": [
           {
@@ -318,7 +318,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "3 months"
@@ -326,7 +326,7 @@
       },
       "resultKey": "r1",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "questions",
         "messages": [
           {
@@ -353,7 +353,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "Yes, I can"
@@ -361,7 +361,7 @@
       },
       "resultKey": "r1",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "questions",
         "messages": [
           {
@@ -388,7 +388,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "No"
@@ -396,7 +396,7 @@
       },
       "resultKey": "r2",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "assessing",
         "messages": [
           {
@@ -418,14 +418,14 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "skip"
         }
       },
       "resultKey": "r2",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "diagnosis",
         "messages": [
           {
@@ -508,7 +508,7 @@
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "Sum it up for me"
@@ -516,7 +516,7 @@
       },
       "resultKey": "r2",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "paper",
         "messages": [
           {
@@ -537,14 +537,14 @@
             "Make me a plan"
           ]
         },
-        "paperUrl": "/api/paper/d7e1f005-81cc-4b46-9a9a-2622ac97046f.pdf",
+        "paperUrl": "/api/paper/47983535-f9a3-42d5-9db3-976264d61f01.pdf",
         "branch": "declined",
         "result": null
       }
     },
     {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "Make me a plan"
@@ -552,7 +552,7 @@
       },
       "resultKey": "r2",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "coach",
         "messages": [
           {
@@ -571,7 +571,7 @@
             "6 months"
           ]
         },
-        "paperUrl": "/api/paper/d7e1f005-81cc-4b46-9a9a-2622ac97046f.pdf",
+        "paperUrl": "/api/paper/47983535-f9a3-42d5-9db3-976264d61f01.pdf",
         "branch": "declined",
         "result": null
       }
@@ -580,7 +580,7 @@
   "coach": {
     "plan3m": {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "3 months"
@@ -588,7 +588,7 @@
       },
       "resultKey": "r2",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "coach",
         "messages": [
           {
@@ -797,14 +797,14 @@
           "placeholder": "What if I…",
           "allowVoice": true
         },
-        "paperUrl": "/api/paper/d7e1f005-81cc-4b46-9a9a-2622ac97046f.pdf",
+        "paperUrl": "/api/paper/47983535-f9a3-42d5-9db3-976264d61f01.pdf",
         "branch": "declined",
         "result": null
       }
     },
     "plan6m": {
       "request": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "input": {
           "type": "choice",
           "value": "6 months"
@@ -812,7 +812,7 @@
       },
       "resultKey": "r2",
       "response": {
-        "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+        "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
         "step": "coach",
         "messages": [
           {
@@ -1060,7 +1060,7 @@
           "placeholder": "What if I…",
           "allowVoice": true
         },
-        "paperUrl": "/api/paper/d7e1f005-81cc-4b46-9a9a-2622ac97046f.pdf",
+        "paperUrl": "/api/paper/47983535-f9a3-42d5-9db3-976264d61f01.pdf",
         "branch": "declined",
         "result": null
       }
@@ -1068,7 +1068,7 @@
     "whatIfs": {
       "paydown": {
         "request": {
-          "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+          "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
           "input": {
             "type": "choice",
             "value": "What if I pay £300 a month?"
@@ -1076,7 +1076,7 @@
         },
         "resultKey": "r2",
         "response": {
-          "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+          "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
           "step": "coach",
           "messages": [
             {
@@ -1102,7 +1102,7 @@
             "placeholder": "What if I…",
             "allowVoice": true
           },
-          "paperUrl": "/api/paper/d7e1f005-81cc-4b46-9a9a-2622ac97046f.pdf",
+          "paperUrl": "/api/paper/47983535-f9a3-42d5-9db3-976264d61f01.pdf",
           "whatIf": {
             "id": "wi-1",
             "text": "What if I pay £300 a month?",
@@ -2842,7 +2842,7 @@
       },
       "bnpl": {
         "request": {
-          "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+          "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
           "input": {
             "type": "choice",
             "value": "What if I stop buy now, pay later?"
@@ -2850,7 +2850,7 @@
         },
         "resultKey": "r2",
         "response": {
-          "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+          "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
           "step": "coach",
           "messages": [
             {
@@ -2876,7 +2876,7 @@
             "placeholder": "What if I…",
             "allowVoice": true
           },
-          "paperUrl": "/api/paper/d7e1f005-81cc-4b46-9a9a-2622ac97046f.pdf",
+          "paperUrl": "/api/paper/47983535-f9a3-42d5-9db3-976264d61f01.pdf",
           "whatIf": {
             "id": "wi-2",
             "text": "What if I stop buy now, pay later?",

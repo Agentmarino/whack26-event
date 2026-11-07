@@ -445,8 +445,10 @@ export function improve(res: EngineResult): Draft[] {
 /** The new branch: the first three steps of the build-from-zero plan. */
 export function buildStart(res: EngineResult): Draft[] {
   const steps = res.result.plans['3m'].steps.slice(0, 3)
+  const first = `The first ${count(steps.length).toLowerCase()} ${steps.length === 1 ? 'step' : 'steps'}:`
   return [
-    d('build-intro', 'text', `Here's how you start from zero. The first ${count(steps.length).toLowerCase()} ${steps.length === 1 ? 'step' : 'steps'}:`, 'warm', 'explaining'),
+    // "From zero" only when the engine is on its build-from-zero track (a thin file).
+    d('build-intro', 'text', res.result.build ? `Here's how you start from zero. ${first}` : `Here's where to start. ${first}`, 'warm', 'explaining'),
     ...steps.map((s, i) => stepLine('build', '3m', i, s)),
   ]
 }
@@ -458,23 +460,30 @@ export const CARD_NAME: Record<'classic' | 'bt' | 'purchase', string> = {
 }
 export const CARD_SHORT: Record<'classic' | 'bt' | 'purchase', string> = { classic: 'Classic card', bt: 'Balance Transfer card', purchase: '0% Purchase card' }
 
-/** The prepare branch: how they stand against the product they want first (the card ladder's criteria). */
+/**
+ * The prepare branch: how they stand against the product they want first (the card ladder's criteria
+ * and the month each turns green). Plain lines, not the ladder card: the plan is run again after the
+ * goals step, and a card in the history would show the new ladder under the old words. The ladder
+ * card itself comes with the plan.
+ */
 export function readiness(res: EngineResult, product: { id: string; label: string }): Draft[] {
   const l = res.result.ladder
   if (product.id === 'classic' && l?.entry && l.applyFrom)
     return [
-      d('ready-card', 'ladder', `The Classic is a credit-builder card. You could check it on QuickCheck from ${E.fmtMonth(l.applyFrom)}. It's a soft search, so it won't leave a mark.`, 'pleased', 'explaining', { on: 'ladder' }),
+      d('ready-card', 'text', `The Classic is a credit-builder card. You could check it on QuickCheck from ${E.fmtMonth(l.applyFrom)}. It's a soft search, so it won't leave a mark.`, 'pleased', 'explaining'),
     ]
   if ((product.id === 'bt' || product.id === 'purchase') && l && l.graduation.length) {
     const met = l.graduation.filter(g => g.ok).length
     const total = l.graduation.length
     const when = l.graduateWhen ? ` All of them should be green by ${l.graduateWhen}.` : ''
-    const name = product.id === 'bt' ? 'Balance Transfer' : '0% Purchase'
     const text =
       product.id === 'bt'
         ? `Against the Balance Transfer card's published criteria, you meet ${met} of ${total} today.${when}`
         : `The 0% Purchase card asks for a record like the Balance Transfer card's. Against those criteria you meet ${met} of ${total} today.${when}`
-    return [d('ready-card', 'ladder', text, met === total ? 'pleased' : 'warm', 'explaining', { on: 'ladder' }), d('ready-note', 'text', `Each line shows the month it should turn green for the ${name} card.`, 'neutral', 'none')]
+    const open = l.graduation.filter(g => !g.ok).slice(0, 3)
+    const out = [d('ready-card', 'text', text, met === total ? 'pleased' : 'warm', 'explaining')]
+    if (open.length) out.push(d('ready-note', 'text', `Still to turn green: ${open.map(g => `${g.label} (${g.when})`).join(', ')}.`, 'neutral', 'none'))
+    return out
   }
   return [
     d('ready-other', 'text', `For ${product.label.toLowerCase()}, lenders look at your payment history, how much of your limits you use and how settled you are. I'll check all of that for you.`, 'warm', 'explaining'),

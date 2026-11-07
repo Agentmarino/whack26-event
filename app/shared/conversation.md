@@ -57,7 +57,7 @@ Skipping is allowed at every upload step. With no report the questions ask every
 - **Mei Lin** and **Alex Morgan**: `credit-coach-report/v1` files that already hold bank data and a decline letter. The agent says so at the bank and letter steps ("Your sample already has that").
 
 ## A letter at any step
-A `letter` (file or sample) is accepted at **any** step, not just `ask_letter`. The backend runs the decline decoder and answers with **one acknowledgement** ("Thanks, that's a letter from Capital One. I'll go through it after your results."); `step` and `expects` stay as they were (`examples/turns/letter-ack.json`). The `decline` step then runs after the diagnosis.
+A `letter` (file or sample) is accepted at **any** step, not just `ask_letter`. The backend runs the decline decoder and answers with **one acknowledgement** ("Thanks, that's a letter from Capital One. I'll go through it after your results."); `step` and `expects` stay as they were (`examples/letter-ack.json`). The `decline` step then runs after the diagnosis.
 
 ## Questions
 Each question is its own turn with step `questions`. Ask the form fields the data has not answered, in this order. **Goal and horizon are always asked** (they shape the plan); the rest only when missing:

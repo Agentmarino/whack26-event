@@ -31,13 +31,13 @@ export function useSpeech(text: string | null, key: string | null, enabled: bool
     const synth = window.speechSynthesis
     const justTurnedOn = enabled && !wasEnabled.current
     wasEnabled.current = enabled
+    // 115: switching read aloud on says its own confirmation (SettingsSheet). Don't read the line on
+    // screen over it, and don't cancel it when no line is showing; every new line from here on is read.
+    if (justTurnedOn) return
     if (!enabled || !text) {
       synth.cancel()
       return
     }
-    // 115: switching read aloud on says its own confirmation (SettingsSheet). Don't read the line on
-    // screen over it; every new line from here on is read in full.
-    if (justTurnedOn) return
     synth.cancel()
     const u = new SpeechSynthesisUtterance(text.replace(/£/g, '£ ').replace(/\s+/g, ' '))
     u.lang = 'en-GB'

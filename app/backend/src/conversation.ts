@@ -232,6 +232,7 @@ function early(s: Session, drafts: T.Draft[]): Reply {
 /** The final engine run, with everything they told us. */
 function finalRun(s: Session, drafts: T.Draft[]): Reply {
   s.stage = 'assess'
+  s.finalDone = true
   s.current = null
   s.result = analyseProfile(s.profile, s.findings)
   return { step: 'assessing', drafts: [...drafts, T.assessing(goalPhrase(s))], expects: { kind: 'none' } }
@@ -388,7 +389,15 @@ function applyReport(s: Session, r: Sample) {
 function outOfOrder(s: Session, input: Extract<TurnInput, { type: 'file' | 'sample' }>): Reply {
   const got = piece(s, input)
   if ('error' in got) return stay(s, [got.error])
-  const after = s.result !== null
+  // After the final run (not the branches' early read): the check is done.
+  const after = s.finalDone
+  if (got.fileKind === 'letter' && s.stage === 'whoWhat') {
+    // The letter answers "who turned you down, and for what": on to the report.
+    applyPiece(s, got)
+    s.queue = []
+    s.current = null
+    return next(s, [T.ackLetter(s.profile.decline?.lender ?? 'the lender')])
+  }
   if (got.fileKind === 'letter') {
     applyPiece(s, got)
     if (after) s.result = analyseProfile(s.profile, s.findings)

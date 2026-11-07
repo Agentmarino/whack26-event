@@ -72,7 +72,7 @@ export function productFrom(t: string): Product {
   if (card) return { id: card, label: CARD_SHORT[card] }
   const s = t.toLowerCase()
   if (/mortgage|house|home/.test(s)) return { id: 'mortgage', label: 'A mortgage' }
-  if (/car/.test(s)) return { id: 'car', label: 'Car finance' }
+  if (/\bcar\b|vehicle|motor/.test(s)) return { id: 'car', label: 'Car finance' } // not the "car" in "card"
   if (/loan/.test(s)) return { id: 'loan', label: 'A loan' }
   if (/phone|contract|mobile/.test(s)) return { id: 'phone', label: 'A phone contract' }
   if (/card/.test(s)) return { id: 'card', label: 'Credit card' }
@@ -374,11 +374,21 @@ async function ownGoal(s: Session, value: string): Promise<Answer> {
   s.goalWords = g.words
   const card = g.goal === 'card' ? cardIn(value) : null
   if (card) s.targetCard = CARD_NAME[card]
+  // "a score of 800": a target score in their own words
+  const max = E.SCALE[s.profile.bureau ?? 'experian'] ?? 999
+  const n = value.match(/\b(\d{3,4})\b/)?.[1]
+  if (!card && n && Number(n) >= 300 && Number(n) <= max && /score|reach|get to|hit|over|above/i.test(value)) {
+    s.targetScore = Number(n)
+    s.profile.goal = 'build'
+    s.goalWords = `a score of ${n}`
+  }
   return { ok: true }
 }
 
 /** The declined branch without the letter: who said no, and for what, become the engine's decline input. */
 function declineFrom(s: Session, lender: string | null, product: Product | null) {
+  // A real letter handed over in the meantime wins over the chips.
+  if (s.has.letter) return
   const prev = s.profile.decline
   const pr = product ?? s.product
   if (product) s.product = product
@@ -388,7 +398,8 @@ function declineFrom(s: Session, lender: string | null, product: Product | null)
     monthsAgo: 0,
     product: pr ? (isCardId(pr.id) ? CARD_SHORT[pr.id] : pr.label.replace(/^(A|An) /, '').toLowerCase()) : null,
     agency: null,
-    statedReason: null,
+    // Shown on the decline card as the reason given; there was no letter to give one.
+    statedReason: 'None, there was no letter',
   }
   keep(s, 'decline', decline)
 }
