@@ -14,4 +14,5 @@ Owner: `mihael` or `partner`. Only take your own. Pull before you start.
 | 107 | Demo path solid, polish, DEMO.md, offline rehearsal, video, screenshots | partner | ready | 2026-11-06 |
 | 108 | Pixel-art NPC credit agent, first concept (character rig, animation states, stand scene) | mihael | done | 2026-11-07 |
 | 109 | NPC art pass, camera in, chunky businessman, iPhone first | mihael | done | 2026-11-07 |
-| 110 | NPC art direction pass, detailed agent at a desk, glass wall office | mihael | in-progress | 2026-11-07 |
+| 110 | NPC art direction pass, detailed agent at a desk, glass wall office | mihael | done | 2026-11-07 |
+| 111 | NPC face proportions and small fixes, set defaults (stubble, day) | mihael | ready | 2026-11-07 |
