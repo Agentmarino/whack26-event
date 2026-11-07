@@ -308,12 +308,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Demo mode: a turn that expects nothing moves on by itself once its line is out (116: page by page).
-  useEffect(() => {
-    if (!settings.demo || !current || !tw.done || state.queue.length || state.pending || state.expects?.kind !== 'none') return
-    const id = window.setTimeout(() => (lastPage ? conv.skip() : setPageAt({ key: curKey, page: page + 1 })), 900)
-    return () => window.clearTimeout(id)
-  }, [settings.demo, current, tw.done, lastPage, curKey, page, state.queue.length, state.pending, state.expects, conv])
 
   // ---------- 115: Cap's business card ----------
   // It opens by itself once per conversation: when the card he slides lands on the desk (at once with
@@ -470,6 +464,44 @@ export default function App() {
         : null
   const windowMsg = current && WINDOW_KINDS.has(current.msg.kind) && (current.msg.ref || current.msg.kind === 'paper') ? current.msg : null
   const openDetails = useCallback((msgId: string) => setPanel({ open: true, tab: 'plan', focus: msgId }), [])
+
+  // ---------- 117: Demo mode moves on by itself ----------
+  // Each page waits a reading pause (250 ms a word, at least 1.2 s; at least 2.5 s with an item window), then
+  // goes on. It stops only where the presenter acts: choices (the turn waits for an answer), the paper (until
+  // it has been opened), the business card, and the first reason's Why? (until Why? has been opened). A sheet,
+  // the notebook or a Why? drawer open pauses it; with read aloud on it waits for the voice. A tap still skips.
+  const paperOpened = useRef<string | null>(null)
+  const whyStop = useRef<{ run: number; key: string | null; done: boolean }>({ run: -1, key: null, done: false })
+  if (whyStop.current.run !== state.run) whyStop.current = { run: state.run, key: null, done: false }
+  if (current?.msg.kind === 'reason' && windowMsg && !whyStop.current.key) whyStop.current.key = current.key
+  useEffect(() => {
+    if (sheet === 'paper' && current?.msg.kind === 'paper') paperOpened.current = current.key
+  }, [sheet, current])
+  useEffect(() => {
+    if (why && whyStop.current.key === current?.key) whyStop.current.done = true
+  }, [why, current?.key])
+  const demoPause = !current
+    ? null
+    : current.msg.kind === 'card' || bizCard || sheet || why || panel.open || state.pending
+      ? null
+      : lastPage && !state.queue.length && state.expects?.kind !== 'none'
+        ? null // choices, a file, typing: the presenter answers
+        : current.msg.kind === 'paper' && paperOpened.current !== current.key
+          ? null
+          : whyStop.current.key === current.key && !whyStop.current.done
+            ? null
+            : Math.max(windowMsg ? 2500 : 1200, 250 * (pages[page] ?? '').split(/\s+/).filter(Boolean).length)
+  useEffect(() => {
+    if (!settings.demo || !tw.done || demoPause === null) return
+    let id = 0
+    const go = () => {
+      // read aloud: let the voice finish first
+      if (settings.readAloud && window.speechSynthesis?.speaking) id = window.setTimeout(go, 400)
+      else advanceRef.current()
+    }
+    id = window.setTimeout(go, demoPause)
+    return () => window.clearTimeout(id)
+  }, [settings.demo, settings.readAloud, tw.done, demoPause, curKey, page])
 
   return (
     <CardContext.Provider value={cardCtx}>
