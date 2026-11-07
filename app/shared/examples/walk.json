@@ -196,12 +196,51 @@
       }
     },
     {
-      "file": "turns/16-coach-whatif.json",
+      "file": "turns/16-coach-whatif-paydown-3m.json",
       "request": {
         "sessionId": "example-priya",
         "input": {
           "type": "text",
           "value": "What if I pay £300 a month?"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/17-coach-whatif-paydown-6m.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "text",
+          "value": "What if I pay £300 a month?"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/18-coach-whatif-bnpl-3m.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "text",
+          "value": "What if I stop buy now, pay later?"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/19-coach-whatif-bnpl-6m.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "text",
+          "value": "What if I stop buy now, pay later?"
         },
         "settings": {
           "plainEnglish": false

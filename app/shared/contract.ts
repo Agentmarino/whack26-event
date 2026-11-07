@@ -103,7 +103,7 @@ export const Sim = z.object({
   extraM1: z.number(),
   extraLater: z.number(),
   limit: z.number(),
-  /** Month index when utilisation first drops under 30%, 50%, 75%. Missing if never or already under. */
+  /** Month index when utilisation first drops under 30%, 50%, 75% (0 = already under). Missing or null if never. */
   crossings: z.object({ 30: z.number().nullish(), 50: z.number().nullish(), 75: z.number().nullish() }),
 })
 
@@ -121,9 +121,13 @@ export const PlanStep = z.object({
 export type PlanStep = z.infer<typeof PlanStep>
 
 export const ProjectionPoint = z.object({
-  /** 0 is today (the score on the report). */
+  /** 0 is today (the score on the report). Use this for the chart axis. */
   month: z.number().int(),
-  date: IsoDate,
+  /**
+   * A DISPLAY month from the engine's fmtMonth(), e.g. "Feb 2027". Not a date: never pass it to
+   * `new Date()` (Safari on the iPhone returns Invalid Date). Show it as text; plot by `month`.
+   */
+  date: z.string(),
   /** Estimated score range on the person's bureau scale. Always label it "estimate". */
   low: z.number(),
   high: z.number(),
@@ -174,9 +178,15 @@ export const Ladder = z.object({
       limitAssumed: z.number(),
     })
     .nullable(),
-  /** Checklist for the next card; `when` is "now", a month ("Jul 2027") or "not within 12 months"; month -1 = not within 12. */
-  graduation: z.array(z.object({ label: z.string(), ok: z.boolean(), when: z.string(), month: z.number() })),
-  graduateWhen: z.string().nullable(),
+  /**
+   * Checklist for the next card; `when` is "now", a month ("Jul 2027") or "not within 12 months"; month -1 = not within 12.
+   * On the Balance Transfer branch (a clean file with an expensive card) items are all ok, have no `month`,
+   * and there is no `graduateWhen`.
+   */
+  graduation: z.array(z.object({ label: z.string(), ok: z.boolean(), when: z.string(), month: z.number().optional() })),
+  graduateWhen: z.string().nullish(),
+  /** Balance Transfer branch only: the interest saved, in words. */
+  saving: z.string().optional(),
 })
 export type Ladder = z.infer<typeof Ladder>
 
@@ -214,12 +224,13 @@ const Bank = z
 export const ProfileDecline = z.object({
   lender: z.string(),
   /** Capital One product id from the engine's CARDS ('classic', 'bt', ...). */
-  productId: z.string().optional(),
+  productId: z.string().nullish(),
   /** Months between the decline and the report. */
-  monthsAgo: z.number().optional(),
-  product: z.string().optional(),
-  agency: z.string().optional(),
-  statedReason: z.string().nullable().optional(),
+  monthsAgo: z.number().nullish(),
+  product: z.string().nullish(),
+  /** null when the letter names no agency (parseReport). */
+  agency: z.string().nullish(),
+  statedReason: z.string().nullish(),
 })
 
 /** The engine's input. Every field optional; normalise() fills defaults, so partial profiles from chat still run. */
@@ -324,8 +335,8 @@ export type EngineResult = z.infer<typeof EngineResult>
 
 // ---------- What-if ----------
 
-/** The engine's levers. Claude may only produce these (113 validates with this schema). */
-export const Change = z.discriminatedUnion('lever', [
+/** The engine's levers (applyChanges). The sliders send any of these; Claude's output is validated with ClaudeChange. */
+const claudeLevers = [
   /** Pay this much extra a month off cards. */
   z.object({ lever: z.literal('paydown'), value: z.number().min(0) }),
   z.object({ lever: z.literal('stop'), what: z.enum(['bnpl', 'gambling', 'payday']) }),
@@ -335,7 +346,13 @@ export const Change = z.discriminatedUnion('lever', [
   /** Clear one card by name, or every card when `card` is missing. */
   z.object({ lever: z.literal('clearCard'), card: z.string().optional() }),
   z.object({ lever: z.literal('rentReporting'), value: z.boolean().optional() }),
-  /** Set any profile path, e.g. "bank.rent". For the sliders only; not for Claude. */
+] as const
+/** The levers Claude may produce from free text (everything except `set`). Validate Claude's output with this. */
+export const ClaudeChange = z.discriminatedUnion('lever', [...claudeLevers])
+export type ClaudeChange = z.infer<typeof ClaudeChange>
+export const Change = z.discriminatedUnion('lever', [
+  ...claudeLevers,
+  /** Set any profile path, e.g. "bank.rent". For the sliders only; never from Claude. */
   z.object({ lever: z.literal('set'), path: z.string().min(1), value: z.union([z.number(), z.string(), z.boolean()]) }),
 ])
 export type Change = z.infer<typeof Change>
@@ -382,8 +399,9 @@ export const CreditReport = z.looseObject({
   format: z.literal('credit-coach-report/v1'),
   provider: z.string().optional(),
   reportDate: z.string().optional(),
-  score: z.looseObject({ value: z.number(), scaleMax: z.number() }),
-  personal: z.looseObject({ name: z.string() }),
+  /** The engine fills scaleMax and the name itself when they are missing. */
+  score: z.looseObject({ value: z.number(), scaleMax: z.number().optional() }),
+  personal: z.looseObject({ name: z.string().optional() }),
   accounts: z.array(z.looseObject({ type: z.string() })),
 })
 export type CreditReport = z.infer<typeof CreditReport>

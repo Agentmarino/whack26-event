@@ -60,6 +60,20 @@ for (const file of ['priya.json', 'sam.json', 'dan.json', 'mock-credit-report.js
   const check = EngineResult.safeParse(E.analyse(input))
   if (!check.success) fail(`engine output for ${file} does not match EngineResult:\n${check.error.message}`)
 }
+// Engine branches the samples never reach (found in the 112 review): the Balance Transfer ladder
+// (clean file, expensive card) and a decline letter that names no agency.
+const edgeCases: Array<[string, Profile | CreditReport]> = [
+  ['balance-transfer branch', { age: 30, grossIncome: 30000, cards: [{ name: 'Old card', limit: 5000, balance: 1000, apr: 34.9, hasDD: true, openedYears: 4 }], loans: [{ name: 'Car finance', monthly: 150, openedYears: 3 }], searches: [], electoralRoll: true }],
+  ['letter without agency', (() => {
+    const rep = readJson<CreditReport & { declineLetters: Array<{ text: string }> }>('mock-credit-report.json')
+    rep.declineLetters = rep.declineLetters.map(l => ({ ...l, text: 'We are unable to offer you a card at this time.' }))
+    return rep
+  })()],
+]
+for (const [label, input] of edgeCases) {
+  const check = EngineResult.safeParse(E.analyse(input))
+  if (!check.success) fail(`engine output for ${label} does not match EngineResult:\n${check.error.message}`)
+}
 
 // ---------- message helpers ----------
 const msg = (id: string, kind: MessageKind, text: string, emote: Emote, gesture: Gesture, ref?: Ref) =>
@@ -286,7 +300,7 @@ const planMessages = (plan: PlanId): AgentMessage[] => {
     msg(
       `plan-${plan}-projection`,
       'projection',
-      `If you stick to it, your ${r.bureau} score could be ${end.low} to ${end.high} by ${E.fmtMonth(end.date)}. That's an estimate, not a promise.`,
+      `If you stick to it, your ${r.bureau} score could be ${end.low} to ${end.high} by ${end.date}. That's an estimate, not a promise.`,
       'pleased',
       'explaining',
       { on: 'projection', plan },
@@ -321,40 +335,54 @@ for (const plan of ['3m', '6m'] as const) {
   })
 }
 
-// Free-text what-if in the chat (113 turns the text into changes with Claude; here we know them).
-const whatIfText = 'What if I pay £300 a month?'
-const whatIfChanges: Change[] = [{ lever: 'paydown', value: 300 }]
-const wi: WhatIfRun = { id: 'wi-1', text: whatIfText, changes: whatIfChanges, output: E.whatIf(priya, whatIfChanges) }
-const whatIfMessage = (id: string, lead: string, run: WhatIfRun) => {
-  const { before: b, after: a, delta } = run.output
-  const end = r.plans['3m'].projection.at(-1)
-  const by = end ? E.fmtMonth(end.date) : 'the end of the plan'
-  const up = delta.m3.high > 0 || delta.m3.low > 0
+// Free-text what-ifs in the chat (113 turns the text into changes with Claude; here we know them).
+// The answer quotes the plan the person chose (m3 or m6).
+const whatIfMessage = (id: string, lead: string, run: WhatIfRun, plan: PlanId = '3m') => {
+  const k = plan === '3m' ? 'm3' : 'm6'
+  const b = run.output.before[k]
+  const a = run.output.after[k]
+  const delta = run.output.delta[k]
+  const end = r.plans[plan].projection.at(-1)
+  const by = end ? end.date : 'the end of the plan'
+  const up = delta.high > 0 || delta.low > 0
   const under30 = run.output.because.under30
   const tail = under30?.after ? ` You'd get under 30% by ${under30.after}.` : ''
-  // No change or a drop means the lever is already in the baseline plan (engine behaviour, see 112 RESULT):
-  // say so instead of showing a lower number.
+  // No change or a drop: the baseline plan already gets there (BNPL and the roll are in it; on the 6-month
+  // plan extra paydown lands on the same range). Say so instead of showing a lower number (112 RESULT).
   return msg(
     id,
     'whatif',
     up
-      ? `${lead}: by ${by} your score could be ${a.m3.low} to ${a.m3.high}, up from ${b.m3.low} to ${b.m3.high}. An estimate.${tail}`
-      : `${lead}: that's already part of your plan, so your estimate stays at ${b.m3.low} to ${b.m3.high} by ${by}.`,
+      ? `${lead}: by ${by} your score could be ${a.low} to ${a.high}, up from ${b.low} to ${b.high}. An estimate.${tail}`
+      : `${lead}: your estimate by ${by} stays at ${b.low} to ${b.high}. Your plan already gets you there.${tail}`,
     up ? 'pleased' : 'neutral',
     'explaining',
     { on: 'whatif', whatIfId: run.id },
   )
 }
-turn({
-  key: 'coach-whatif',
-  request: req({ type: 'text', value: whatIfText }),
-  step: 'coach',
-  messages: [whatIfMessage('whatif-1', 'Paying £300 extra a month', wi)],
-  expects: expectsWhatIf,
-  hasResult: true,
-  hasPaper: true,
-  whatIf: wi,
-})
+const WHAT_IFS = [
+  { lever: 'paydown', text: 'What if I pay £300 a month?', lead: 'Paying £300 extra a month', changes: [{ lever: 'paydown', value: 300 }] },
+  { lever: 'bnpl', text: 'What if I stop buy now, pay later?', lead: 'Stopping buy now, pay later', changes: [{ lever: 'stop', what: 'bnpl' }] },
+] as const satisfies ReadonlyArray<{ lever: string; text: string; lead: string; changes: readonly Change[] }>
+let whatIfN = 0
+for (const w of WHAT_IFS) {
+  for (const plan of ['3m', '6m'] as const) {
+    whatIfN += 1
+    const changes: Change[] = [...w.changes]
+    const run: WhatIfRun = { id: `wi-${whatIfN}`, text: w.text, changes, output: E.whatIf(priya, changes) }
+    turn({
+      key: `coach-whatif-${w.lever}-${plan}`,
+      // Typed text; a chip sends {type:'choice'} with the same words, and counts the same (conversation.md).
+      request: req({ type: 'text', value: w.text }),
+      step: 'coach',
+      messages: [whatIfMessage(`whatif-${whatIfN}`, w.lead, run, plan)],
+      expects: expectsWhatIf,
+      hasResult: true,
+      hasPaper: true,
+      whatIf: run,
+    })
+  }
+}
 
 // ---------- build, validate, write ----------
 const problems: string[] = []
@@ -403,10 +431,10 @@ checkMessages('letter-ack', letterAck.messages, null, {}, null)
 // Sliders sheet: POST /api/whatif with changes.
 const sliderChanges: Change[] = [{ lever: 'paydown', value: 400 }, { lever: 'stop', what: 'bnpl' }]
 const sliderRequest = WhatIfRequest.parse({ sessionId: SESSION, changes: sliderChanges })
-const sliderRun: WhatIfRun = { id: 'wi-2', text: null, changes: sliderChanges, output: E.whatIf(priya, sliderChanges) }
+const sliderRun: WhatIfRun = { id: 'wi-slider', text: null, changes: sliderChanges, output: E.whatIf(priya, sliderChanges) }
 const whatIfResponse: WhatIfResponse = {
   sessionId: SESSION,
-  messages: [whatIfMessage('whatif-2', 'Paying £400 a month and stopping buy now, pay later', sliderRun)],
+  messages: [whatIfMessage('whatif-slider', 'Paying £400 a month and stopping buy now, pay later', sliderRun)],
   whatIf: sliderRun,
 }
 if (!WhatIfResponse.safeParse(whatIfResponse).success) problems.push('whatif: not a WhatIfResponse')

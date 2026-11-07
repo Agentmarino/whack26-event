@@ -47,7 +47,7 @@ type RawEngine = {
   summary(r: RawRun): string
   normalise(profile: Profile): Profile
   toJSON<T>(x: unknown): T
-  PERSONAS: Record<string, Profile & { name: string; blurb: string }>
+  PERSONAS: Record<'priya' | 'sam' | 'dan', Profile & { name: string; blurb: string }>
   CARDS: Record<string, CapitalOneCard>
   SRC: Record<string, SourceLink>
   SCALE: Record<'experian' | 'equifax' | 'transunion', number>
@@ -101,7 +101,7 @@ export const SRC = E.SRC
 /** Score scale per bureau. */
 export const SCALE = E.SCALE
 
-/** "9 Nov 2026". Accepts the ISO strings in JSON results too. */
+/** "9 Nov 2026". Accepts the ISO strings in JSON results too (not projection `date`, which is already text). */
 export const fmtDate = (d: Date | string): string => E.fmtDate(typeof d === 'string' ? new Date(d) : d)
 /** "Nov 2026". */
 export const fmtMonth = (d: Date | string): string => E.fmtMonth(typeof d === 'string' ? new Date(d) : d)

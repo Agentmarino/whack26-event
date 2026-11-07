@@ -16,20 +16,20 @@
     "sessionId": "example-priya",
     "messages": [
       {
-        "id": "whatif-2",
+        "id": "whatif-slider",
         "kind": "whatif",
         "text": "Paying £400 a month and stopping buy now, pay later: by Feb 2027 your score could be 747 to 854, up from 735 to 836. An estimate. You'd get under 30% by Jan 2027.",
         "emote": "pleased",
         "gesture": "explaining",
         "ref": {
           "on": "whatif",
-          "whatIfId": "wi-2"
+          "whatIfId": "wi-slider"
         },
         "writtenBy": "template"
       }
     ],
     "whatIf": {
-      "id": "wi-2",
+      "id": "wi-slider",
       "text": null,
       "changes": [
         {

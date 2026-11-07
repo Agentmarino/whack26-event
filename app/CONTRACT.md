@@ -8,6 +8,10 @@ Written by handoff 112 on 2026-11-07. Jag's credit engine is the brain; the pixe
 - `app/shared/examples/`: real responses for Priya, made from the engine by `scripts/make-examples.ts` (`walk.json` lists the request behind each turn)
 - `app/shared/mock-conversation.ts`: `mockTurn(state, request)`, `mockWhatIf`, `mockUpload`, `mockPersonas` so 114 runs the whole chat with no backend
 
+**Using it:** add `"shared": "workspace:*"` to your `package.json` dependencies (`pnpm add 'shared@workspace:*'`), then `import { TurnResponse, resolveRef } from 'shared'` and `import { mockTurn } from 'shared/mock-conversation'`. The package exports `.ts` source; Vite and tsx compile it.
+
+**Watch out:** projection `date` is a display month ("Feb 2027"), not a date: never `new Date()` it (Safari returns Invalid Date); plot by `month`. A reason card has the because-trail (`because.dataPoint`, `rule`, `source`, `weightSource`) but no separate evidence list; `findings` is null for persona samples.
+
 **113 owns `app/shared/`.** Changes go in a commit starting `CONTRACT:` plus a dated line under "Contract changes" in `handoffs/113-backend-conversation.md`. Never break a field 114 uses without adding the new one first.
 
 ## Ports and routes
@@ -34,6 +38,7 @@ Backend `http://localhost:8000`, frontend `http://localhost:5173` (Vite proxies 
 - `Ref` is a tagged union on `on` (`{on: 'factor', factorId}`, `{on: 'step', plan, stepIndex}`, ...) instead of loose keys
 - `AgentMessage.writtenBy` (optional): `template` or `claude`, for 113's debug panel
 - `UploadResult` shape: `{ok, fileId, fileKind, fileName, findings, error}`
+- `ClaudeChange`: the `Change` levers without `set`, to validate Claude's what-if output
 
 ## Replaced
 The Lender's Eyes contract from handoff 101 (Jordan's sample files, `POST /api/assess`, `POST /api/plan`, the Python/FastAPI backend) is **replaced** by this one. Handoffs 101 to 107 are superseded by 113 and 114.

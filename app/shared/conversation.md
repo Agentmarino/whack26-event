@@ -1,6 +1,6 @@
 # The conversation
 
-How the credit agent at the Capital One desk talks a person through the check, then coaches them. The types are in `contract.ts`; the real messages for Priya are in `examples/turns/` (made from the engine by `scripts/make-examples.ts`, which also checks the rules below).
+How the credit agent at the Capital One desk talks a person through the check, then coaches them. The types are in `contract.ts`; the real messages for Priya are in `examples/turns/` (made from the engine by `scripts/make-examples.ts`, which checks every example against the schemas, every `ref` resolves, at most 40 words, and a few American spellings; "you", "estimate" and the numbers are by hand).
 
 ## Rules for every message
 - **At most 40 words**, one idea per message. Talk to "you". British spelling. Calm, warm, plain words.
@@ -29,7 +29,7 @@ Skipping is allowed at every upload step. With no report the questions ask every
 
 **`expects.kind: 'none'`**: no input. The frontend sends `{type: 'skip'}` once the person has read the messages (tap, or automatically in demo mode).
 
-**Chips**: the frontend sends `{type: 'choice', value: <the chip text exactly>}`. With `kind: 'text'`, chips are quick replies next to the text box.
+**Chips**: the frontend sends `{type: 'choice', value: <the chip text exactly>}`. With `kind: 'text'`, chips are quick replies next to the text box, and the backend must accept the same words as `choice` or `text`.
 
 ## Samples
 "Use a sample" sends `{type: 'sample', fileKind, personaId}`. The first sample (the report) names the persona; later samples use the same one. `GET /api/personas` lists them (`app/backend/data/personas/index.json`):
@@ -77,9 +77,9 @@ One kind `paper` message, ref `{on: 'paper'}`, gesture `slide-paper`. `paperUrl`
 ## Coach
 1. **Choose the plan**: "Right, let's make you a plan. You said 3 months. Shall we stick with that, or go for 6?" Chips: 3 months, 6 months
 2. **The plan** (one response): an intro ("Here's your 3-month plan: 12 steps, week by week..."), then **one kind `step` message per step** (ref `{on: 'step', plan, stepIndex}`, text "9 Nov 2026: Register to vote at your current address."; the card shows the instruction, why and how you'll know), then **projection** (kind `projection`, ref `{on: 'projection', plan}`: "If you stick to it, your Experian score could be 735 to 836 by Feb 2027. That's an estimate, not a promise."), then the **card ladder** (kind `ladder`, ref `{on: 'ladder'}`: entry card and month, "check with QuickCheck first"; with no entry card, the ladder's `reason`), then the what-if prompt
-3. **What-ifs**: `expects` text with chips "What if I pay £300 a month?", "What if I pay £400 a month?", "What if I stop buy now, pay later?". Free text goes to `POST /api/turn` as `{type: 'text'}`; 113 turns it into `changes[]` (only the `Change` levers), runs `whatIf`, and answers with kind `whatif`, ref `{on: 'whatif', whatIfId}`, the run in `TurnResponse.whatIf`. The sliders sheet calls `POST /api/whatif` instead (same message shape, `WhatIfResponse`). Step stays `coach`
+3. **What-ifs**: `expects` text with chips "What if I pay £300 a month?", "What if I pay £400 a month?", "What if I stop buy now, pay later?". Free text goes to `POST /api/turn` as `{type: 'text'}`, a chip as `{type: 'choice'}` with the same words: **in `coach` and at the goal question, the backend treats `choice` and `text` the same**; 113 turns it into `changes[]` (only the `Change` levers), runs `whatIf`, and answers with kind `whatif`, ref `{on: 'whatif', whatIfId}`, the run in `TurnResponse.whatIf`. The sliders sheet calls `POST /api/whatif` instead (same message shape, `WhatIfResponse`). Step stays `coach`
 
-**What-ifs compare against the plan, not against doing nothing.** The baseline plan already stops BNPL and registers you to vote, so those levers move Priya's estimate by 0 (BNPL) or even lower it (electoral roll, `clearCard`); only the paydown amount moves it up. When the 3-month estimate does not go up, say "that's already part of your plan, so your estimate stays at X to Y" rather than showing a lower number. (Engine behaviour, reported in 112 RESULT.)
+**What-ifs compare against the plan, not against doing nothing.** The baseline plan already stops BNPL and registers you to vote, so those levers move Priya's estimate by 0 (BNPL) or even lower it (electoral roll, `clearCard`); only the paydown amount moves it up. On the 6-month plan, extra paydown reaches the same end range (it only gets you under 30% sooner). Quote the plan the person chose (`m3` or `m6`). When that estimate does not go up, say "your estimate by Feb 2027 stays at X to Y. Your plan already gets you there." rather than showing a lower number. (Engine behaviour, reported in 112 RESULT.)
 
 ## Gesture → NPC kit
 The contract's `gesture` names are partly the kit's **states**. 114 maps them like this (`src/npc/`, see `app/npc-concept/ART-GUIDE.md`); call `gesture()` after `setState()`:

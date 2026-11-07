@@ -8,8 +8,8 @@
 // Whatever persona or file is picked, the mock always answers as Priya.
 
 import { z } from 'zod'
-import { EngineResult, Persona, TurnResponse, UploadResult, WhatIfResponse } from './contract.ts'
-import type { FileKind, TurnRequest, WhatIfRequest } from './contract.ts'
+import { EngineResult, Persona, TurnResponse, UploadResult, WhatIfResponse, paperUrlFor } from './contract.ts'
+import type { FileKind, PlanId, TurnRequest, WhatIfRequest } from './contract.ts'
 import { bundle as rawBundle } from './examples/bundle.ts'
 
 const Bundle = z.object({
@@ -34,13 +34,27 @@ export type MockState = {
   at: string | null
   /** A letter was handed over (sample or file) at any step: the decline step will run. */
   hasLetter: boolean
-  /** Counts what-ifs so every answer gets fresh ids. */
+  /** The plan picked in coach; what-if answers quote it. */
+  plan: PlanId
+  /** Counts what-ifs and letter acks so every message gets a fresh id. */
   whatIfCount: number
+  letterCount: number
+  /** How many times the conversation was started; restarts get a new sessionId so ids stay unique per session. */
+  runs: number
   /** The last response, so a letter at any step can keep the step and expects. */
   last: TurnResponse | null
 }
 
-export const initialMockState: MockState = { sessionId: null, at: null, hasLetter: false, whatIfCount: 0, last: null }
+export const initialMockState: MockState = {
+  sessionId: null,
+  at: null,
+  hasLetter: false,
+  plan: '3m',
+  whatIfCount: 0,
+  letterCount: 0,
+  runs: 0,
+  last: null,
+}
 
 const LINEAR = [
   'greet',
@@ -58,15 +72,15 @@ const LINEAR = [
   'coach-choose',
 ] as const
 
-function nextKey(state: MockState, input: TurnRequest['input']): string {
+const valueOf = (input: TurnRequest['input']) => (input.type === 'choice' || input.type === 'text' ? input.value : '')
+
+function nextKey(state: MockState, input: TurnRequest['input'], plan: PlanId): string {
   const at = state.at
   if (at === null || input.type === 'start') return 'greet'
   if (at === 'diagnosis') return state.hasLetter ? 'decline' : 'paper'
-  if (at === 'coach-choose') {
-    const value = input.type === 'choice' || input.type === 'text' ? input.value : ''
-    return /6/.test(value) ? 'coach-plan-6m' : 'coach-plan-3m'
-  }
-  if (at.startsWith('coach-')) return 'coach-whatif'
+  if (at === 'coach-choose') return `coach-plan-${plan}`
+  // Chips and typed text count the same here. Only two what-ifs are in the examples.
+  if (at.startsWith('coach-')) return `coach-whatif-${/stop|bnpl|buy now/i.test(valueOf(input)) ? 'bnpl' : 'paydown'}-${plan}`
   const i = LINEAR.indexOf(at as (typeof LINEAR)[number])
   return LINEAR[Math.min(i + 1, LINEAR.length - 1)] ?? 'greet'
 }
@@ -80,18 +94,24 @@ export function mockTurn(state: MockState, request: TurnRequest): { state: MockS
 
   // A letter at any step other than ask_letter: one acknowledgement, step and expects unchanged.
   if (isLetter(input) && state.at !== null && state.at !== 'ask_letter' && state.last) {
-    const ack = structuredClone(b.letterAck)
-    const response: TurnResponse = { ...structuredClone(state.last), messages: ack.messages, whatIf: null }
-    return { state: { ...state, hasLetter: true, last: response }, response }
+    const letterCount = state.letterCount + 1
+    const messages = structuredClone(b.letterAck.messages).map(m => ({ ...m, id: `${m.id}-${letterCount}` }))
+    const response: TurnResponse = { ...structuredClone(state.last), messages, whatIf: null }
+    return { state: { ...state, hasLetter: true, letterCount, last: response }, response }
   }
 
-  const key = nextKey(state, input)
+  const restart = state.at === null || input.type === 'start'
+  const plan: PlanId = restart ? '3m' : state.at === 'coach-choose' ? (/6/.test(valueOf(input)) ? '6m' : '3m') : state.plan
+  const key = nextKey(state, input, plan)
   const example = b.turns[key]
   if (!example) throw new Error(`mockTurn: no example for "${key}"`)
   const response = structuredClone(example.response)
   if (example.hasResult) response.result = structuredClone(b.result)
+  const runs = restart ? state.runs + 1 : state.runs
+  response.sessionId = runs > 1 ? `${b.sessionId}-${runs}` : b.sessionId
+  if (response.paperUrl) response.paperUrl = paperUrlFor(response.sessionId)
 
-  let hasLetter = key === 'greet' ? false : state.hasLetter
+  let hasLetter = restart ? false : state.hasLetter
   if (state.at === 'ask_letter' && isLetter(input)) hasLetter = true
 
   // Skipped an upload: drop the "thanks, I've got it" message.
@@ -102,10 +122,10 @@ export function mockTurn(state: MockState, request: TurnRequest): { state: MockS
   if (key === 'diagnosis' && !hasLetter) response.expects = { kind: 'choice', chips: ['What can I do?'] }
 
   let whatIfCount = state.whatIfCount
-  if (key === 'coach-whatif' && response.whatIf) {
+  if (key.startsWith('coach-whatif') && response.whatIf) {
     whatIfCount += 1
     const id = `wi-mock-${whatIfCount}`
-    response.whatIf = { ...response.whatIf, id, text: input.type === 'text' || input.type === 'choice' ? input.value : null }
+    response.whatIf = { ...response.whatIf, id, text: valueOf(input) || null }
     response.messages = response.messages.map(m => ({
       ...m,
       id: `${m.id}-${whatIfCount}`,
@@ -113,7 +133,16 @@ export function mockTurn(state: MockState, request: TurnRequest): { state: MockS
     }))
   }
 
-  const next: MockState = { sessionId: response.sessionId, at: key, hasLetter, whatIfCount, last: response }
+  const next: MockState = {
+    sessionId: response.sessionId,
+    at: key,
+    hasLetter,
+    plan,
+    whatIfCount,
+    letterCount: restart ? 0 : state.letterCount,
+    runs,
+    last: response,
+  }
   return { state: next, response }
 }
 
@@ -128,6 +157,7 @@ export function mockWhatIf(state: MockState, request: WhatIfRequest): { state: M
     id: `${m.id}-${whatIfCount}`,
     ...(m.ref?.on === 'whatif' ? { ref: { on: 'whatif' as const, whatIfId: id } } : {}),
   }))
+  response.sessionId = state.sessionId ?? response.sessionId
   return { state: { ...state, whatIfCount }, response }
 }
 
