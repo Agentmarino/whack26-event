@@ -523,5 +523,40 @@
   "purpose": "whatif",
   "text": "{\"changes\":[{\"lever\":\"rentReporting\",\"value\":true}]}",
   "at": "2026-11-07T20:00:50.964Z"
+ },
+ "goal:4db5daa0f0d6f2ad633dd0a9581a6d2f": {
+  "purpose": "goal",
+  "text": "{\"goal\":\"build\"}",
+  "at": "2026-11-07T20:07:45.012Z"
+ },
+ "wording:07fc11bc85b97fbe3d1cfea6a3e114d5": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, start by knowing where you stand. Your home country's credit history doesn't transfer, so use one fixed address on your UK bank, phone and bills.",
+  "at": "2026-11-07T20:21:46.750Z"
+ },
+ "wording:4600dbe17cb5a3b0d26436e9bb5d4942": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, steer clear of the thin-file traps. Apply for one thing at a time, after a soft-search check, and avoid payday loans and stacked buy now, pay later plans.",
+  "at": "2026-11-07T20:21:46.752Z"
+ },
+ "wording:403401ee16796ac38ac42ce6e2b3cd69": {
+  "purpose": "wording",
+  "text": "On 1 Feb 2027, try a monthly phone contract again. Once your quick wins show, ask for a cheap SIM-only plan. It's easier to get and helps build your credit history.",
+  "at": "2026-11-07T20:21:51.558Z"
+ },
+ "wording:693c9af266730f0ff2af313acb2329c8": {
+  "purpose": "wording",
+  "text": "On 9 Feb 2027, get your rent reported. Sign up to a service like CreditLadder for your £560 rent. It takes about 8 weeks to show on your report.",
+  "at": "2026-11-07T20:21:51.558Z"
+ },
+ "wording:1d24abe0468b0b59298e3fd1ada4ecda": {
+  "purpose": "wording",
+  "text": "On 9 Feb 2027, run QuickCheck to see if the Capital One Classic suits you. It's a soft search, so no score impact. If it says no, wait 3 months and check again.",
+  "at": "2026-11-07T20:21:51.927Z"
+ },
+ "wording:d071660410e66a75c22141e68b0d16ea": {
+  "purpose": "wording",
+  "text": "On 23 Feb 2027, move Amazon Prime Student £4.49 and Spotify Student £5.99 onto your Classic card, then set a Direct Debit for the full balance so you pay £0 interest.",
+  "at": "2026-11-07T20:21:51.928Z"
  }
 }
