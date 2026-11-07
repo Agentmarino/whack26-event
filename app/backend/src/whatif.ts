@@ -21,6 +21,9 @@ Only these levers exist (JSON):
 - {"lever":"clearCard","card":"<card name>"}  clear one card in full (omit "card" for all cards)
 - {"lever":"rentReporting","value":true}  get rent reported to the credit agencies
 Reply with JSON only, no prose: {"changes":[...]}. Several levers are fine.
+Coming off, being removed from, leaving or not being on the electoral roll is {"lever":"electoralRoll","value":false}.
+Money that arrives (winning the lottery, a bet, an inheritance, a bonus, a pay rise) is not a lever: nothing fits.
+"stop" is only for someone who says they'd stop or cut out that spending.
 If nothing fits, reply {"changes":[],"reason":"<a few words>"}. Never invent an amount; never use any other lever.`
 
 const Reply = z.object({ changes: z.array(z.unknown()), reason: z.string().optional() })
@@ -64,6 +67,41 @@ export function amountsIn(text: string): number[] {
   return out
 }
 
+// Money arriving is not something the engine models. "What if I win the lottery" used to read as
+// "stop gambling" (114 review). Windfall words are removed before looking for an action, so "a pay rise" is not "pay".
+const WINDFALL = /\b(win|wins|won|winning|winnings|lottery|lotto|jackpot|premium bonds?|inherit\w*|inheritance|windfall|bonus|pay ?rise|payrise|promotion|gift(ed)?)\b/g
+const ACTION = /\b(pay|paid|paying|put|putting|clear\w*|stop\w*|quit\w*|give up|gave up|cut\w*|regist\w*|report\w*|break|remov\w*|cancel\w*)\b/
+/** Lower case with straight apostrophes (iPhone keyboards type ’). */
+const norm = (text: string) => text.toLowerCase().replace(/[\u2018\u2019]/g, "'")
+
+/** True when the question is only about money arriving ("what if I win the lottery"), with nothing done with it. */
+export function windfallOnly(text: string): boolean {
+  const t = norm(text)
+  if (!t.match(WINDFALL)) return false
+  return !ACTION.test(t.replace(WINDFALL, ' '))
+}
+
+// Stop levers need the person to say they'd stop: "what if I play the lottery" is not "stop gambling".
+const STOPPING = /\b(stop\w*|quit\w*|give up|giving up|gave up|cut(ting)? (out|back|down)|no more|without|didn'?t|don'?t|do not|did not|never|cancel\w*|ban\w*|block\w*|self-?exclu\w*|less|fewer|ditch\w*)\b/
+
+// The electoral roll, read per clause so "remove my ex and register to vote" still registers.
+const ROLL = /electoral|\b(the|voting) roll\b|\bregist\w* to vote\b|\bvot(e|es|ing)\b/
+const OFF_ROLL =
+  /\b(come|comes|coming|came|get|gets|got|getting|go|goes|going|went|taken?|took|kicked|drop(s|ped|ping)?|fall(s|en|ing)?|fell)\s+(me\s+)?off\b|\boff (of )?the (electoral )?(roll|register)\b|\bremov(e|es|ed|ing|al)\b|\b(de|un)-?regist\w*|\b(leave|leaves|leaving|left)\b|\bno longer\b|\bstop(ped|ping)? (being|voting)\b/
+const NOT_ON = /\b(wasn'?t|weren'?t|isn'?t|aren'?t|was not|were not|am not|not|never)\s+(on|registered)\b/
+const REGISTERING = /(?<!(de|un)-?)\bregist(er|ers|ering|ration)\b|\b(get|getting|got|go|going|put me|sign(ed)? up|join(ed)?)\s+on\b/
+
+/** Which way the electoral roll goes in this text: true = register, false = come off, null = not about the roll. */
+export function rollDirection(text: string): boolean | null {
+  const t = norm(text)
+  const clauses = t.split(/\band\b|,|;|\bthen\b|\bplus\b|\balso\b/).filter(c => ROLL.test(c))
+  if (!clauses.length) return null
+  if (clauses.some(c => OFF_ROLL.test(c))) return false
+  // "what if I wasn't on the roll" is coming off; "I'm not on the roll, what if I register" is registering.
+  if (clauses.some(c => NOT_ON.test(c)) && !REGISTERING.test(t)) return false
+  return true
+}
+
 /** Validate Claude's levers: known levers only, a paydown amount the person said, card names that exist. */
 export function checkClaudeChanges(raw: unknown[], text: string, profile: Profile): { ok: true; changes: Change[] } | { ok: false; why: string } {
   const changes: Change[] = []
@@ -81,6 +119,8 @@ export function checkClaudeChanges(raw: unknown[], text: string, profile: Profil
       if (!match) return { ok: false, why: `no card called ${c.card}` }
       c.card = match
     }
+    // Claude sometimes reads "remove me from the roll" as registering: the words decide the direction.
+    if (c.lever === 'electoralRoll' && rollDirection(text) === false) c.value = false
     changes.push(c)
   }
   return changes.length ? { ok: true, changes } : { ok: false, why: 'no levers' }
@@ -88,7 +128,8 @@ export function checkClaudeChanges(raw: unknown[], text: string, profile: Profil
 
 /** The keyword reader: used when Claude is off, fails, or is unsure. */
 export function keywordChanges(text: string, profile: Profile): Change[] {
-  const t = text.toLowerCase()
+  if (windfallOnly(text)) return []
+  const t = norm(text)
   const out: Change[] = []
   const cards = (profile.cards ?? []).map(c => c.name)
   const named = cards.find(n => t.includes(n.toLowerCase()))
@@ -103,22 +144,27 @@ export function keywordChanges(text: string, profile: Profile): Change[] {
   // An amount means a monthly paydown ("pay £300 a month", "300 extra"), unless it is about rent.
   if (amounts.length) out.push({ lever: 'paydown', value: amounts[0]! })
   else if (clearing && (named || /card|balance|debt/.test(t))) out.push(named ? { lever: 'clearCard', card: named } : { lever: 'clearCard' })
-  if (/bnpl|buy now|pay later|klarna|clearpay|laybuy|paypal (in|pay) 3/.test(t)) out.push({ lever: 'stop', what: 'bnpl' })
-  if (/gambl|betting|\bbet\b|bet365|casino|lottery|scratch/.test(t)) out.push({ lever: 'stop', what: 'gambling' })
-  if (/payday/.test(t)) out.push({ lever: 'stop', what: 'payday' })
-  if (/electoral|register(ed)? to vote|voting|\bvote\b/.test(t)) out.push({ lever: 'electoralRoll', value: !/come off|remove me|unregister|leave/.test(t) })
+  const stopping = STOPPING.test(t)
+  if (stopping && /bnpl|buy now|pay later|klarna|clearpay|laybuy|paypal (in|pay) 3/.test(t)) out.push({ lever: 'stop', what: 'bnpl' })
+  if (stopping && /gambl|betting|\bbets?\b|bet365|casino|lottery|scratch|bookies/.test(t)) out.push({ lever: 'stop', what: 'gambling' })
+  if (stopping && /payday/.test(t)) out.push({ lever: 'stop', what: 'payday' })
+  const roll = rollDirection(t)
+  if (roll !== null) out.push({ lever: 'electoralRoll', value: roll })
   if (/associate|financial link|\bex\b|ex-partner|joint account|disassociat/.test(t)) out.push({ lever: 'removeAssociates' })
   if (/rent/.test(t) && /report|credit ?ladder|count|track/.test(t)) out.push({ lever: 'rentReporting', value: true })
   return out
 }
 
 export async function changesFromText(text: string, profile: Profile): Promise<FromText> {
+  if (windfallOnly(text)) return { unknown: true, why: 'money arriving is not a lever' }
   const cards = (profile.cards ?? []).map(c => c.name)
   const content = `The person's cards: ${cards.length ? cards.join(', ') : 'none'}.\nTheir question: ${text.trim()}`
   const call = { purpose: 'whatif', system: SYSTEM, content, maxTokens: 300, keyInput: { text: text.trim().toLowerCase(), cards } }
   const reply = await askClaude(call)
   if (reply) {
     const parsed = Reply.safeParse(jsonIn(reply.text))
+    // Claude saying nothing fits is an answer, not doubt: don't let the keyword reader guess instead.
+    if (parsed.success && parsed.data.changes.length === 0) return { unknown: true, why: parsed.data.reason ?? 'nothing fits' }
     if (parsed.success) {
       const checked = checkClaudeChanges(parsed.data.changes, text, profile)
       if (checked.ok) {
@@ -144,6 +190,12 @@ export function runWhatIf(s: Session, changes: Change[], text: string | null): W
   let output
   try {
     output = EngineWhatIf.safeParse(E.whatIf(structuredClone(res.profile), changes))
+    // Taking something away (off the roll, no rent reporting) is never shown as a gain. The engine treats
+    // these as no change; if it ever says otherwise, answer with no change at all.
+    if (output.success && changes.every(T.isRemoval) && T.rises(output.data)) {
+      log('whatif', 'a removal came back as a rise: answered as no change')
+      output = EngineWhatIf.safeParse(E.whatIf(structuredClone(res.profile), []))
+    }
   } catch (err) {
     log('whatif', `engine: ${err instanceof Error ? err.message : err}`)
     return null

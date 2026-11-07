@@ -2,7 +2,7 @@
 // template comes straight from the engine result. Claude may reword some of these later (block 3);
 // these are always the fallback. At most 40 words a message, "you", British spelling.
 
-import type { DeclineDecoded, EngineResult, Emote, Expects, Gesture, MessageKind, PlanId, Ref, Rag, WhatIfRun } from 'shared'
+import type { Change, DeclineDecoded, EngineResult, EngineWhatIf, Emote, Expects, Gesture, MessageKind, PlanId, Ref, Rag, WhatIfRun } from 'shared'
 import * as E from '../engine/index.ts'
 
 /** A message before it gets its id. `base` is the id stem; `item` marks text Claude may reword. */
@@ -270,8 +270,14 @@ export const whatIfExpects = (res: EngineResult): Expects => ({
   allowVoice: true,
 })
 
+/** A change that takes something good away. Never shown as a gain (114 review: coming off the roll showed a rise). */
+export const isRemoval = (c: Change) => (c.lever === 'electoralRoll' || c.lever === 'rentReporting') && c.value === false
+
+/** Does the engine's answer go up on either plan? */
+export const rises = (o: EngineWhatIf) => [o.delta.m3, o.delta.m6].some(d => d.low > 0 || d.high > 0)
+
 /** Words for a list of changes: "Paying £300 extra a month and stopping buy now, pay later". */
-export function leadFor(run: WhatIfRun): string {
+export function leadFor(run: WhatIfRun | { changes: Change[] }): string {
   const parts = run.changes.map(c => {
     switch (c.lever) {
       case 'paydown':
@@ -309,13 +315,25 @@ export function whatIfMessage(res: EngineResult, run: WhatIfRun, plan: PlanId): 
   const delta = run.output.delta[k]
   const end = res.result.plans[plan].projection.at(-1)
   const by = end ? end.date : 'the end of your plan'
+  // Coming off the roll or dropping rent reporting never reads as a gain, alone or next to other changes.
+  const removals = run.changes.filter(isRemoval)
+  const gains = run.changes.filter(c => !isRemoval(c))
+  if (!gains.length && removals.length) {
+    const why = [
+      removals.some(c => c.lever === 'electoralRoll') ? 'lenders use the roll to check who you are.' : '',
+      removals.some(c => c.lever === 'rentReporting') ? 'Reported rent adds payment history.' : '',
+    ].filter(Boolean)
+    const text = `${leadFor(run)} won't raise your score${why.length ? ': ' + why.join(' ') : '.'} Your estimate by ${by} stays at ${b.low} to ${b.high} at best.`
+    return d('whatif', 'whatif', text, 'concerned', 'explaining', { on: 'whatif', whatIfId: run.id })
+  }
+  const leftOut = removals.length ? ` I left out ${lowerFirst(leadFor({ changes: removals }))}: it won't help.` : ''
   const up = delta.high > 0 || delta.low > 0
   // A change that takes something good away (off the roll, no rent reporting, a number set by the sliders)
   // can really lower the estimate: say so with the engine's numbers.
   const down = (delta.high < 0 || delta.low < 0) && run.changes.some(c => ('value' in c && c.value === false) || c.lever === 'set')
   const under30 = run.output.because.under30
-  const tail = under30?.after ? ` You'd get under 30% by ${under30.after}.` : ''
-  const lead = leadFor(run)
+  const tail = (under30?.after ? ` You'd get under 30% by ${under30.after}.` : '') + leftOut
+  const lead = leadFor({ changes: gains })
   const text = up
     ? `${lead}: by ${by} your score could be ${a.low} to ${a.high}, up from ${b.low} to ${b.high}. An estimate.${tail}`
     : down
@@ -328,7 +346,7 @@ export const whatIfUnknown = (): Draft =>
   d(
     'whatif-unknown',
     'text',
-    "I can only test a few things: paying more off your cards, stopping buy now pay later, gambling or payday loans, registering to vote, clearing a card, or reporting your rent. Try one of those?",
+    "I can't test that one. I can model these: paying more off your cards, clearing a card, stopping buy now pay later, gambling or payday loans, registering to vote, breaking a financial link, or reporting your rent.",
     'neutral',
     'coach',
   )

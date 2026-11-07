@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 import type { Profile } from 'shared'
-import { amountsIn, checkClaudeChanges, keywordChanges } from '../src/whatif.ts'
+import { amountsIn, checkClaudeChanges, keywordChanges, rollDirection, windfallOnly } from '../src/whatif.ts'
 
 const priya: Profile = {
   cards: [{ name: 'Barclaycard', limit: 1200, balance: 950, apr: 29.9 }],
@@ -28,6 +28,23 @@ describe('Claude lever checker', () => {
     expect(checkClaudeChanges([{ lever: 'clearCard', card: 'Amex' }], 'clear my amex', priya).ok).toBe(false)
     expect(checkClaudeChanges([], 'what if I move to Spain', priya).ok).toBe(false)
   })
+
+  it('the words decide the roll direction, whatever Claude says (114 review)', () => {
+    expect(checkClaudeChanges([{ lever: 'electoralRoll', value: true }], 'what if I remove myself from the electoral roll', priya)).toEqual({
+      ok: true,
+      changes: [{ lever: 'electoralRoll', value: false }],
+    })
+    expect(rollDirection('what if I register to vote')).toBe(true)
+    expect(rollDirection('what if I pay 300')).toBeNull()
+  })
+
+  it('windfalls are not levers (114 review)', () => {
+    expect(windfallOnly('what if I win the lottery')).toBe(true)
+    expect(windfallOnly('what if I get a pay rise')).toBe(true)
+    expect(windfallOnly('what if I inherit £5k')).toBe(true)
+    expect(windfallOnly('what if I win the lottery and pay off my card')).toBe(false)
+    expect(windfallOnly('what if I pay 300 a month')).toBe(false)
+  })
 })
 
 describe('keyword reader', () => {
@@ -44,6 +61,20 @@ describe('keyword reader', () => {
     ['what if in 3 months I pay 200 extra', [{ lever: 'paydown', value: 200 }]],
     ['what if I pay 300 extra and report my rent', [{ lever: 'paydown', value: 300 }, { lever: 'rentReporting', value: true }]],
     ['what if my £650 rent was reported', [{ lever: 'rentReporting', value: true }]],
+    // 114 review: money arriving is not a lever; "lottery" alone is not "stop gambling".
+    ['what if I win the lottery', []],
+    ['What if I won £5,000 on the lottery?', []],
+    ['what if I play the lottery', []],
+    ['what if I quit the lottery and scratchcards', [{ lever: 'stop', what: 'gambling' }]],
+    ['what if I win the lottery and clear my barclaycard', [{ lever: 'clearCard', card: 'Barclaycard' }]],
+    // 114 review: every way of coming off the roll reads as coming off it.
+    ['what if I come off the electoral roll', [{ lever: 'electoralRoll', value: false }]],
+    ['what if I remove myself from the electoral roll', [{ lever: 'electoralRoll', value: false }]],
+    ['what if I got taken off the electoral roll', [{ lever: 'electoralRoll', value: false }]],
+    ["what if I wasn't on the electoral roll", [{ lever: 'electoralRoll', value: false }]],
+    ['what if I deregister from voting', [{ lever: 'electoralRoll', value: false }]],
+    ["I'm not on the electoral roll, what if I register to vote?", [{ lever: 'electoralRoll', value: true }]],
+    ['what if I remove my ex and register to vote', [{ lever: 'electoralRoll', value: true }, { lever: 'removeAssociates' }]],
   ])('%s', (text, changes) => {
     expect(keywordChanges(text, priya)).toEqual(changes)
   })

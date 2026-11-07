@@ -276,11 +276,92 @@ describe('POST /api/whatif', () => {
     expect(s.whatIf.id).not.toBe(t.whatIf.id)
 
     const bad = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, text: 'what if I win the lottery jackpot' } })
-    // "lottery" reads as gambling; a truly unknown one is rejected with a friendly message.
-    expect([200, 422]).toContain(bad.statusCode)
+    expect(bad.statusCode).toBe(422)
     const unknown = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, text: 'what if I move to Spain' } })
     expect(unknown.statusCode).toBe(422)
-    expect(unknown.json().error).toMatch(/I can only test/)
+    expect(unknown.json().error).toMatch(/I can model these:/)
+  })
+
+  /** A session with its result: a persona's samples, or no files at all (every question answered). */
+  async function checkedSession(personaId: string | null) {
+    const c = chat()
+    await c.send({ type: 'start' })
+    await c.send({ type: 'choice', value: "Let's start" })
+    if (personaId) {
+      await c.send({ type: 'sample', fileKind: 'credit_report', personaId })
+      await c.send(personaId === 'priya' ? { type: 'sample', fileKind: 'bank' } : { type: 'skip' })
+    } else {
+      await c.send({ type: 'skip' })
+      await c.send({ type: 'skip' })
+    }
+    const typed = ['31', 'about 28k']
+    let r = await c.send({ type: 'skip' })
+    while (r.step === 'questions')
+      r = await c.send(r.expects.chips?.length ? { type: 'choice', value: r.expects.chips[0]! } : { type: 'text', value: typed.shift() ?? 'yes' })
+    expect(r.step).toBe('assessing')
+    return { c, r }
+  }
+
+  it('"what if I win the lottery" is not "stop gambling": the agent says what it can model (114 review)', async () => {
+    for (const who of ['priya', 'mei', 'alex', null]) {
+      const { c } = await checkedSession(who)
+      for (const text of ['what if I win the lottery', 'What if I won £5,000 on the lottery?', 'what if I get a pay rise']) {
+        const res = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, text } })
+        expect(res.statusCode, `${who}: ${text}: ${res.body}`).toBe(422)
+        expect(res.json().error).toMatch(/^I can't test that one\. I can model these: /)
+      }
+    }
+    // In the chat: a friendly text with the what-if chips, not a what-if card.
+    const { c } = await checkedSession('priya')
+    let r = await c.send({ type: 'skip' })
+    for (let i = 0; r.step !== 'coach' && i < 6; i++) r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'Make me a plan' })
+    r = await c.send({ type: 'choice', value: '3 months' })
+    expect(r.messages.some(m => m.kind === 'projection')).toBe(true)
+    const lottery = await c.send({ type: 'text', value: 'what if I win the lottery' })
+    expect(lottery.step).toBe('coach')
+    expect(lottery.whatIf ?? null).toBeNull()
+    expect(lottery.messages).toHaveLength(1)
+    expect(lottery.messages[0]!.kind).toBe('text')
+    expect(lottery.messages[0]!.text).toMatch(/I can model these: paying more off your cards/)
+    expect(lottery.expects.chips?.length).toBeGreaterThan(0)
+    // Saying you'd stop still works.
+    const stop = await c.send({ type: 'text', value: 'what if I stop gambling and the lottery' })
+    expect(stop.whatIf?.changes).toEqual([{ lever: 'stop', what: 'gambling' }])
+  })
+
+  it('coming off the electoral roll never shows a rise, for any persona or no data (114 review)', async () => {
+    const asks = [
+      'what if I come off the electoral roll',
+      'what if I remove myself from the electoral roll',
+      "what if I wasn't on the electoral roll",
+      'what if I deregister from voting',
+    ]
+    for (const who of ['priya', 'mei', 'alex', null]) {
+      const { c } = await checkedSession(who)
+      const bodies: Record<string, unknown>[] = [...asks.map(text => ({ text })), { changes: [{ lever: 'electoralRoll', value: false }] }]
+      for (const body of bodies) {
+        const label = `${who}: ${JSON.stringify(body)}`
+        const res = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, ...body } })
+        expect(res.statusCode, `${label}: ${res.body}`).toBe(200)
+        const w = WhatIfResponse.parse(res.json())
+        expect(w.whatIf.changes, label).toEqual([{ lever: 'electoralRoll', value: false }])
+        for (const k of ['m3', 'm6'] as const) {
+          expect(w.whatIf.output.delta[k].low, label).toBeLessThanOrEqual(0)
+          expect(w.whatIf.output.delta[k].high, label).toBeLessThanOrEqual(0)
+        }
+        expect(w.messages[0]!.text, label).toMatch(/^Coming off the electoral roll won't raise your score/)
+        expect(w.messages[0]!.text, label).not.toMatch(/up from|already gets you there|Registering/)
+      }
+    }
+    // Next to a real gain, the rise is the paydown's and the roll is named as left out.
+    const { c } = await checkedSession('priya')
+    const both = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, text: 'what if I pay 400 a month and come off the electoral roll' } })
+    const w = WhatIfResponse.parse(both.json())
+    const alone = WhatIfResponse.parse(
+      (await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, changes: [{ lever: 'paydown', value: 400 }] } })).json(),
+    )
+    expect(w.whatIf.output.after).toEqual(alone.whatIf.output.after)
+    expect(w.messages[0]!.text).toMatch(/^Paying £400 extra a month: .* up from .* I left out coming off the electoral roll: it won't help\.$/)
   })
 
   it('unsafe or impossible slider changes are refused, worse changes say so (review 113)', async () => {
