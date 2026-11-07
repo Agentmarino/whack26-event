@@ -71,7 +71,7 @@ export function StepLine(props: { step: PlanStep; plan: PlanId; stepIndex: numbe
   return (
     <details className="group" data-card="step-line">
       <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 py-1 text-[1.0625rem] leading-snug text-muted [&::-webkit-details-marker]:hidden">
-        <span className="w-[5.25rem] flex-none font-bold text-text">{dayLabel(props.step.date)}</span>
+        <span className="w-[6.25rem] flex-none font-bold text-text">{dayLabel(props.step.date)}</span>
         <span className="min-w-0 flex-1">{props.step.title}</span>
         <span aria-hidden="true" className="next-arrow flex-none -rotate-90 text-muted group-open:rotate-0" />
       </summary>

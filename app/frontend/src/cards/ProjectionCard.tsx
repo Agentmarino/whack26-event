@@ -131,7 +131,8 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
           If you miss one payment: about {props.riskLine} points lower (dotted, estimate)
         </li>
       </ul>
-      <table className="sr-only">
+      <div className="sr-only">
+      <table>
         <caption>Estimated score by month</caption>
         <thead>
           <tr>
@@ -153,6 +154,7 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
           })}
         </tbody>
       </table>
+      </div>
     </article>
   )
 }

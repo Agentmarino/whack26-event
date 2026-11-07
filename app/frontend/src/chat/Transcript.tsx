@@ -36,7 +36,7 @@ export function Transcript(props: {
 
   const last = conv.entries[conv.entries.length - 1]
   return (
-    <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-2" data-testid="transcript">
+    <div ref={scroller} className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-2" data-testid="transcript">
       <ol className="flex flex-col gap-3" aria-label="Conversation so far">
         {conv.entries.map((e) => {
           const latest = !conv.pending && !conv.error && e === last
