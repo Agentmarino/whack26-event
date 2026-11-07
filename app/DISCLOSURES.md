@@ -35,6 +35,10 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | @fontsource/press-start-2p (package MIT, font OFL-1.1) | 5.3.0 | 108 self-hosted Press Start 2P font for the dialogue box |
 | Transitive packages of the above | see `app/npc-concept/pnpm-lock.yaml` | Installed by pnpm, not used directly |
 | zod (MIT) | 4.6.7 | 112 shared contract: schemas and validation used by backend and frontend (`app/shared/`, `app/backend/`) |
+| fastify (MIT) | 5.12.8 | 113 backend HTTP server (`app/backend/src/app.ts`): every `/api` route |
+| @fastify/cors (MIT) | 11.4.1 | 113 CORS for the Vite dev server on localhost and the phone's LAN address |
+| vitest (MIT) | 5.1.0 | 113 backend tests (`app/backend/test/`), run with `pnpm --filter backend test` |
+| @anthropic-ai/sdk (Apache-2.0) | 1.6.0 | 113 Claude API client (`app/backend/src/claude.ts`): what-if text to engine levers, wording, document reading |
 | typescript (Apache-2.0) | 7.0.2 | 112 type checking of `app/shared/` and `app/backend/` |
 | tsx (MIT) | 4.23.15 | 112 runs the TypeScript scripts (`make-examples.ts`, `mock-walk.ts`); 113 dev server |
 | esbuild (MIT) | 0.28.2 | 112 installed by tsx (its build script allowed in `pnpm-workspace.yaml`), not used directly |
