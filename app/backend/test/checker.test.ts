@@ -60,3 +60,17 @@ describe('facts for each item', () => {
     expect(problemsWith('On 8 Dec 2026, pay £180 extra off your Barclaycard.', { facts: f, template: '' })).toEqual(['£180 is not in the data'])
   })
 })
+
+describe('goal in own words (keywords)', async () => {
+  const { parseGoal } = await import('../src/questions.ts')
+  it.each([
+    ['A mortgage', 'mortgage'],
+    ['I want to buy my first flat', 'mortgage'],
+    ["I'd like to be able to rent a nicer flat", 'build'],
+    ['A credit card', 'card'],
+    ['Car finance', 'build'],
+    ['Just build my credit', 'build'],
+  ])('%s', (text, goal) => {
+    expect(parseGoal(text).goal).toBe(goal)
+  })
+})

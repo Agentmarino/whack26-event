@@ -233,5 +233,10 @@
   "purpose": "wording",
   "text": "From 9 Nov 2026, please hold off applying for credit until 9 Jan 2027. If you want to check a card, a soft-search checker like Capital One QuickCheck won't affect your score.",
   "at": "2026-11-07T17:45:52.627Z"
+ },
+ "goal:67a420e3aabb6fdec27d268a7005e8d6": {
+  "purpose": "goal",
+  "text": "{\"goal\": \"card\"}",
+  "at": "2026-11-07T17:59:45.729Z"
  }
 }

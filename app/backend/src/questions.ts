@@ -105,7 +105,8 @@ export function parseHousing(t: string): string | null {
 /** Engine goal plus the person's words when the goal is not one of the engine's. `matched` false = a guess. */
 export function parseGoal(t: string): { goal: Goal; words: string | null; matched?: false } {
   const s = t.toLowerCase()
-  if (/mortgage|house|home|flat|property/.test(s)) return { goal: 'mortgage', words: null }
+  if (/\brent(ing|al)?\b|landlord|tenan/.test(s)) return { goal: 'build', words: 'renting a home' }
+  if (/mortgage|\b(buy|buying|own)\b.*\b(house|home|flat|place|property)\b|first home|homeowner|property ladder/.test(s)) return { goal: 'mortgage', words: null }
   if (/\bcar\b|vehicle|motor/.test(s)) return { goal: 'build', words: 'car finance' }
   if (/card/.test(s)) return { goal: 'card', words: null }
   if (/build|improve|better|score|rating/.test(s)) return { goal: 'build', words: null }
