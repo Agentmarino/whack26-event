@@ -21,3 +21,4 @@ Owner: `mihael` or `partner`. Only take your own. Pull before you start.
 | 114 | Phase B frontend, NPC chat on iPhone, every message type, accessibility | mihael | done | 2026-11-07 |
 | 115 | Cap, business card intro, opening question and branching flow | mihael | done | 2026-11-07 |
 | 116 | Full-screen scene, 8-bit game dialogue text, expandable side panel | mihael | done | 2026-11-07 |
+| 117 | Cap closer, framing options, speech bubble fallback, demo-mode auto-advance | mihael | ready | 2026-11-07 |
