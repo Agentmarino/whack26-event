@@ -72,7 +72,7 @@ export function buildOffice(): IndexBuffer {
   b.rect(0, base, NATIVE_W, 2, IDX.officeWallShade)
   // floor
   b.rect(0, 46, NATIVE_W, NATIVE_H - 46, IDX.officeFloor)
-  // tall plant in the back left corner (leaves in chunky clumps, pot hidden by the desk monitor)
+  // tall plant in the back left corner (leaves in chunky clumps, pot behind the frosted band)
   b.rect(3, 40, 8, 7, IDX.officePot)
   const leaves: [number, number, number, number][] = [[5, 14, 3, 8], [2, 19, 4, 7], [8, 17, 4, 9], [1, 27, 4, 8], [9, 25, 4, 9], [4, 31, 5, 9]]
   for (const [x, y, w, h] of leaves) {

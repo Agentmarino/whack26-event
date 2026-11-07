@@ -64,7 +64,7 @@ Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`,
 | Canvas | 128 x 96 (4:3) | Whole-number device scale (`useIntegerScale`); iPhone 15 portrait 9x (1152 x 864 device px = 384 x 288 CSS px), desktop 1440 x 900 5x (640 x 480) at dpr 1 |
 | Character box | 49 x 60 | Top-left at scene (44, 18). The head rises 5 rows above it. Visible figure head to desk: y 13 to 73 |
 | Head | 25 x 31 | Box (12, -5), centre column 12. Tufts rows 0 to 1, hair to row 8 (fringe to 10, sideburns to 15), face skin rows 9 to 29 and columns 4 to 20, brows row 15, eyes 17 to 19, ears 17 to 22, nose 21 to 22, moustache 23 to 24, mouth line 25, chin 29, chin outline 30 (on torso row 1, so torso rows 2 to 3 are the visible neck) |
-| Eyes layer | 13 x 4 | Head (6, 16). Row 0 only for looking up; each eye 4 x 3 on rows 1 to 3 (2 x 3 iris with a highlight top-left, sclera both sides); left eye x 0-3, right eye x 9-12 |
+| Eyes layer | 13 x 4 | Head (6, 16). Row 0 is empty headroom; each eye 4 x 3 on rows 1 to 3 (2 x 3 iris with a highlight top-left, sclera both sides); left eye x 0-3, right eye x 9-12 |
 | Eyebrows layer | 13 x 3 | Head (6, 14). 4 wide, 1 px, neutral on row 1 |
 | Mouth layer | 9 x 4 | Head (8, 23), main line on row 2 |
 | Facial hair | stubble 25 x 31 (head-sized), moustache 9 x 2 | Stubble at head (0, 0) under the eyes and mouth; moustache at head (8, 23) over the mouth |
@@ -232,7 +232,7 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 Emotes change eyebrows, eyes and mouth together:
 | Emote | Eyebrows | Eyes | Mouth at rest | Talk frames (small, open, wide) |
 |---|---|---|---|---|
-| `neutral` | level, 1 px | open: lid, sclera, iris | warm closed smile, 7 px | small, open, wide |
+| `neutral` | level, 1 px | open: 2x3 iris with a highlight, sclera both sides | warm closed smile, 7 px | small, open, wide |
 | `warm` | soft arch | narrowed (iris row shaded) | wide smile, 9 px with corners up | smile-small, open, wide |
 | `concerned` | inner ends up (slanted) | softer: outer lid corners down | slight frown | small, small, open (restrained) |
 | `pleased` | raised arch | happy (closed upward arcs) | open smile with teeth | smile-small, grin, wide |

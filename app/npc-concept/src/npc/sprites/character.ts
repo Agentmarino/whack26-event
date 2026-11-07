@@ -25,7 +25,7 @@ export const HEAD_POS = { x: 12, y: -5 }
 export const HEAD = sprite(HEAD_ART)
 
 /**
- * Eyes 13x4 at head (6, 16); the eyes themselves are rows 1-3 (row 0 is only used looking up). Each eye is
+ * Eyes 13x4 at head (6, 16); the eyes themselves are rows 1-3 (row 0 is empty headroom in every frame). Each eye is
  * 4x3: a 2x3 iris with a white highlight at its top-left and white sclera on both sides, no lid line on top.
  */
 export const EYES_POS = { x: 6, y: 16 }

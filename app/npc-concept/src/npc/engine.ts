@@ -99,7 +99,7 @@ export const ARM_POSES = {
   retractR: arm(43, 49, 32, 59, 'flat', true),
   plannerR: arm(45, 49, 35, 47, 'grip'),
   toFace1L: arm(3, 45, 8, 36, 'grip'),
-  toFace2L: arm(5, 39, 16, 17, 'grip'),
+  toFace2L: arm(5, 36, 16, 14, 'grip'), // 111: hand at the left eye (eyes are local y 12-14 since the head moved up)
 } satisfies Record<string, ArmPose>
 
 /** x, y are local coords, or an offset from the hand when attached to an arm. */
