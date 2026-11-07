@@ -1,7 +1,7 @@
 ---
 id: 117
 title: Cap closer, framing options, speech bubble fallback, demo-mode auto-advance
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
