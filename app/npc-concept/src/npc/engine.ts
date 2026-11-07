@@ -73,8 +73,8 @@ export const ARM_POSES = {
   raiseL: arm(-1, 41, -3, 28, 'open'),
   waveL1: arm(-2, 35, -5, 18, 'open'),
   waveL2: arm(-1, 34, 1, 16, 'open'),
-  // open palm: forearm out to the side, hand presented at chest height
-  palmL: arm(0, 47, -9, 40, 'openL'),
+  // open palm: forearm raised in front of the chest, palm presented to the customer (clear of the monitor)
+  palmL: arm(-2, 49, 5, 37, 'openL'),
   // reach to the tray (screen left) and back
   reach1L: arm(1, 47, -2, 53, 'open'),
   reach2L: arm(-3, 49, -6, 56, 'open'),

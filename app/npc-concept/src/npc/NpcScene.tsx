@@ -245,7 +245,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
           type="button"
           className="npc-hotspot"
           style={box(PAPER_HOT, s)}
-          aria-label="Summary sheet on the counter. Open your summary."
+          aria-label="Summary sheet on the desk. Open your summary."
           data-npc-hotspot="paper"
           onClick={() => propsRef.current.onPaperClick?.()}
           onMouseEnter={() => engineRef.current?.setPaperHover(true)}
