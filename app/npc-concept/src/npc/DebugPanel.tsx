@@ -15,7 +15,7 @@ export function DebugPanel({ snapshot, onState, onEmote, onGesture, info, childr
   const headingRef = useRef<HTMLHeadingElement>(null)
   useEffect(() => headingRef.current?.focus(), [])
   return (
-    <aside className="npc-debug" aria-labelledby="npc-debug-title">
+    <aside className="npc-debug" id="npc-debug-panel" aria-labelledby="npc-debug-title">
       <h2 id="npc-debug-title" ref={headingRef} tabIndex={-1}>Debug panel <kbd>D</kbd></h2>
       <section>
         <h3>State</h3>

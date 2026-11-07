@@ -1,4 +1,5 @@
-/* NPC kit styles. All sizes in rem so text can be raised to 200%. Square corners, hard edges. */
+/* NPC kit styles. All sizes in rem so text can be raised to 200%. Square corners, hard edges.
+   Touch targets are at least 2.75rem (44px) so they work on a phone; nothing depends on hover. */
 :root {
   --npc-ui-bg: #0b1d2e;
   --npc-ui-bg-deep: #06131f;
@@ -32,8 +33,14 @@
   image-rendering: crisp-edges;
   image-rendering: pixelated;
 }
+.npc-logo {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+}
 .npc-hotspot {
   position: absolute;
+  -webkit-tap-highlight-color: transparent;
   margin: 0;
   padding: 0;
   border: 0;
@@ -94,10 +101,10 @@
 }
 .npc-next {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 2rem;
-  height: 2rem;
+  right: -0.375rem;
+  bottom: -0.375rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -153,7 +160,12 @@
   cursor: pointer;
 }
 .npc-speed__opt span {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0.375rem 0.5rem;
   line-height: 1.2;
   border: 0.125rem solid var(--npc-ui-muted);
@@ -178,6 +190,8 @@
 }
 .npc-chip,
 .npc-reply__send {
+  box-sizing: border-box;
+  min-height: 2.75rem;
   font-family: inherit;
   font-size: 0.75rem;
   line-height: 1.4;
@@ -199,7 +213,9 @@
   gap: 0.5rem;
 }
 .npc-reply__input {
-  flex: 1 1 12rem;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  flex: 1 1 10rem;
   min-width: 0;
   font-family: inherit;
   font-size: 0.75rem;
@@ -208,6 +224,18 @@
   color: var(--npc-ui-text);
   background: var(--npc-ui-bg-deep);
   border: 0.125rem solid var(--npc-ui-muted);
+}
+/* Phone keyboard open: the reply row is pinned to the bottom of the visual viewport (top set in JS). */
+.npc-reply--pinned {
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  flex-wrap: nowrap;
+  transform: translateY(-100%);
+  padding: 0.5rem max(0.5rem, env(safe-area-inset-right)) 0.5rem max(0.5rem, env(safe-area-inset-left));
+  background: var(--npc-ui-bg);
+  border-top: 0.25rem solid var(--npc-ui-text);
 }
 .npc-reply__input::placeholder {
   color: var(--npc-ui-muted);
@@ -291,6 +319,29 @@
 .npc-debug__info dd {
   margin: 0;
   text-align: right;
+}
+
+@media (pointer: coarse) {
+  .npc-debug button,
+  .npc-debug select {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+}
+
+/* Phone width: the dialogue box spans the screen under the scene. */
+@media (max-width: 40rem) {
+  .npc-dialogue {
+    margin-top: 0.5rem;
+    padding: 0.625rem 0.75rem 0.75rem;
+  }
+  .npc-dialogue__text {
+    font-size: 0.875rem;
+  }
+  /* 16px inputs stop iOS Safari zooming the page when the reply box is focused */
+  .npc-reply__input {
+    font-size: 1rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,12 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  DebugPanel, DialogueBox, NpcScene, useIntegerScale, usePrefersReducedMotion,
+  DebugPanel, DialogueBox, NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion,
   type DialogueLine, type NpcHandle, type NpcSnapshot, type Speed,
 } from './npc'
 import { OPENING, SAMPLE, TEST_LINE } from './sample'
 
 const SPEAKER = 'Agent' // name TBD
 type MotionPref = 'system' | 'on' | 'off'
+/** Set by vite.config.ts only when public/brand/capital-one-logo.svg or .png exists. */
+const LOGO_URL: string = import.meta.env.VITE_NPC_LOGO || ''
+
+/** The debug panel sits beside the scene on wide screens and below it on a phone. */
+function useWide(): boolean {
+  const query = '(min-width: 64rem)'
+  const [v, setV] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const on = () => setV(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return v
+}
 
 export default function App() {
   const npc = useRef<NpcHandle>(null)
@@ -22,7 +37,8 @@ export default function App() {
   const [sample, setSample] = useState<'idle' | 'running' | 'done'>('idle')
   const systemReduced = usePrefersReducedMotion()
   const reduced = motionPref === 'system' ? systemReduced : motionPref === 'on'
-  const { scale, deviceScale } = useIntegerScale(16, debug ? 16 * 16 + 16 : 0)
+  const wide = useWide()
+  const { scale, deviceScale } = useIntegerScale(16, debug && wide ? 16 * 16 + 16 : 0)
 
   const lineId = useRef(0)
   const lineDone = useRef<(() => void) | null>(null)
@@ -145,12 +161,21 @@ export default function App() {
     npc.current?.setPalette(green ? { uniform: '#1f6b45', uniformShade: '#124a2f', uniformLight: '#3d8c63' } : {})
   }, [green])
 
-  const width = 320 * scale
+  const width = NATIVE_W * scale
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Lender&rsquo;s Eyes &middot; credit agent concept</h1>
-        <p>Press <kbd>D</kbd> for the debug panel</p>
+        <h1>Lender&rsquo;s Eyes &middot; credit agent</h1>
+        <button
+          type="button"
+          className="page-debug-toggle"
+          aria-pressed={debug}
+          aria-controls="npc-debug-panel"
+          data-npc-action="debug-toggle"
+          onClick={() => setDebug((d) => !d)}
+        >
+          Debug <kbd aria-hidden="true">D</kbd>
+        </button>
       </header>
       <div className="page-main">
         <main className="stage" style={{ width }}>
@@ -162,6 +187,7 @@ export default function App() {
             onChange={setSnap}
             onFileDrop={onFileDrop}
             onPaperClick={onPaperClick}
+            wordmarkSrc={LOGO_URL || undefined}
           />
           <DialogueBox
             line={line}
@@ -203,7 +229,7 @@ export default function App() {
               ['gesture', snap?.gesture ?? ''],
               ['mode', snap?.mode ?? ''],
               ['paper', snap?.paper ?? ''],
-              ['scale', `${deviceScale}x device, ${320 * scale}x${180 * scale} css`],
+              ['scale', `${deviceScale}x device, ${+(NATIVE_W * scale).toFixed(2)}x${+(NATIVE_H * scale).toFixed(2)} css`],
               ['reduced motion', reduced ? 'on' : 'off'],
               ['sample', sample],
             ]}

@@ -3,7 +3,7 @@ import { describeAgent } from './describe'
 import { NpcEngine, type AgentState, type Emote, type Gesture, type NpcSnapshot } from './engine'
 import type { ColorName } from './palette'
 import { NATIVE_H, NATIVE_W } from './raster'
-import { PAPER_END, PAPER_SIZE, TRAY } from './scene'
+import { PAPER_END, PAPER_SIZE, TRAY, WORDMARK, WORDMARK_AT } from './scene'
 
 export interface NpcHandle {
   setState(s: AgentState): void
@@ -30,14 +30,25 @@ export interface NpcSceneProps {
   onPaperClick?: () => void
   onFileDrop?: (file: File) => void
   onChange?: (s: NpcSnapshot) => void
+  /**
+   * Optional URL of the official logo file. When it loads, it is shown in the wordmark layer's
+   * area instead of the pixel text, scaled to fit. Never redraw or trace the logo.
+   */
+  wordmarkSrc?: string
 }
 
-// Hit areas in native pixels for the keyboard/mouse hotspots over the canvas.
+// Hit areas in native pixels for the touch/keyboard/mouse hotspots over the canvas.
 const TRAY_HOT = { x: TRAY.x - 4, y: TRAY.y - 12, w: TRAY.w + 8, h: TRAY.h + 16 }
-const PAPER_HOT = { x: PAPER_END.x - 3, y: PAPER_END.y - 3, w: PAPER_SIZE.w + 6, h: PAPER_SIZE.h + 6 }
-const box = (r: { x: number; y: number; w: number; h: number }, s: number): CSSProperties => ({
-  left: r.x * s, top: r.y * s, width: r.w * s, height: r.h * s,
-})
+const PAPER_HOT = { x: PAPER_END.x - 3, y: PAPER_END.y - 4, w: PAPER_SIZE.w + 6, h: PAPER_SIZE.h + 8 }
+/** Room for the official logo: the wordmark's spot, a little wider and taller. */
+const LOGO_BOX = { x: WORDMARK_AT.x - 13, y: WORDMARK_AT.y - 1, w: WORDMARK.w + 26, h: 9 }
+/** Touch targets are at least 44x44 CSS px (Apple HIG 44pt), grown around their centre. */
+const MIN_TARGET = 44
+const box = (r: { x: number; y: number; w: number; h: number }, s: number): CSSProperties => {
+  const w = Math.max(r.w * s, MIN_TARGET)
+  const h = Math.max(r.h * s, MIN_TARGET)
+  return { left: (r.x + r.w / 2) * s - w / 2, top: (r.y + r.h / 2) * s - h / 2, width: w, height: h }
+}
 
 export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(props, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -46,6 +57,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   const propsRef = useRef(props)
   propsRef.current = props
   const [snap, setSnap] = useState<NpcSnapshot | null>(null)
+  const [logoOk, setLogoOk] = useState(false)
 
   useEffect(() => {
     const engine = new NpcEngine(canvasRef.current!, {
@@ -67,6 +79,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
 
   useEffect(() => engineRef.current?.setAmbient(props.ambient ?? true), [props.ambient])
   useEffect(() => engineRef.current?.setReducedMotion(props.reducedMotion ?? false), [props.reducedMotion])
+  useEffect(() => engineRef.current?.setWordmarkVisible(!(props.wordmarkSrc && logoOk)), [props.wordmarkSrc, logoOk])
 
   useImperativeHandle(ref, () => ({
     setState: (s) => engineRef.current?.setState(s),
@@ -128,21 +141,38 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   return (
     <div className="npc-scene" style={size}>
       <canvas ref={canvasRef} className="npc-canvas" style={size} role="img" aria-label={describeAgent(snap)} />
+      {props.wordmarkSrc && (
+        <img
+          className="npc-logo"
+          src={props.wordmarkSrc}
+          alt=""
+          style={{
+            left: LOGO_BOX.x * s, top: LOGO_BOX.y * s, width: LOGO_BOX.w * s, height: LOGO_BOX.h * s,
+            visibility: logoOk ? 'visible' : 'hidden',
+          }}
+          onLoad={() => setLogoOk(true)}
+          onError={() => setLogoOk(false)}
+        />
+      )}
       <button
         type="button"
         className="npc-hotspot"
         style={box(TRAY_HOT, s)}
-        aria-label="Document tray. Choose a file to hand to the agent, or drop one anywhere on the page."
+        aria-label="Document tray. Tap to choose a file to hand to the agent, or drop one anywhere on the page."
         data-npc-hotspot="tray"
         onClick={() => fileRef.current?.click()}
         onFocus={(e) => e.currentTarget.matches(':focus-visible') && engineRef.current?.setDropHover(true)}
         onBlur={() => engineRef.current?.setDropHover(false)}
       />
+      {/* Visually hidden, not display:none, so iOS Safari opens the picker from the tray tap. */}
       <input
         ref={fileRef}
         type="file"
-        hidden
+        accept=".pdf,.csv,image/*"
+        className="npc-sr-only"
         tabIndex={-1}
+        aria-hidden="true"
+        data-npc-file
         onChange={(e) => {
           const file = e.target.files?.[0]
           engineRef.current?.setDropHover(false)
