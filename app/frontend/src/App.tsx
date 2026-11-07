@@ -409,7 +409,7 @@ export default function App() {
             <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live">
               {announce}
             </p>
-            {windowMsg && <DataWindow key={current!.key} msg={windowMsg} onDetails={openDetails} />}
+            {windowMsg && <DataWindow key={current!.key} msg={windowMsg} onDetails={openDetails} minTop={vp.h - boxMax - 4} />}
             <GameBox
               current={current ? { key: current.key, msg: current.msg } : null}
               page={page}

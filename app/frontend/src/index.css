@@ -1109,7 +1109,8 @@ dialog.bizcard-dialog::backdrop {
   position: absolute;
   right: 0.5rem;
   bottom: calc(100% + 0.25rem);
-  /* about 18 letters a line in the pixel font, never more than 60% of the box */
+  /* about 18 letters a line in the pixel font, never more than 60% of the box (em: the window's text) */
+  font-size: var(--t-win);
   width: min(18em, 60%);
   padding: 0.25rem 0.5rem 0.375rem;
   color: var(--ink);
@@ -1127,6 +1128,26 @@ dialog.bizcard-dialog::backdrop {
     transform: scale(0.6);
     opacity: 0;
   }
+}
+/* no floor left between the desk and the box: just the title and the buttons, in one row */
+.gwin--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 0.5rem;
+}
+.gwin--compact .gwin__tag,
+.gwin--compact .gwin__fact,
+.gwin--compact .gwin__chart,
+.gwin--compact .gwin__health {
+  display: none;
+}
+.gwin--compact .gwin__actions {
+  margin-top: 0;
+}
+.gwin[hidden] {
+  display: none;
 }
 .gwin__tag {
   margin: 0;

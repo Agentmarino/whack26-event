@@ -1,6 +1,7 @@
 // 116: the small game window above the dialogue box, like an item pop-up: the one thing worth seeing
 // for a data moment (a reason's key fact and health, a step's date and title, a tiny chart, the card on
 // the ladder...). "Details" opens the side panel at the full card; a reason also has "Why?".
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { resolveRef, type AgentMessage, type Factor, type RunResult } from 'shared'
 import { useCards } from '../cards/context'
 import { dayLabel, range } from '../format'
@@ -50,8 +51,30 @@ function MiniChart({ plans, plan, scaleMax }: { plans: RunResult['plans']; plan:
   )
 }
 
-export function DataWindow({ msg, onDetails }: { msg: AgentMessage; onDetails: (msgId: string) => void }) {
+/**
+ * `minTop`: the y (CSS px) where Cap's desk ends. The window never reaches above it: when the box is tall
+ * (a menu) and there is no floor left, it shrinks to its title and buttons, and if that still covers the
+ * desk it steps aside (the item is in the notebook). Checked again whenever the box changes size.
+ */
+export function DataWindow({ msg, onDetails, minTop }: { msg: AgentMessage; onDetails: (msgId: string) => void; minTop: number }) {
   const ctx = useCards()
+  const ref = useRef<HTMLElement>(null)
+  const [tick, setTick] = useState(0)
+  const fitKey = `${msg.id}:${minTop}:${tick}`
+  const [fit, setFit] = useState({ key: '', level: 0 })
+  const level = fit.key === fitKey ? fit.level : 0
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || level >= 2) return
+    if (el.getBoundingClientRect().top < minTop - 1) setFit({ key: fitKey, level: level + 1 })
+  })
+  useEffect(() => {
+    const box = document.querySelector('.gbox')
+    if (!box) return
+    const ro = new ResizeObserver(() => setTick((t) => t + 1))
+    ro.observe(box)
+    return () => ro.disconnect()
+  }, [])
   let r
   try {
     r = resolveRef(msg.ref, ctx.result, { whatIfs: ctx.whatIfs, paperUrl: ctx.paperUrl })
@@ -132,7 +155,15 @@ export function DataWindow({ msg, onDetails }: { msg: AgentMessage; onDetails: (
     }
 
   return (
-    <aside className="gwin" aria-label={`${tag}: ${title}`} data-testid="data-window" data-window={r?.on ?? 'paper'}>
+    <aside
+      ref={ref}
+      className={level === 1 ? 'gwin gwin--compact' : 'gwin'}
+      hidden={level >= 2}
+      aria-label={`${tag}: ${title}`}
+      data-testid="data-window"
+      data-window={r?.on ?? 'paper'}
+      data-fit={level === 0 ? 'full' : level === 1 ? 'compact' : 'hidden'}
+    >
       <p className="gwin__tag">{tag}</p>
       <p className="gwin__title">{title}</p>
       {body}

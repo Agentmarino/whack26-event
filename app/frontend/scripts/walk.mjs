@@ -135,7 +135,7 @@ async function drain(label) {
     if (first && kind && kind !== 'text') await shot(`${label}-${kind}-${id}`)
     else if (first && /decline|flags|headline/.test(id)) await shot(`${label}-${id}`)
     // 116: a reason's item window has Why?: open the because-trail once
-    if (kind === 'reason' && !whyDone && (await page.locator('[data-testid="data-window"] [data-action="why"]').count())) {
+    if (kind === 'reason' && !whyDone && (await page.locator('[data-testid="data-window"] [data-action="why"]').isVisible().catch(() => false))) {
       whyDone = true
       await press(page.locator('[data-testid="data-window"] [data-action="why"]'), 'Why?')
       await page.getByTestId('why-sheet').waitFor({ state: 'visible' })
