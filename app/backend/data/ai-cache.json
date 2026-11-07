@@ -1,0 +1,242 @@
+{
+ "whatif:c4463212990edb120d9b2e994af4a6c0": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
+  "at": "2026-11-07T17:31:14.737Z"
+ },
+ "whatif:19f004a95c0b5ae27432e02545656942": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"clearCard\",\"card\":\"Barclaycard\"},{\"lever\":\"stop\",\"what\":\"bnpl\"}]}",
+  "at": "2026-11-07T17:31:16.186Z"
+ },
+ "whatif:cdbd6fd70d3103c2b1887d08d199391e": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":200}]}",
+  "at": "2026-11-07T17:31:50.743Z"
+ },
+ "wording:0fa8b047d3651cc1e2e7920786f48034": {
+  "purpose": "wording",
+  "text": "You don't have bad credit, you simply have very little of it. Don't worry, this plan helps you build it up from zero, one step at a time.",
+  "at": "2026-11-07T17:35:43.907Z"
+ },
+ "wording:39f33503e82c6e1d4221a7c6a509f514": {
+  "purpose": "wording",
+  "text": "You're using 79% of your £1,200 total limit, which is £950. Getting that under 30% would show lenders you're keeping things in control.",
+  "at": "2026-11-07T17:35:43.911Z"
+ },
+ "wording:95dc4924b2615ae08a8aba135fbb49f1": {
+  "purpose": "wording",
+  "text": "You're not on the electoral roll at your current address yet. Lenders use it to confirm who you are, so it's worth sorting out.",
+  "at": "2026-11-07T17:35:43.911Z"
+ },
+ "wording:ae3377da672e0c4b9f9d2e389a6980ed": {
+  "purpose": "wording",
+  "text": "You've had 3 hard searches in the last year, and all 3 were in the last 3 months. Lots of applications close together can look credit-hungry.",
+  "at": "2026-11-07T17:35:43.912Z"
+ },
+ "wording:47709c3b6496e121890d2d82528639bd": {
+  "purpose": "wording",
+  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That should bring your card balance to about £91. You'll know it worked when your statement shows £91 or less.",
+  "at": "2026-11-07T17:35:46.549Z"
+ },
+ "wording:e6f6c4076161ee0e3f7bef6f7098da89": {
+  "purpose": "wording",
+  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That should clear your balance to about £0. You'll know it worked when your statement shows £0.",
+  "at": "2026-11-07T17:35:46.550Z"
+ },
+ "wording:c3da64c911ddc62c24334b9435c2330d": {
+  "purpose": "wording",
+  "text": "On 9 May 2027, you can look ahead to your next card. Check Balance Transfer in Jul 2027. The app will remind you to run QuickCheck then, so you can see where you stand.",
+  "at": "2026-11-07T17:35:46.550Z"
+ },
+ "wording:84587102d9b989735a147c55bfa65a2f": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, steer clear of the thin-file traps. Apply for one thing at a time, only after a soft-search check, and avoid buy now, pay later and payday loans.",
+  "at": "2026-11-07T17:35:48.809Z"
+ },
+ "wording:4b7ac52646a07556e30a026e19767ea7": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, register to vote at your current address at gov.uk/register-to-vote. It takes 5 minutes, and you'll need your National Insurance number.",
+  "at": "2026-11-07T17:35:48.810Z"
+ },
+ "wording:c4883fc9c570f57cf7cc928bc9e18d0a": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, pause all credit applications until 9 Jan 2027. If you're curious about a card, a soft-search checker like Capital One QuickCheck won't affect your score.",
+  "at": "2026-11-07T17:35:48.810Z"
+ },
+ "wording:9bc6bd887d1d09342329905bc59b2805": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, connect Experian Boost by linking your current account in the Experian app. It can count Council Tax, Spotify and Netflix as on-time payments, and it can't lower your score.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:9689195a278d92ecd30f6fca26b15fa3": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, finish your current buy now, pay later plans but don't start new ones. That frees up £40/month for your card from month 2.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:5c2a034b427b0a0d43a8e619d5400ffc": {
+  "purpose": "wording",
+  "text": "On 16 Nov 2026, sign up to a rent-reporting service such as CreditLadder for your £650 rent. It takes about 8 weeks to show on your report.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:5296468a1412716cd68cd1b58173bc95": {
+  "purpose": "wording",
+  "text": "On 8 Dec 2026, pay £175 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £770.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:36a18496d8b7f45437188ca1d2c776d4": {
+  "purpose": "wording",
+  "text": "On 8 Jan 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £549.",
+  "at": "2026-11-07T17:35:48.812Z"
+ },
+ "wording:19dbea75b11e2750ea24df46d8ea1ef0": {
+  "purpose": "wording",
+  "text": "On 9 Jan 2027, run Capital One Classic through QuickCheck first, as it's a soft search. If it says no, wait 3 months and check again rather than applying anyway.",
+  "at": "2026-11-07T17:35:48.812Z"
+ },
+ "wording:38690e6230bf6101793afb0e15eb7721": {
+  "purpose": "wording",
+  "text": "On 23 Jan 2027, move Netflix £10.99 and Spotify £11.99 onto your Classic card. Set a Direct Debit for the full balance so you pay £0 interest.",
+  "at": "2026-11-07T17:35:48.812Z"
+ },
+ "wording:cd29f99867ce91bec51b4ac6a476ad04": {
+  "purpose": "wording",
+  "text": "On 8 Feb 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £323, under 30% of your limit.",
+  "at": "2026-11-07T17:35:48.813Z"
+ },
+ "whatif:7675a0e06107c21ae368550da9ff7f26": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
+  "at": "2026-11-07T17:35:50.780Z"
+ },
+ "read-report:4dd97b4187eea9fd06efbf15b52f34cf": {
+  "purpose": "read-report",
+  "text": "{\n \"format\": \"credit-coach-report/v1\",\n \"provider\": \"Experian\",\n \"reportDate\": \"2026-11-01\",\n \"score\": {\"value\": 682, \"scaleMax\": 999, \"band\": \"Poor\"},\n \"personal\": {\"name\": \"Alex Morgan\", \"dateOfBirth\": \"2001-03-14\", \"declaredIncome\": 29000, \"residentialStatus\": \"rent\"},\n \"addresses\": [\n  {\"address\": \"Flat 4, 18 Spencer Street, Coventry CV1 3EZ\", \"from\": \"2026-05-01\", \"current\": true},\n  {\"address\": \"27 Gulson Road, Coventry CV1 2JG\", \"from\": \"2023-08-01\", \"to\": \"2026-04-30\", \"current\": false}\n ],\n \"electoralRoll\": [\n  {\"address\": \"27 Gulson Road, Coventry CV1 2JG\", \"registered\": true},\n  {\"address\": \"Flat 4, 18 Spencer Street, Coventry CV1 3EZ\", \"registered\": false}\n ],\n \"accounts\": [\n  {\n   \"type\": \"credit_card\",\n   \"lender\": \"Barclaycard\",\n   \"opened\": \"2023-03-10\",\n   \"status\": \"open\",\n   \"limit\": 1500,\n   \"balance\": 1180,\n   \"apr\": 28.9,\n   \"directDebit\": false,\n   \"paymentPattern\": \"minimum\",\n   \"paymentHistory\": [\n    {\"month\": \"2025-11\", \"status\": \"OK\"},\n    {\"month\": \"2025-12\", \"status\": \"OK\"},\n    {\"month\": \"2026-01\", \"status\": \"OK\"},\n    {\"month\": \"2026-02\", \"status\": \"OK\"},\n    {\"month\": \"2026-03\", \"status\": \"OK\"},\n    {\"month\": \"2026-04\", \"status\": \"OK\"},\n    {\"month\": \"2026-05\", \"status\": \"OK\"},\n    {\"month\": \"2026-06\", \"status\": \"1\"},\n    {\"month\": \"2026-07\", \"status\": \"OK\"},\n    {\"month\": \"2026-08\", \"status\": \"OK\"},\n    {\"month\": \"2026-09\", \"status\": \"OK\"},\n    {\"month\": \"2026-10\", \"status\": \"OK\"}\n   ]\n  },\n  {\n   \"type\": \"credit_card\",\n   \"lender\": \"Aqua\",\n   \"opened\": \"2025-09-02\",\n   \"status\": \"open\",\n   \"limit\": 600,\n   \"balance\": 420,\n   \"apr\": 34.9,\n   \"directDebit\": true,\n   \"paymentPattern\": \"minimum\",\n   \"paymentHistory\": [\n    {\"month\": \"2025-11\", \"status\": \"OK\"},\n    {\"month\": \"2025-12\", \"status\": \"OK\"},\n    {\"month\": \"2026-01\", \"status\": \"OK\"},\n    {\"month\": \"2026-02\", \"status\": \"OK\"},\n    {\"month\": \"2026-03\", \"status\": \"OK\"},\n    {\"month\": \"2026-04\", \"status\": \"OK\"},\n    {\"month\": \"2026-05\", \"status\": \"OK\"},\n    {\"month\": \"2026-06\", \"status\": \"OK\"},\n    {\"month\": \"2026-07\", \"status\": \"OK\"},\n    {\"month\": \"2026-08\", \"status\": \"OK\"},\n    {\"month\": \"2026-09\", \"status\": \"OK\"},\n    {\"month\": \"2026-10\", \"status\": \"OK\"}\n   ]\n  },\n  {\n   \"type\": \"communications\",\n   \"lender\": \"O2\",\n   \"opened\": \"2024-01-15\",\n   \"status\": \"open\",\n   \"monthlyPayment\": 28,\n   \"directDebit\": true,\n   \"paymentHistory\": [\n    {\"month\": \"2026-10\", \"status\": \"OK\"}\n   ]\n  },\n  {\n   \"type\": \"current_account_overdraft\",\n   \"lender\": \"Monzo\",\n   \"opened\": \"2022-09-01\",\n   \"status\": \"open\",\n   \"limit\": 250,\n   \"balance\": 0\n  }\n ],\n \"searches\": [\n  {\"date\": \"2026-09-14\", \"organisation\": \"Vanquis\", \"purpose\": \"Credit card application\", \"type\": \"hard\"},\n  {\"date\": \"2026-10-02\", \"organisation\": \"Capital One\", \"purpose\": \"Credit card application\", \"type\": \"hard\"},\n  {\"date\": \"2026-10-20\", \"organisation\": \"Zopa\", \"purpose\": \"Loan quotation\", \"type\": \"soft\"}\n ],\n \"publicRecords\": [],\n \"defaults\": [],\n \"financialAssociates\": [\n  {\"name\": \"Jordan Morgan\", \"reason\": \"Joint current account (closed March 2024)\", \"stillLinked\": true}\n ],\n \"declineLetters\": []\n}",
+  "at": "2026-11-07T17:43:12.657Z"
+ },
+ "read-letter:e17437bf5210716ef6d6107388228acf": {
+  "purpose": "read-letter",
+  "text": "{\"lender\": \"Capital One\", \"product\": \"Balance Transfer credit card\", \"date\": \"2026-10-06\", \"cra\": \"Experian\", \"reasons\": []}",
+  "at": "2026-11-07T17:43:26.622Z"
+ },
+ "read-bank:60413aec992d90a112d0c8378f3088a4": {
+  "purpose": "read-bank",
+  "text": "{\"rows\":[{\"date\":\"2026-08-01\",\"description\":\"HARBOUR LETTINGS RENT\",\"amount\":-650.00},{\"date\":\"2026-08-02\",\"description\":\"COVENTRY CITY COUNCIL CTAX\",\"amount\":-120.00},{\"date\":\"2026-08-03\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-08-04\",\"description\":\"TESCO STORES 2241\",\"amount\":-46.20},{\"date\":\"2026-08-05\",\"description\":\"EE LIMITED\",\"amount\":-18.00},{\"date\":\"2026-08-06\",\"description\":\"OCTOPUS ENERGY\",\"amount\":-60.00},{\"date\":\"2026-08-07\",\"description\":\"ALDI 5512\",\"amount\":-38.75},{\"date\":\"2026-08-08\",\"description\":\"SPOTIFY P1A2B3\",\"amount\":-11.99},{\"date\":\"2026-08-09\",\"description\":\"SAINSBURYS S/MKT\",\"amount\":-41.10},{\"date\":\"2026-08-10\",\"description\":\"NETFLIX.COM\",\"amount\":-10.99},{\"date\":\"2026-08-10\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-08-12\",\"description\":\"KLARNA*ASOS\",\"amount\":-20.00},{\"date\":\"2026-08-13\",\"description\":\"TESCO STORES 2241\",\"amount\":-52.30},{\"date\":\"2026-08-14\",\"description\":\"BEAN & LEAF CAFE\",\"amount\":-6.40},{\"date\":\"2026-08-15\",\"description\":\"BARCLAYCARD PAYMENT\",\"amount\":-29.00},{\"date\":\"2026-08-16\",\"description\":\"ALDI 5512\",\"amount\":-35.90},{\"date\":\"2026-08-17\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-08-19\",\"description\":\"KLARNA*ZARA\",\"amount\":-20.00},{\"date\":\"2026-08-20\",\"description\":\"CO-OP GROUP FOOD\",\"amount\":-22.40},{\"date\":\"2026-08-21\",\"description\":\"BEAN & LEAF CAFE\",\"amount\":-5.90},{\"date\":\"2026-08-23\",\"description\":\"TESCO STORES 2241\",\"amount\":-44.15},{\"date\":\"2026-08-24\",\"description\":\"TRAINLINE.COM\",\"amount\":-32.50},{\"date\":\"2026-08-26\",\"description\":\"ALDI 5512\",\"amount\":-39.20},{\"date\":\"2026-08-27\",\"description\":\"ACME DESIGN STUDIO LTD SALARY\",\"amount\":1680.00},{\"date\":\"2026-09-01\",\"description\":\"HARBOUR LETTINGS RENT\",\"amount\":-650.00},{\"date\":\"2026-09-02\",\"description\":\"COVENTRY CITY COUNCIL CTAX\",\"amount\":-120.00},{\"date\":\"2026-09-03\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-09-04\",\"description\":\"TESCO STORES 2241\",\"amount\":-48.60},{\"date\":\"2026-09-05\",\"description\":\"EE LIMITED\",\"amount\":-18.00},{\"date\":\"2026-09-06\",\"description\":\"OCTOPUS ENERGY\",\"amount\":-60.00},{\"date\":\"2026-09-07\",\"description\":\"ALDI 5512\",\"amount\":-36.10},{\"date\":\"2026-09-08\",\"description\":\"SPOTIFY P1A2B3\",\"amount\":-11.99},{\"date\":\"2026-09-09\",\"description\":\"SAINSBURYS S/MKT\",\"amount\":-39.85},{\"date\":\"2026-09-10\",\"description\":\"NETFLIX.COM\",\"amount\":-10.99},{\"date\":\"2026-09-10\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-09-12\",\"description\":\"KLARNA*ASOS\",\"amount\":-20.00},{\"date\":\"2026-09-13\",\"description\":\"TESCO STORES 2241\",\"amount\":-50.05},{\"date\":\"2026-09-14\",\"description\":\"BEAN & LEAF CAFE\",\"amount\":-6.40},{\"date\":\"2026-09-15\",\"description\":\"BARCLAYCARD PAYMENT\",\"amount\":-29.00},{\"date\":\"2026-09-16\",\"description\":\"ALDI 5512\",\"amount\":-37.40},{\"date\":\"2026-09-17\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-09-18\",\"description\":\"SQ *HAIR BY JO\",\"amount\":-35.00},{\"date\":\"2026-09-19\",\"description\":\"KLARNA*ZARA\",\"amount\":-20.00},{\"date\":\"2026-09-20\",\"description\":\"CO-OP GROUP FOOD\",\"amount\":-24.10},{\"date\":\"2026-09-21\",\"description\":\"BEAN & LEAF CAFE\",\"amount\":-5.90},{\"date\":\"2026-09-23\",\"description\":\"TESCO STORES 2241\",\"amount\":-43.80},{\"date\":\"2026-09-24\",\"description\":\"TRAINLINE.COM\",\"amount\":-32.50},{\"date\":\"2026-09-26\",\"description\":\"ALDI 5512\",\"amount\":-40.10},{\"date\":\"2026-09-27\",\"description\":\"ACME DESIGN STUDIO LTD SALARY\",\"amount\":1680.00},{\"date\":\"2026-10-01\",\"description\":\"HARBOUR LETTINGS RENT\",\"amount\":-650.00},{\"date\":\"2026-10-02\",\"description\":\"COVENTRY CITY COUNCIL CTAX\",\"amount\":-120.00},{\"date\":\"2026-10-03\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-10-04\",\"description\":\"TESCO STORES 2241\",\"amount\":-47.30},{\"date\":\"2026-10-05\",\"description\":\"EE LIMITED\",\"amount\":-18.00},{\"date\":\"2026-10-06\",\"description\":\"OCTOPUS ENERGY\",\"amount\":-60.00},{\"date\":\"2026-10-07\",\"description\":\"ALDI 5512\",\"amount\":-37.65},{\"date\":\"2026-10-08\",\"description\":\"SPOTIFY P1A2B3\",\"amount\":-11.99},{\"date\":\"2026-10-09\",\"description\":\"SAINSBURYS S/MKT\",\"amount\":-40.45},{\"date\":\"2026-10-10\",\"description\":\"NETFLIX.COM\",\"amount\":-10.99},{\"date\":\"2026-10-10\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-10-11\",\"description\":\"PAYPAL *VINTED\",\"amount\":-18.00},{\"date\":\"2026-10-12\",\"description\":\"KLARNA*ASOS\",\"amount\":-20.00},{\"date\":\"2026-10-13\",\"description\":\"TESCO STORES 2241\",\"amount\":-51.20},{\"date\":\"2026-10-14\",\"description\":\"BEAN & LEAF CAFE\",\"amount\":-6.40},{\"date\":\"2026-10-15\",\"description\":\"BARCLAYCARD PAYMENT\",\"amount\":-29.00},{\"date\":\"2026-10-16\",\"description\":\"ALDI 5512\",\"amount\":-36.80},{\"date\":\"2026-10-17\",\"description\":\"WEST MIDLANDS BUS\",\"amount\":-32.50},{\"date\":\"2026-10-19\",\"description\":\"KLARNA*ZARA\",\"amount\":-20.00},{\"date\":\"2026-10-20\",\"description\":\"CO-OP GROUP FOOD\",\"amount\":-23.25},{\"date\":\"2026-10-21\",\"description\":\"BEAN & LEAF CAFE\",\"amount\":-5.90},{\"date\":\"2026-10-23\",\"description\":\"TESCO STORES 2241\",\"amount\":-44.60},{\"date\":\"2026-10-24\",\"description\":\"TRAINLINE.COM\",\"amount\":-32.50},{\"date\":\"2026-10-26\",\"description\":\"ALDI 5512\",\"amount\":-38.75},{\"date\":\"2026-10-27\",\"description\":\"ACME DESIGN STUDIO LTD SALARY\",\"amount\":1680.00}]}",
+  "at": "2026-11-07T17:43:38.691Z"
+ },
+ "bank-payees:9858063a2dc8a4a8086ffe9be5427f44": {
+  "purpose": "bank-payees",
+  "text": "{\"categories\": {\"SQ *HAIR BY JO\": \"other\", \"PAYPAL *VINTED\": \"other\"}}",
+  "at": "2026-11-07T17:43:39.775Z"
+ },
+ "wording:f5a882744b7dfeab4ca59b02d5ea2d73": {
+  "purpose": "wording",
+  "text": "You don't have bad credit. You just have very little of it. This plan helps you build it up from zero.",
+  "at": "2026-11-07T17:45:15.842Z"
+ },
+ "wording:6e80b24ca5678ef24a27327a5fd01a99": {
+  "purpose": "wording",
+  "text": "You're using 79% of your £1,200 total limit, which is £950. Utilisation means how much of your limit you use. Under 30% looks in control.",
+  "at": "2026-11-07T17:45:15.844Z"
+ },
+ "wording:95a1148e18df24f73ea73976b4f9cf8e": {
+  "purpose": "wording",
+  "text": "You're not on the electoral roll at your current address. Lenders use it to check who you are, so being on it helps.",
+  "at": "2026-11-07T17:45:15.844Z"
+ },
+ "wording:1fd65eca5c2a65d01ff07f2b938ea1e3": {
+  "purpose": "wording",
+  "text": "You have 3 hard searches in the last year, and all 3 were in the last 3 months. Many applications close together can look credit-hungry.",
+  "at": "2026-11-07T17:45:15.845Z"
+ },
+ "wording:6522a6ffd4e9c9786980133cde11ffb6": {
+  "purpose": "wording",
+  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That would take your card balance to about £91. Aim for a statement balance of £91 or less.",
+  "at": "2026-11-07T17:45:18.595Z"
+ },
+ "wording:85fc18ed58b02ddfd3441a2df081d9a7": {
+  "purpose": "wording",
+  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That would take your balance to about £0. Aim for a statement balance of £0.",
+  "at": "2026-11-07T17:45:18.596Z"
+ },
+ "wording:b123b5ff122edd9784832eee34228ca4": {
+  "purpose": "wording",
+  "text": "On 9 May 2027, look ahead to your next card. Your file may fit the Balance Transfer rules by Jul 2027. The app will remind you to run QuickCheck then.",
+  "at": "2026-11-07T17:45:18.598Z"
+ },
+ "wording:11c629fb04717bc49eb617fe6b3ade63": {
+  "purpose": "wording",
+  "text": "9 Nov 2026: Keep your credit file safe. Apply for one thing at a time, and only after a soft-search check. Skip buy now, pay later plans and payday loans.",
+  "at": "2026-11-07T17:45:21.052Z"
+ },
+ "wording:2dd9ac58fe0fccf9cb5d88bf2104221a": {
+  "purpose": "wording",
+  "text": "9 Nov 2026: Register to vote at your current address on gov.uk/register-to-vote. It takes 5 minutes. Have your National Insurance number ready. It shows on your report in 6 to 8 weeks.",
+  "at": "2026-11-07T17:45:21.053Z"
+ },
+ "wording:c5891378cac84b96f2355a16552a67dd": {
+  "purpose": "wording",
+  "text": "9 Nov 2026: Please don't apply for any credit until 9 Jan 2027. To check a card, use a soft-search checker like Capital One QuickCheck. It has no score impact.",
+  "at": "2026-11-07T17:45:21.054Z"
+ },
+ "wording:71ec445ca5903401c64efe01510731af": {
+  "purpose": "wording",
+  "text": "9 Nov 2026: Connect Experian Boost. Link your current account in the Experian app. It counts bills like Council Tax, Spotify and Netflix as on-time payments. It can't lower your score.",
+  "at": "2026-11-07T17:45:21.054Z"
+ },
+ "wording:ed51802825e455c7383f0c249fdc37d6": {
+  "purpose": "wording",
+  "text": "9 Nov 2026: Finish your current buy now, pay later plans, but don't start new ones. That frees £40/month for your card from month 2.",
+  "at": "2026-11-07T17:45:21.054Z"
+ },
+ "wording:6c09aec7e2c7fb79fbac93c881ea6186": {
+  "purpose": "wording",
+  "text": "16 Nov 2026: Sign up to a rent-reporting service like CreditLadder for your £650 rent. It tells all three credit agencies. It takes about 8 weeks to show.",
+  "at": "2026-11-07T17:45:21.055Z"
+ },
+ "wording:0027832d8afc95bd78a25e0b9b55d1b9": {
+  "purpose": "wording",
+  "text": "8 Dec 2026: Pay £175 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £770, which is 64% of your limit.",
+  "at": "2026-11-07T17:45:21.056Z"
+ },
+ "wording:4206e7b3c39ef7c7318d9788b8dda8ca": {
+  "purpose": "wording",
+  "text": "8 Jan 2027: Pay £215 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £549, which is 46% of your limit.",
+  "at": "2026-11-07T17:45:21.056Z"
+ },
+ "wording:aae0baff44e71f83b35134473badc3e3": {
+  "purpose": "wording",
+  "text": "9 Jan 2027: Run Capital One QuickCheck for the Classic card. It's a soft search. If it says yes, apply once. If it says no, wait 3 months and check again.",
+  "at": "2026-11-07T17:45:21.056Z"
+ },
+ "wording:bc15d2f3698d895fd231616b3c4612f5": {
+  "purpose": "wording",
+  "text": "23 Jan 2027: Move Netflix £10.99 and Spotify £11.99 onto the Classic card. Set a Direct Debit for the full balance, so you pay £0 interest.",
+  "at": "2026-11-07T17:45:21.057Z"
+ },
+ "wording:3b70e8f8e7e3f804e18db1b647509278": {
+  "purpose": "wording",
+  "text": "8 Feb 2027: Pay £215 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £323, which is 27% of your limit.",
+  "at": "2026-11-07T17:45:21.057Z"
+ },
+ "wording:e880550a8fb1d313c4a0307ea2ef845f": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, please pause all credit applications until 9 Jan 2027. To check a card, use a soft-search checker like Capital One QuickCheck. It has no score impact.",
+  "at": "2026-11-07T17:45:22.915Z"
+ },
+ "wording:37a7bdea7ca105e7a0362f8e55a90d08": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, set up a Direct Debit on your Barclaycard for at least the minimum, about £29, dated 2 days after payday. That way a late payment can't happen by accident.",
+  "at": "2026-11-07T17:45:52.626Z"
+ },
+ "wording:dd31d07e25d90c1b3d7bc32ed32f2c78": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, please hold off applying for credit until 9 Jan 2027. If you want to check a card, a soft-search checker like Capital One QuickCheck won't affect your score.",
+  "at": "2026-11-07T17:45:52.627Z"
+ },
+ "goal:67a420e3aabb6fdec27d268a7005e8d6": {
+  "purpose": "goal",
+  "text": "{\"goal\": \"card\"}",
+  "at": "2026-11-07T17:59:45.729Z"
+ }
+}

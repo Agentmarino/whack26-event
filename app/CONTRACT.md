@@ -22,8 +22,8 @@ Backend `http://localhost:8000`, frontend `http://localhost:5173` (Vite proxies 
 | `GET /api/health` | | `{ok: true}` |
 | `GET /api/personas` | | `Persona[]` (`{id, name, blurb}`: priya, mei, alex) |
 | `POST /api/turn` | `TurnRequest {sessionId \| null, input, settings?: {plainEnglish}}` | `TurnResponse {sessionId, step, messages, expects, result, paperUrl, whatIf?}` |
-| `POST /api/upload` | multipart: `file`, `fileKind` (`credit_report \| bank \| letter`), `sessionId` | `UploadResult {ok, fileId, fileKind, fileName, findings, error}`; then send `{type: 'file', fileKind, fileId}` to `/api/turn` |
-| `POST /api/whatif` | `WhatIfRequest {sessionId, text?, changes?}` | `WhatIfResponse {sessionId, messages, whatIf}` |
+| `POST /api/upload` | multipart: `file`, `fileKind` (`credit_report \| bank \| letter`), `sessionId`; or a `text` field instead of `file` (a pasted letter) | `UploadResult {ok, fileId, fileKind, fileName, findings, error}`; then send `{type: 'file', fileKind, fileId}` to `/api/turn`. A file it can't read is still HTTP 200 with `ok: false` and a friendly `error` to show |
+| `POST /api/whatif` | `WhatIfRequest {sessionId, text?, changes?}` | `WhatIfResponse {sessionId, messages, whatIf}`. 409 `{error}` before the check is done; 422 `{error}` (a friendly sentence to show) when the text maps to no lever |
 | `GET /api/paper/:sessionId.pdf` | | the summary PDF (404 `{error}` until the `paper` step) |
 
 ## The ideas in one screen
@@ -32,6 +32,10 @@ Backend `http://localhost:8000`, frontend `http://localhost:5173` (Vite proxies 
 - **Expects**: `{kind: file | choice | text | none, fileKinds?, chips?, optional?, placeholder?, allowVoice?}`. `none` = send `{type: 'skip'}` after the messages
 - **`result`** is the engine's `analyse()` output exactly: `{profile, findings, result, decline}`. Note the nesting: the factors are at `result.result.diagnosis.ranked`, the plans at `result.result.plans['3m' | '6m']`, the card ladder at `result.result.ladder`, the decoded decline at `result.decline`
 - **Claude never computes a number.** The engine computes; Claude reads documents into the engine's input, writes wording (checked), and turns free-text what-ifs into the engine's `Change[]` levers
+
+## Status codes (113)
+- `POST /api/turn`: 400 when the body is not a `TurnRequest` or a non-`start` input has no `sessionId`; 404 when the session is unknown (the server restarted): start again with `{type: 'start'}`
+- Every error body is `{error: string}`; 5xx bodies say "Something went wrong on our side. Please try again."
 
 ## Additions beyond the 112 spec
 - `TurnResponse.whatIf` (optional): the `WhatIfRun` behind a `whatif` message on a coach turn
