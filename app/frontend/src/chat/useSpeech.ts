@@ -1,5 +1,5 @@
 // Read the agent's lines aloud with the browser's own voice (speechSynthesis, en-GB).
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 let voice: SpeechSynthesisVoice | null | undefined
 
@@ -25,13 +25,19 @@ export function speakNow(text: string, rate: number) {
 }
 
 export function useSpeech(text: string | null, key: string | null, enabled: boolean, rate: number) {
+  const wasEnabled = useRef(enabled)
   useEffect(() => {
     if (!speechAvailable()) return
     const synth = window.speechSynthesis
+    const justTurnedOn = enabled && !wasEnabled.current
+    wasEnabled.current = enabled
     if (!enabled || !text) {
       synth.cancel()
       return
     }
+    // 115: switching read aloud on says its own confirmation (SettingsSheet). Don't read the line on
+    // screen over it; every new line from here on is read in full.
+    if (justTurnedOn) return
     synth.cancel()
     const u = new SpeechSynthesisUtterance(text.replace(/£/g, '£ ').replace(/\s+/g, ' '))
     u.lang = 'en-GB'

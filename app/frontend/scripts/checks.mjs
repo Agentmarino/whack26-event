@@ -50,6 +50,28 @@ async function drain(page) {
     await page.locator('[data-action="next"]').click()
   }
 }
+// 115: Cap's business card opens over everything on the first turn; put it away before tapping.
+async function closeCard(page, wait = 6000) {
+  const card = page.getByTestId('business-card')
+  try {
+    await card.waitFor({ state: 'visible', timeout: wait })
+  } catch {
+    return
+  }
+  await page.locator('[data-action="card-close"]').click()
+  await card.waitFor({ state: 'hidden' })
+}
+/** 115: past the card and the opening question, into the report branch (where "Let's start" used to go). */
+async function toReport(page) {
+  await closeCard(page)
+  await drain(page)
+  await page.locator('[data-chip="Nice to meet you, Cap!"]').click()
+  await settle(page)
+  await drain(page)
+  await page.locator(`[data-chip="I've got a credit report I want help with"]`).click()
+  await settle(page)
+  await drain(page)
+}
 const shot = async (page, name) => {
   await page.waitForTimeout(400)
   await page.screenshot({ path: `${out}check-${name}.png` })
@@ -64,17 +86,16 @@ const shot = async (page, name) => {
   await page.waitForTimeout(100)
   const live = await page.getByTestId('live').textContent()
   const typingMode = await mode(page)
-  const label1 = await page.locator('canvas').getAttribute('aria-label')
+  const label1 = await page.locator('canvas.npc-canvas').getAttribute('aria-label')
   await shot(page, 'typing-1x')
   await page.waitForTimeout(4500)
   const after = await mode(page)
-  ok('live region holds the whole line at once', live?.startsWith('Credit agent says: Hello, welcome'), live?.slice(0, 60))
+  ok('live region holds the whole line at once', live?.startsWith("Cap says: Hi, nice to meet you. My name's Cap"), live?.slice(0, 60))
   ok('1x typewriter: dock says "Show all of it" while typing, then Next', typingMode === 'next' && after === 'next', `${typingMode} -> ${after}`)
-  ok('canvas has an aria-label for the agent', label1?.includes('Credit agent'), label1 ?? '')
-  await drain(page)
-  await page.locator(`[data-chip="Let's start"]`).click()
+  ok('canvas has an aria-label for the agent', label1?.includes('Cap'), label1 ?? '')
+  await toReport(page)
   await settle(page)
-  const label2 = await page.locator('canvas').getAttribute('aria-label')
+  const label2 = await page.locator('canvas.npc-canvas').getAttribute('aria-label')
   ok('canvas label follows the state', label2 !== label1, label2 ?? '')
   ok('no console errors (1)', errors.length === 0, errors.join(' | '))
   await ctx.close()
@@ -94,8 +115,7 @@ const shot = async (page, name) => {
 // 3. upload failure (?mock=uploadfail): friendly notice, inputs stay
 {
   const { ctx, page } = await open('?mock=uploadfail')
-  await drain(page)
-  await page.locator(`[data-chip="Let's start"]`).click()
+  await toReport(page)
   await settle(page)
   const chooser = page.waitForEvent('filechooser')
   await page.locator('[data-action="upload"]').click()
@@ -111,8 +131,7 @@ const shot = async (page, name) => {
 // 4. a real upload through the tray, then a letter at another step
 {
   const { ctx, page, errors } = await open()
-  await drain(page)
-  await page.locator(`[data-chip="Let's start"]`).click()
+  await toReport(page)
   await settle(page)
   const chooser = page.waitForEvent('filechooser')
   await page.locator('[data-npc-hotspot="tray"]').click()
@@ -146,7 +165,8 @@ const shot = async (page, name) => {
   await settle(page)
   await page.waitForTimeout(300)
   const spoken = await page.evaluate(() => window.__spoken)
-  ok('read aloud speaks the line in en-GB at the chosen rate', spoken?.[0]?.lang === 'en-GB' && Math.abs(spoken[0].rate - 1.2) < 0.001 && spoken[0].text.startsWith('Hello'), JSON.stringify({ ...(spoken?.[0] ?? {}), text: spoken?.[0]?.text?.slice(0, 30) }))
+  ok('read aloud speaks the line in en-GB at the chosen rate', spoken?.[0]?.lang === 'en-GB' && Math.abs(spoken[0].rate - 1.2) < 0.001 && spoken[0].text.startsWith('Hi, nice to meet you'), JSON.stringify({ ...(spoken?.[0] ?? {}), text: spoken?.[0]?.text?.slice(0, 30) }))
+  await closeCard(page)
   await page.locator('[data-action="settings"]').click()
   await page.getByTestId('settings-sheet').waitFor({ state: 'visible' })
   await shot(page, 'settings')
@@ -158,15 +178,15 @@ const shot = async (page, name) => {
   await page.locator('label:has-text("Standard")').click()
   await page.locator('label:has-text("100%")').click()
   await page.keyboard.press('Escape')
-  // to the goal question (text box with the mic)
-  await drain(page)
-  await page.locator(`[data-chip="Let's start"]`).click()
-  for (let i = 0; i < 3; i++) {
+  // to the goal question (text box with the mic): samples, then chips, until the reply box shows
+  await toReport(page)
+  for (let i = 0; i < 10 && !(await page.locator('#reply-box').isVisible().catch(() => false)); i++) {
     await drain(page)
-    await page.locator('[data-action="sample"]').click()
-    if (i === 0) {
-      await page.locator('[data-persona="priya"]').click()
-    }
+    if (await page.locator('[data-action="sample"]').isVisible().catch(() => false)) {
+      await page.locator('[data-action="sample"]').click()
+      if (await page.locator('[data-persona="priya"]').isVisible().catch(() => false)) await page.locator('[data-persona="priya"]').click()
+    } else if (!(await page.locator('#reply-box').isVisible().catch(() => false))) await page.locator('[data-chip]').first().click()
+    await settle(page)
   }
   await drain(page)
   await page.locator('[data-action="mic"]').click()
@@ -178,9 +198,35 @@ const shot = async (page, name) => {
   await ctx.close()
 }
 
+// 5b. 115: switching read aloud on says its confirmation in full (the line on screen is not read over
+//     it); the next new line is read
+{
+  const { ctx, page } = await open('', { speed: 'instant', readAloud: false, voiceRate: 1 })
+  await settle(page)
+  await closeCard(page)
+  await page.locator('[data-action="settings"]').click()
+  await page.getByTestId('settings-sheet').waitFor({ state: 'visible' })
+  await page.locator('label').filter({ has: page.getByTestId('toggle-voice') }).click()
+  await page.waitForTimeout(400)
+  const afterToggle = await page.evaluate(() => window.__spoken.map((u) => u.text))
+  await page.keyboard.press('Escape')
+  await drain(page)
+  await page.locator('[data-chip="Nice to meet you, Cap!"]').click()
+  await settle(page)
+  await page.waitForTimeout(300)
+  const afterChip = await page.evaluate(() => window.__spoken.map((u) => u.text))
+  ok(
+    'read aloud on: the confirmation alone, then the next line in full',
+    afterToggle.length === 1 && afterToggle[0] === "I'll read my replies aloud." && afterChip.length > 1 && /credit search|make your credit better/.test(afterChip.at(-1) ?? ''),
+    JSON.stringify({ afterToggle, next: afterChip.at(-1)?.slice(0, 40) }),
+  )
+  await ctx.close()
+}
+
 // 6. tap-to-explain a credit term
 {
   const { ctx, page } = await open('?demo=1')
+  await closeCard(page)
   for (let i = 0; i < 60; i++) {
     if (await page.locator('[data-term]').count()) break
     const m = await mode(page)
@@ -209,8 +255,7 @@ if (liveBase) {
     await ctx.route('**/api/whatif', (r) => r.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Unknown session' }) }))
   }
   const { ctx, page } = await open('?demo=1', { speed: 'instant', demo: true }, liveBase, refuse)
-  await drain(page)
-  await page.locator(`[data-chip="Let's start"]`).click()
+  await toReport(page)
   await settle(page)
   const chooser = page.waitForEvent('filechooser')
   await page.locator('[data-action="upload"]').click()
@@ -243,7 +288,7 @@ if (liveBase) {
   ok('a lost session on /api/whatif offers Start again', (await page.locator('[data-action="restart-chat"]').count()) === 1 && (await page.locator('[data-action="retry"]').count()) === 0)
   await page.locator('[data-action="restart-chat"]').click()
   await settle(page)
-  ok('Start again begins a new conversation', (await page.locator('.app').getAttribute('data-step')) === 'greet')
+  ok('Start again begins a new conversation', (await page.locator('.app').getAttribute('data-step')) === 'intro')
   await ctx.close()
 }
 

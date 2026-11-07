@@ -1,8 +1,8 @@
-// 114 verification: walk the whole chat from greet to coach and screenshot every step and card.
+// 114/115 verification: walk a branch from Cap's card to the plan and a what-if, screenshotting every step and card.
 // Playwright WebKit with the iPhone 15 profile (393x659, dpr 3, touch) unless --desktop.
 //
-//   node scripts/walk.mjs [--base http://localhost:5173] [--desktop] [--keyboard] [--reduced]
-//                         [--text 150] [--colour okabe|contrast] [--prefix name] [--live] [--until coach]
+//   node scripts/walk.mjs [--base http://localhost:5173] [--branch declined|report|prepare|new] [--desktop] [--keyboard]
+//                         [--reduced] [--text 150] [--colour okabe|contrast] [--prefix name] [--live] [--cardshots]
 //
 // Screens go to app/frontend/screens/<prefix>-NN-<step>.png. Every screenshot is taken twice (the first
 // can lag one action behind) and the second is kept. Exits 1 on a console error or a stuck step.
@@ -24,8 +24,10 @@ const reduced = flag('reduced')
 const textSize = Number(opt('text', '100'))
 const colour = opt('colour', 'standard')
 const live = flag('live')
-const prefix = opt('prefix', desktop ? 'desktop' : 'iphone')
-const outDir = fileURLToPath(new URL('../screens/', import.meta.url))
+const branch = opt('branch', 'declined')
+const cardShots = flag('cardshots')
+const prefix = opt('prefix', `${desktop ? 'desktop' : 'iphone'}-${branch}`)
+const outDir = opt('out', fileURLToPath(new URL('../screens/', import.meta.url))).replace(/\/?$/, '/')
 mkdirSync(outDir, { recursive: true })
 
 const browser = desktop ? await chromium.launch() : await webkit.launch()
@@ -141,126 +143,134 @@ const step = async () => {
   return s
 }
 
+// 115: the branch to walk, and its persona. declined is the demo path (Priya with her letter).
+const BRANCH_CHIP = {
+  declined: "I've been declined already",
+  report: "I've got a credit report I want help with",
+  prepare: 'I want to get ready before I apply',
+  new: "I'm new to credit or new to the UK",
+}
+const PERSONA = { declined: 'priya', report: 'priya', prepare: 'priya', new: 'mei' }
+// Chips the walk prefers when they are offered (the demo path); otherwise the first chip.
+const PREFER = [
+  BRANCH_CHIP[branch], 'Nice to meet you, Cap!', 'What can I do?', 'The Balance Transfer card', 'Capital One Classic', 'The Classic card',
+  "I'm new to the UK", 'Under 6 months', '3 months', 'Yes, I can', 'No', 'Tell me about the letter', 'Got it', 'Sum it up for me', 'Make me a plan',
+]
+
+/** The business card overlay (115): screenshot it growing, then put it away. */
+async function businessCard() {
+  const card = page.getByTestId('business-card')
+  if (cardShots) {
+    await shot('card-start')
+    await page.waitForTimeout(700)
+    await page.screenshot({ path: `${outDir}${prefix}-${String(++n).padStart(2, '0')}-card-mid.png` })
+    shots.push('card-mid')
+  }
+  await card.waitFor({ state: 'visible', timeout: 8000 })
+  await page.waitForTimeout(reduced ? 150 : 900)
+  await shot('card-full')
+  if (keyboard) await page.keyboard.press('Escape')
+  else await press(action('card-close'), 'put the card away')
+  await card.waitFor({ state: 'hidden', timeout: 4000 })
+}
+
+/** Use a sample, picking the branch's persona when the picker opens. */
+async function useSample(label) {
+  await press(action('sample'), `sample ${label}`)
+  const picker = page.getByTestId('persona-sheet')
+  if (await picker.isVisible().catch(() => false)) {
+    await press(page.locator(`[data-persona="${PERSONA[branch]}"]`), PERSONA[branch])
+  }
+}
+
 try {
   await page.goto(`${base}/${live ? '?mock=off' : ''}`)
   await page.getByTestId('dock').waitFor()
+  await businessCard()
   await settle()
   await step()
-  await shot('greet')
-  await drain('greet')
-  await press(chip("Let's start"), "Let's start")
-  await settle()
-  await step()
-  await shot('ask-report')
-
-  // Use a sample -> persona picker -> Priya
-  await press(action('sample'), 'Use a sample')
-  await page.getByTestId('persona-sheet').waitFor({ state: 'visible' })
-  await shot('persona-picker')
-  await press(page.locator('[data-persona="priya"]'), 'Priya')
-  await settle()
-  await step()
-  await shot('ask-bank-ack')
-  await drain('ask-bank')
-  await shot('ask-bank')
-  await press(action('sample'), 'sample bank')
-  await settle()
-  await step()
-  await drain('ask-letter')
-  await shot('ask-letter')
-  await press(action('sample'), 'sample letter')
-  await settle()
-  await step()
-  await drain('questions')
-  await shot('q-goal')
-  await press(chip('A credit card'), 'A credit card')
-  await settle()
-  await step()
-  await drain('questions')
-  await shot('q-horizon')
-  await press(chip('3 months'), '3 months')
-  await settle()
-  await drain('questions')
-  await shot('q-roll')
-  await press(chip('Yes, I can'), 'Yes, I can')
-  await settle()
-  await drain('questions')
-  await shot('q-dd')
-  await press(chip('No'), 'No')
-  await settle()
-  await step()
-  await shot('assessing')
-  await drain('assessing')
-  if ((await mode()) === 'continue') await press(action('continue'), 'Continue')
-  await settle()
-  await step()
-  await drain('diagnosis')
-  await shot('diagnosis-end')
-  // the because-trail drawer on the last reason in history
-  const why = page.locator('[data-action="why"]').first()
-  await why.scrollIntoViewIfNeeded()
-  await press(why, 'Why?')
-  await page.getByTestId('why-sheet').waitFor({ state: 'visible' })
-  await shot('why-drawer')
-  await page.keyboard.press('Escape')
-  await page.getByTestId('why-sheet').waitFor({ state: 'hidden' })
-
-  await press(chip('Tell me about the letter'), 'letter chip')
-  await settle()
-  await step()
-  await drain('decline')
-  await shot('decline-end')
-  await press(chip('Got it'), 'Got it')
-  await settle()
-  await step()
-  await drain('paper')
-  await page.waitForTimeout(reduced ? 100 : 1800) // the sheet slides across the desk
-  await shot('paper')
-  // tap the sheet on the desk (keyboard: the "Read it" button on the card)
-  if (keyboard) await press(action('open-paper'), 'Read it')
-  else await page.locator('[data-npc-hotspot="paper"]').click()
-  await page.getByTestId('paper-sheet').waitFor({ state: 'visible' })
-  await shot('paper-overlay')
-  await press(action('download'), 'Download')
-  await page.getByTestId('paper-status').filter({ hasText: /./ }).waitFor({ timeout: 5000 }).catch(() => {})
-  await shot('paper-download')
-  await page.keyboard.press('Escape')
-  await page.getByTestId('paper-sheet').waitFor({ state: 'hidden' })
-
-  await press(chip('Make me a plan'), 'Make me a plan')
-  await settle()
-  await step()
-  await drain('coach')
-  await shot('coach-choose')
-  if (opt('until') !== 'coach-choose') {
-    await press(chip('3 months'), 'plan 3 months')
-    await settle()
-    await drain('plan')
-    await shot('plan-end')
-    await press(chip('What if I pay £300 a month?'), 'what-if chip')
-    await settle()
-    await drain('whatif')
-    await shot('whatif-chip')
-    const sliders = action('whatif-sheet')
-    if (await sliders.count()) {
-      await press(sliders, 'sliders')
-      await page.getByTestId('whatif-sheet').waitFor({ state: 'visible', timeout: 3000 })
-      // slider by keyboard (works for touch and keys alike): 12 steps of £25 = £300, then stop BNPL
-      await page.getByTestId('paydown').focus()
-      for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowRight')
-      const bnpl = page.locator('[data-lever="bnpl"]')
-      if (await bnpl.count()) {
-        if (keyboard) {
-          await bnpl.focus()
-          await page.keyboard.press('Space')
-        } else await bnpl.check()
-      }
-      await shot('whatif-sheet')
-      await press(action('whatif-run'), 'run what-if')
+  let plans = 0
+  let whatIf = false
+  const done = new Set()
+  for (let i = 0; i < 80; i++) {
+    const m = await drain(`t${i}`)
+    const s = await step()
+    if (m === 'continue') {
+      await press(action('continue'), 'Continue')
       await settle()
-      await drain('whatif-sliders')
-      await shot('whatif-sliders')
+      continue
     }
+    if (m !== 'input') break
+    // One-off extras on the way, as a person would: the Why? drawer, the paper, the opening chips.
+    if (s === 'opening' && !done.has('opening')) {
+      done.add('opening')
+      await shot('opening-chips')
+    }
+    if (s === 'diagnosis' && !done.has('why')) {
+      done.add('why')
+      const why = page.locator('[data-action="why"]').first()
+      if (await why.count()) {
+        await why.scrollIntoViewIfNeeded()
+        await press(why, 'Why?')
+        await page.getByTestId('why-sheet').waitFor({ state: 'visible' })
+        await shot('why-drawer')
+        await page.keyboard.press('Escape')
+        await page.getByTestId('why-sheet').waitFor({ state: 'hidden' })
+      }
+    }
+    if (s === 'paper' && !done.has('paper')) {
+      done.add('paper')
+      await page.waitForTimeout(reduced ? 100 : 1800) // the sheet slides across the desk
+      if (keyboard) await press(action('open-paper'), 'Read it')
+      else await page.locator('[data-npc-hotspot="paper"]').click()
+      await page.getByTestId('paper-sheet').waitFor({ state: 'visible' })
+      await shot('paper-overlay')
+      await page.keyboard.press('Escape')
+      await page.getByTestId('paper-sheet').waitFor({ state: 'hidden' })
+    }
+    const mode = await dock.getAttribute('data-expects').catch(() => null)
+    const chips = await page.locator('[data-chip]').evaluateAll((els) => els.map((e) => e.getAttribute('data-chip')))
+    if (await action('sample').first().isVisible().catch(() => false)) {
+      await shot(`${s}`)
+      await useSample(s)
+      await settle()
+      continue
+    }
+    if (s === 'coach' && chips.includes('3 months') && plans === 0) {
+      plans++
+      await shot('coach-choose')
+      await press(chip('3 months'), 'plan 3 months')
+      await settle()
+      continue
+    }
+    if (s === 'coach' && plans > 0) {
+      if (!whatIf && chips.length) {
+        whatIf = true
+        await shot('plan-end')
+        await press(chip(chips[0]), 'what-if chip')
+        await settle()
+        await drain('whatif')
+        await shot('whatif')
+      }
+      break
+    }
+    if (chips.length) {
+      const pick = PREFER.find((c) => chips.includes(c)) ?? chips[0]
+      await shot(`${s}-${pick.replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 24)}`)
+      await press(chip(pick), pick)
+      await settle()
+      continue
+    }
+    // Text with no chips (a typed answer).
+    const box = page.locator('#reply-box')
+    if (await box.count()) {
+      await box.fill(['31', 'about 28k', 'a car'][i % 3])
+      await press(action('send'), 'Send')
+      await settle()
+      continue
+    }
+    problems.push(`no way forward at step ${s} (dock mode ${mode})`)
+    break
   }
   await step()
 } catch (e) {
@@ -283,7 +293,7 @@ if (layout.scrollW > layout.vw) problems.push(`horizontal scroll: ${layout.scrol
 if (layout.dockBottom === null || layout.dockBottom > layout.vh) problems.push(`dock off screen: ${JSON.stringify(layout)}`)
 
 for (const t of small) problems.push(`touch target under 44px: ${t}`)
-console.log(JSON.stringify({ prefix, desktop, keyboard, reduced, textSize, colour, live, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
+console.log(JSON.stringify({ prefix, branch, desktop, keyboard, reduced, textSize, colour, live, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
 for (const p of problems) console.log('PROBLEM', p)
 await browser.close()
 process.exit(problems.length ? 1 : 0)
