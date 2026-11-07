@@ -94,6 +94,10 @@ export const PALETTE_DEF = [
   [']', 'screenWhite', '#ffffff'],
   [',', 'bezel', '#22262e'],
   ['"', 'bezelLight', '#3a404b'],
+  // ---- 111: hair far side, colleagues' arm seams ----
+  ['8', 'hairShade', '#2a1c17'],
+  ['(', 'colleagueTopAShade', '#6c7b91'],
+  [')', 'colleagueTopBShade', '#8c7282'],
 ] as const
 
 export type ColorName = (typeof PALETTE_DEF)[number][1]
@@ -110,6 +114,7 @@ export const BACKGROUNDS = {
     officeWall: '#c4b8ac', officeWallShade: '#ab9f95', wallShine: '#d3c9be', ceiling: '#d2c7bb', ceilingLight: '#ffe8b5',
     officeFloor: '#9d9189', deskBack: '#b6aa9f', deskBackShade: '#958980', monitorBack: '#56606e', monitorBackLit: '#e9cc92',
     colleagueSkin: '#c59b83', colleagueHair: '#5d4b46', colleagueTopA: '#7b8398', colleagueTopB: '#9c7f87',
+    colleagueTopAShade: '#686f85', colleagueTopBShade: '#876b74',
     officePlant: '#7d9a77', officePlantShade: '#607e62', officePot: '#a2978e', frosted: '#eee4d8', frostedLine: '#dcd0c3',
   },
 } as const satisfies Record<string, Partial<Record<ColorName, string>>>

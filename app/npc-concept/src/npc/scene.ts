@@ -4,32 +4,37 @@
 // office* palette values (see BACKGROUNDS in palette.ts). Back to front:
 //   office (buildOffice + drawOfficeLife) -> glass (frames, frosted band, reflections) -> agent -> desk -> props.
 import { IDX } from './palette'
-import { IndexBuffer, NATIVE_H, NATIVE_W, sprite, tintWhere } from './raster'
+import { IndexBuffer, NATIVE_H, NATIVE_W, sprite, tintWhere, type Sprite } from './raster'
 
-/** Where the 49x60 character box sits in the scene. Head top at y 15, shoulders at y 48. */
-export const AGENT_ORIGIN = { x: 44, y: 15 }
-/** Desk top runs y 70..79 (seen from above), front panel 80..95. The desk hides the agent below y 70. */
-export const COUNTER_TOP_Y = 70
-export const DESK_FRONT_Y = 80
+/**
+ * Where the 49x60 character box sits in the scene. Since 111 the head rises 5 rows above the box (head top at
+ * y 13), and the box, the desk and every desk prop sit 3 px lower than in 110 (the desk front panel is shorter).
+ */
+export const AGENT_ORIGIN = { x: 44, y: 18 }
+/** Desk top runs y 73..82 (seen from above), front panel 83..95. The desk hides the agent below y 73. */
+export const COUNTER_TOP_Y = 73
+export const DESK_FRONT_Y = 83
 /** In-tray on the desk, between the monitor and the keyboard (the drop zone and the phone's tap target). */
-export const TRAY = { x: 31, y: 73, w: 18, h: 6 }
-export const CALC = { x: 84, y: 73 }
-export const KEYBOARD = { x: 58, y: 73, w: 22, h: 5 }
+export const TRAY = { x: 31, y: 76, w: 18, h: 6 }
+export const CALC = { x: 84, y: 76 }
+export const KEYBOARD = { x: 58, y: 76, w: 22, h: 5 }
 export const PAPER_SIZE = { w: 20, h: 5 }
-export const PAPER_START = { x: 59, y: 71 }
-export const PAPER_END = { x: 59, y: 75 }
+export const PAPER_START = { x: 59, y: 74 }
+export const PAPER_END = { x: 59, y: 78 }
 /** Desk monitor. SCREEN is the lit area where NpcScene shows the official logo file. */
-export const MONITOR = { x: 5, y: 44, w: 40, h: 23 }
-export const SCREEN = { x: 7, y: 46, w: 36, h: 17 }
-export const MUG = { x: 95, y: 66 }
-export const PLANT = { x: 107, y: 59 }
+export const MONITOR = { x: 5, y: 47, w: 40, h: 23 }
+export const SCREEN = { x: 7, y: 49, w: 36, h: 17 }
+export const MUG = { x: 95, y: 69 }
+export const PLANT = { x: 107, y: 62 }
 export const BUBBLE_AT = { x: 82, y: 5 }
 
 // ---------- office behind the glass ----------
 const MULLIONS = [42, 98]
-const FROSTED = { y: 37, h: 5 }
-const COLLEAGUE_A = { x: 21, y: 24 } // seated behind a monitor, facing us
-const COLLEAGUE_B = { x: 111, y: 19 } // standing by the right desk with a mug
+/** Frosted band, just under the back desk tops (111: moved down from y 37 so the colleagues' arms show). */
+const FROSTED = { y: 42, h: 5 }
+/** Head top-left of each seated colleague; their forearms rest on the back desk top at y 41. */
+const COLLEAGUE_A = { x: 21, y: 24 } // at desk A, their monitor beside them
+const COLLEAGUE_B = { x: 110, y: 24 } // at desk B with a mug
 const LIGHTS = [8, 52, 96]
 
 function buildings(b: IndexBuffer, x0: number, x1: number, base: number) {
@@ -67,7 +72,7 @@ export function buildOffice(): IndexBuffer {
   b.rect(0, base, NATIVE_W, 2, IDX.officeWallShade)
   // floor
   b.rect(0, 46, NATIVE_W, NATIVE_H - 46, IDX.officeFloor)
-  // tall plant in the back left corner (leaves in chunky clumps, pot hidden by the desk monitor)
+  // tall plant in the back left corner (leaves in chunky clumps, pot behind the frosted band)
   b.rect(3, 40, 8, 7, IDX.officePot)
   const leaves: [number, number, number, number][] = [[5, 14, 3, 8], [2, 19, 4, 7], [8, 17, 4, 9], [1, 27, 4, 8], [9, 25, 4, 9], [4, 31, 5, 9]]
   for (const [x, y, w, h] of leaves) {
@@ -86,41 +91,68 @@ export function buildOffice(): IndexBuffer {
   return b
 }
 
-/** A small person facing us: head with hair, neck, rounded shoulders. dy moves the head (a nod). */
-function person(b: IndexBuffer, x: number, y: number, top: number, dy: number, bodyH: number) {
-  b.rect(x - 4, y + 10, 16, bodyH, top) // shoulders and body
-  b.rect(x - 5, y + 11, 18, bodyH - 1, top)
-  b.rect(x + 2, y + 8, 4, 2, IDX.colleagueSkin) // neck
-  b.rect(x, y + dy, 8, 9, IDX.colleagueSkin) // head
-  b.rect(x, y + dy, 8, 3, IDX.colleagueHair)
-  b.rect(x - 1, y + 1 + dy, 1, 4, IDX.colleagueHair)
-  b.rect(x + 8, y + 1 + dy, 1, 4, IDX.colleagueHair)
-  b.rect(x + 2, y + 4 + dy, 1, 2, IDX.colleagueHair) // eyes, 1x2 so they read at a distance
-  b.rect(x + 5, y + 4 + dy, 1, 2, IDX.colleagueHair)
+/**
+ * A colleague seated at a back desk, facing us: head, neck, rounded shoulders, upper arms split from the
+ * body by a seam in the shade tone, forearms on the desk top with the hands together. The head is columns
+ * 4..11; the last row lies on the desk top. Soft colours only (colleague*), so they stay behind the agent.
+ */
+const SEATED_ROWS = [
+  '....========....',
+  '...==========...',
+  '...==========...',
+  '...=++++++++=...',
+  '...=++++++++=...',
+  '....++++++++....',
+  '....++++++++....',
+  '....++++++++....',
+  '.....++++++.....',
+  '......++++......',
+  '...~~~~~~~~~~...',
+  '..~~~~~~~~~~~~..',
+  '..~~(~~~~~~(~~..',
+  '.~~~(~~~~~~(~~~.',
+  '.~~~~(~~~~(~~~~.',
+  '~~~~~~(~~(~~~~~~',
+  '((~~~~~~~~~~~~((',
+  '.(((~~++++~~(((.',
+]
+const SEATED_A: Sprite = sprite(SEATED_ROWS)
+const SEATED_B: Sprite = sprite(SEATED_ROWS.map((r) => r.replace(/~/g, '-').replace(/\(/g, ')')))
+
+/** x, y: the head's top-left. Eyes are 1x2 so they read at a distance; looking down they become 2x1 lids. */
+function seated(b: IndexBuffer, s: Sprite, x: number, y: number, lookDown: boolean) {
+  b.blit(s, x - 4, y)
+  if (lookDown) {
+    b.rect(x + 1, y + 5, 2, 1, IDX.colleagueHair)
+    b.rect(x + 5, y + 5, 2, 1, IDX.colleagueHair)
+  } else {
+    b.rect(x + 2, y + 4, 1, 2, IDX.colleagueHair)
+    b.rect(x + 5, y + 4, 1, 2, IDX.colleagueHair)
+  }
 }
 
 /** Colleagues and the light flicker. Animated only when ambient is on and motion is allowed. */
 export function drawOfficeLife(b: IndexBuffer, t: number, animate: boolean) {
-  // colleague A, seated behind a monitor, facing us; looks down at the keyboard now and then
+  // colleague A at desk A, their monitor beside them (back towards us); looks down at the keyboard now and then
   const a = COLLEAGUE_A
-  const down = animate && Math.floor(t / 4200) % 3 === 2 ? 1 : 0
-  person(b, a.x, a.y, IDX.colleagueTopA, down, 8)
-  if (down) {
-    // eyes lowered: two 2x1 lids instead of the 1x2 eyes
-    b.rect(a.x + 2, a.y + 5, 4, 2, IDX.colleagueSkin)
-    b.rect(a.x + 1, a.y + 6, 2, 1, IDX.colleagueHair)
-    b.rect(a.x + 5, a.y + 6, 2, 1, IDX.colleagueHair)
-  }
-  b.rect(a.x - 6, a.y + 13, 20, 5, IDX.monitorBack) // their monitor, back towards us
-  b.rect(a.x + 3, a.y + 18, 2, 1, IDX.monitorBack)
-  // colleague B, standing by desk B with a mug; lifts it now and then
+  seated(b, SEATED_A, a.x, a.y, animate && Math.floor(t / 4200) % 3 === 2)
+  b.rect(a.x + 12, a.y + 7, 7, 9, IDX.monitorBack)
+  b.rect(a.x + 13, a.y + 8, 5, 1, IDX.colleagueTopAShade)
+  b.rect(a.x + 14, a.y + 16, 3, 1, IDX.monitorBack)
+  // colleague B at desk B with a mug beside the right hand; lifts it to the chest now and then
   const c = COLLEAGUE_B
   const sip = animate && Math.floor(t / 5300) % 4 === 1
-  person(b, c.x, c.y, IDX.colleagueTopB, 0, 16)
-  b.rect(c.x + 10, c.y + 13, 3, 9, IDX.colleagueTopB) // arm
-  const my = sip ? c.y + 11 : c.y + 19
-  b.rect(c.x + 9, my, 4, 4, IDX.officeWall) // mug
-  b.rect(c.x + 9, my, 4, 1, IDX.officeWallShade)
+  seated(b, SEATED_B, c.x, c.y, false)
+  if (sip) {
+    b.rect(c.x + 4, c.y + 17, 7, 1, IDX.deskBack) // the right forearm leaves the desk...
+    b.rect(c.x + 7, c.y + 12, 3, 4, IDX.colleagueTopB) // ...and comes up to the chest
+    b.rect(c.x + 6, c.y + 12, 1, 4, IDX.colleagueTopBShade)
+    b.rect(c.x + 6, c.y + 11, 2, 2, IDX.colleagueSkin)
+  }
+  const mx = sip ? c.x + 3 : c.x + 12
+  const my = sip ? c.y + 9 : c.y + 14
+  b.rect(mx, my, 4, 4, IDX.officePot) // mug
+  b.rect(mx, my, 4, 1, IDX.officeWallShade)
   // one ceiling light flickers off for a moment every ~9 s
   if (animate && t % 9000 < 140) b.rect(LIGHTS[2], 5, 22, 2, IDX.ceiling)
 }
@@ -132,7 +164,8 @@ function shineMap() {
     [IDX.skyTop, IDX.skyShine], [IDX.skyLow, IDX.skyLowShine], [IDX.cityFar, IDX.cityShine], [IDX.cityNear, IDX.cityFar],
     [IDX.cityWindow, IDX.skyLowShine], [IDX.officeWall, IDX.wallShine], [IDX.officeWallShade, IDX.officeWall],
     [IDX.ceiling, IDX.wallShine], [IDX.officeFloor, IDX.deskBack], [IDX.deskBack, IDX.officeWall], [IDX.deskBackShade, IDX.deskBack],
-    [IDX.officePlant, IDX.officePlantShade], [IDX.colleagueTopA, IDX.cityShine], [IDX.monitorBack, IDX.officePlantShade],
+    [IDX.officePlant, IDX.officePlantShade], [IDX.colleagueTopA, IDX.cityShine], [IDX.colleagueTopAShade, IDX.colleagueTopA],
+    [IDX.monitorBack, IDX.officePlantShade],
   ])
   return SHINE
 }
@@ -141,7 +174,8 @@ let FROST: Map<number, number> | null = null
 function frostMap() {
   if (FROST) return FROST
   const darker = [IDX.cityNear, IDX.cityFar, IDX.officeWallShade, IDX.deskBackShade, IDX.monitorBack, IDX.officePlant,
-    IDX.officePlantShade, IDX.colleagueTopA, IDX.colleagueTopB, IDX.colleagueHair, IDX.colleagueSkin, IDX.officeFloor]
+    IDX.officePlantShade, IDX.colleagueTopA, IDX.colleagueTopB, IDX.colleagueTopAShade, IDX.colleagueTopBShade,
+    IDX.colleagueHair, IDX.colleagueSkin, IDX.officeFloor]
   const lighter = [IDX.skyTop, IDX.skyLow, IDX.cityWindow, IDX.officeWall, IDX.ceiling, IDX.deskBack, IDX.monitorBackLit, IDX.officePot]
   FROST = new Map([...darker.map((i) => [i, IDX.frostedLine] as const), ...lighter.map((i) => [i, IDX.frosted] as const)])
   return FROST
@@ -154,7 +188,7 @@ export function drawGlass(b: IndexBuffer) {
     const d = x + y - c
     return d >= 0 && d < w
   }
-  tintWhere(b, shineMap(), (x, y) => y < 70 && (band(x, y, 36, 5) || band(x, y, 44, 2) || (x > 99 && (band(x, y, 132, 5) || band(x, y, 140, 2)))))
+  tintWhere(b, shineMap(), (x, y) => y < COUNTER_TOP_Y && (band(x, y, 36, 5) || band(x, y, 44, 2) || (x > 99 && (band(x, y, 132, 5) || band(x, y, 140, 2)))))
   // frosted band: translucent, shapes behind it show as two soft tones; thin lines at its edges
   tintWhere(b, frostMap(), (_x, y) => y > FROSTED.y && y < FROSTED.y + FROSTED.h - 1)
   b.rect(0, FROSTED.y, NATIVE_W, 1, IDX.frostedLine)

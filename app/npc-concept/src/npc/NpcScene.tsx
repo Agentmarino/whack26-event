@@ -17,8 +17,8 @@ export interface NpcHandle {
   setDropHover(on: boolean): void
   clearPaper(): void
   setPalette(overrides: Partial<Record<ColorName, string>>): void
-  /** Facial hair layer: 'none' (default), 'moustache', 'stubble' (moustache with light stubble). */
-  setFacialHair(f: FacialHair): void
+  /** Facial hair layer: 'moustache-stubble' (default since 111), 'moustache', 'none'. The 110 name 'stubble' still works. */
+  setFacialHair(f: FacialHair | 'stubble'): void
   /** Office behind the glass: 'day' (default) or 'evening'. */
   setBackground(b: Background): void
   reset(): void
@@ -40,8 +40,8 @@ export interface NpcSceneProps {
    * screen, scaled to fit. Never redraw or trace the logo.
    */
   wordmarkSrc?: string
-  /** Facial hair layer (default 'none'). Same as calling setFacialHair. */
-  facialHair?: FacialHair
+  /** Facial hair layer (default 'moustache-stubble'). Same as calling setFacialHair. */
+  facialHair?: FacialHair | 'stubble'
   /** Office behind the glass (default 'day'). Same as calling setBackground. */
   background?: Background
 }

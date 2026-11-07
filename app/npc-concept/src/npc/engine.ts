@@ -8,8 +8,8 @@ import {
   TRAY, TRAY_DOC,
 } from './scene'
 import {
-  BROWS, BROWS_POS, BUBBLE, EYES, EYES_POS, GLASSES, GLASSES_POS, HANDS, HEAD, HEAD_POS, ITEMS, MOUSTACHE, MOUSTACHE_POS,
-  MOUTH_POS, MOUTHS, SHOULDER_L, SHOULDER_R, STUBBLE, TORSO, TORSO_POS,
+  BROWS, BROWS_POS, BUBBLE, DEFAULT_FACIAL_HAIR, EYES, EYES_POS, GLASSES, GLASSES_POS, HANDS, HEAD, HEAD_POS, ITEMS, MOUSTACHE,
+  MOUSTACHE_POS, MOUTH_POS, MOUTHS, normalizeFacialHair, SHOULDER_L, SHOULDER_R, STUBBLE, TORSO, TORSO_POS,
   type BrowKey, type EyeKey, type FacialHair, type HandKey, type ItemKey, type MouthKey,
 } from './sprites/character'
 
@@ -55,7 +55,7 @@ const GESTURE_MS: Record<Gesture, number> = {
   none: 0, wave: 1600, 'point-down': 2000, 'point-side': 2000, chin: 2500, 'tap-calc': 2000, 'open-palm': 1800,
 }
 
-// ---------- arm poses (local coords in the 49x60 box; shoulders at (9, 33) and (39, 33)) ----------
+// ---------- arm poses (local coords in the 49x60 box; shoulders at (9, 33) and (39, 33); the head rises above the box) ----------
 // Gestures move the whole arm so each one reads in a thumbnail. The desk top is local y 55; the
 // keyboard is local x 14..35, y 58..61; the tray local x -13..4, y 58..63; the calculator local x 40..50.
 interface P { x: number; y: number }
@@ -99,7 +99,7 @@ export const ARM_POSES = {
   retractR: arm(43, 49, 32, 59, 'flat', true),
   plannerR: arm(45, 49, 35, 47, 'grip'),
   toFace1L: arm(3, 45, 8, 36, 'grip'),
-  toFace2L: arm(5, 39, 16, 17, 'grip'),
+  toFace2L: arm(5, 36, 16, 14, 'grip'), // 111: hand at the left eye (eyes are local y 11-13 since the head moved up)
 } satisfies Record<string, ArmPose>
 
 /** x, y are local coords, or an offset from the hand when attached to an arm. */
@@ -167,7 +167,7 @@ export class NpcEngine {
   private desk = buildDesk()
   /** True while no logo image covers the monitor: the monitor then shows a plain dashboard. */
   private wordmark = true
-  private facialHairV: FacialHair = 'none'
+  private facialHairV: FacialHair = DEFAULT_FACIAL_HAIR
   private backgroundV: Background = 'day'
 
   private raf = 0
@@ -306,9 +306,9 @@ export class NpcEngine {
     this.paletteOverrides = overrides
     this.colors = buildColorTable({ ...BACKGROUNDS[this.backgroundV], ...overrides })
   }
-  /** Facial hair layer: 'none' (default), 'moustache', or 'stubble' (moustache with light stubble). */
-  setFacialHair(f: FacialHair) {
-    this.facialHairV = f
+  /** Facial hair layer: 'moustache-stubble' (default), 'moustache' or 'none'. The 110 name 'stubble' still works. */
+  setFacialHair(f: FacialHair | 'stubble') {
+    this.facialHairV = normalizeFacialHair(f)
     this.emit()
   }
   /** Office behind the glass: 'day' (default) or 'evening'. A palette swap of the office colours only. */
@@ -423,7 +423,7 @@ export class NpcEngine {
       }
       case 'asking':
         f.L = A.palmL
-        f.tilt = 0.09
+        f.tilt = 0.07 // row shear: 2 px at the top of the 31-row head
         f.browsForce = 'raised'
         f.eyes = 'open'
         break
@@ -623,7 +623,7 @@ export class NpcEngine {
     const m = 3 // margin so the tilt has room
     hb.clear()
     hb.blit(HEAD, m, 0)
-    if (this.facialHairV === 'stubble') hb.blit(STUBBLE, m, 0)
+    if (this.facialHairV === 'moustache-stubble') hb.blit(STUBBLE, m, 0)
     hb.blit(EYES[this.eyesFor(f)], m + EYES_POS.x, EYES_POS.y)
     if (this.mode === 'coach') hb.blit(GLASSES, m + GLASSES_POS.x, GLASSES_POS.y)
     const face = EMOTE_FACE[this.emoteV]

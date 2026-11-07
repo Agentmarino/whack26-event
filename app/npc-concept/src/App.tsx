@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  BACKGROUND_NAMES, DebugPanel, DialogueBox, FACIAL_HAIR, NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion,
+  BACKGROUND_NAMES, DEFAULT_FACIAL_HAIR, DebugPanel, DialogueBox, FACIAL_HAIR, NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion,
   type Background, type DialogueLine, type FacialHair, type NpcHandle, type NpcSnapshot, type Speed,
 } from './npc'
 import { OPENING, SAMPLE, TEST_LINE } from './sample'
@@ -31,7 +31,7 @@ export default function App() {
   const [ambient, setAmbient] = useState(true)
   const [motionPref, setMotionPref] = useState<MotionPref>('system')
   const [green, setGreen] = useState(false)
-  const [facialHair, setFacialHair] = useState<FacialHair>('none')
+  const [facialHair, setFacialHair] = useState<FacialHair>(DEFAULT_FACIAL_HAIR)
   const [background, setBackground] = useState<Background>('day')
   const [line, setLine] = useState<DialogueLine>({ id: 0, speaker: SPEAKER, text: OPENING.text })
   const [chips, setChips] = useState<string[]>(OPENING.chips)
@@ -272,7 +272,7 @@ export default function App() {
               <div className="npc-debug__grid">
                 {FACIAL_HAIR.map((f) => (
                   <button key={f} type="button" data-npc-facial-hair={f} aria-pressed={facialHair === f} onClick={() => setFacialHair(f)}>
-                    {f === 'stubble' ? 'moustache + stubble' : f}
+                    {f === 'moustache-stubble' ? 'moustache + stubble' : f}
                   </button>
                 ))}
               </div>
