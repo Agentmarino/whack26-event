@@ -1,7 +1,7 @@
 ---
 id: 114
 title: Phase B frontend, NPC chat on iPhone, every message type, accessibility
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
