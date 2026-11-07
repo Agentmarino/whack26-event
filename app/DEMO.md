@@ -9,16 +9,17 @@ Separately, two terminals: `pnpm --filter backend dev`, and `cd app/frontend && 
 
 No backend? `cd app/frontend && pnpm dev` runs the whole chat on the mock conversation (Priya), which is the default.
 
-## Steps (the 2 minute live demo)
-1. Phone, portrait, `http://<Mac LAN IP>:5173/`. The agent waves: tap **Next**, then **Let's start**
-2. **Use a sample** → **Priya** (report), then **Use a sample** twice more (bank statement, decline letter)
-3. Questions: **A credit card**, **3 months**, **Yes, I can**, **No**. Tap **Continue** while he thinks
-4. Diagnosis: the headline, then three reason cards. Tap **Why?** on one to show the because-trail, then **Tell me about the letter**
-5. Decline: why they likely said no, the one fix, when to reapply, your rights. **Got it**
-6. The agent slides the summary across the desk: tap the sheet on the desk, then **Download** (the PDF from the backend)
-7. **Make me a plan** → **3 months**: steps week by week (**Skip to end** if short of time), the projection chart, the card ladder
-8. What-if: tap **What if I pay £300 a month?**, or **Sliders** for the paydown slider and switches
-9. Accessibility in 20 seconds: the settings button (top right): 150% text, red-green safe colours, read aloud
+## Steps (the live demo, 115: declined branch with Priya; the full script with every line is `deliverables/pitch/demo-script.md`)
+1. Phone, portrait, `http://<Mac LAN IP>:5173/`. Cap slides his business card across the desk and it fills the screen: tap it to put it away. Settings (top right) → **Plain English** on
+2. **Nice to meet you, Cap!** → **I've been declined already**
+3. **Use a sample** three times: Priya's letter, her report, her bank data (demo mode picks Priya)
+4. The decline first: likely reasons ranked, the one fix, when to reapply, your rights. **What can I do?** → three first steps
+5. Four questions: **The Balance Transfer card**, **3 months**, **Yes, I can**, **No**. He thinks, then the diagnosis: tap **Why?** on a reason
+6. **Sum it up for me**: the summary slides across the desk (tap it for the PDF)
+7. **Make me a plan** → **3 months** (**Skip to end**): the projection chart, the card ladder
+8. What-if: type or say "what if I pay 300 a month?", or **Sliders**
+9. Read aloud on its own: Settings → **Read replies aloud** (he says "I'll read my replies aloud."), then tap **What if I pay £400 a month?** and let him read it
+Other branches from the opening: **I've got a credit report I want help with** (Priya), **I want to get ready before I apply** (pick a card first), **I'm new to credit or new to the UK** (Mei Lin)
 
 ## Fallbacks
 - If the live API is down: the app says so and offers **Use the offline demo** (the mock conversation, no backend). Or open `http://<Mac LAN IP>:5173/?mock=on`

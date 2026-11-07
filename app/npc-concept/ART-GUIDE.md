@@ -227,6 +227,7 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 | `thinking` | right hand to chin, forearm up across the chest (1); eyes up-right; bubble dots 3 | dots step every 400 ms |
 | `explaining` | right hand points down at the front-centre of the desk, where the summary lands (2: tap +1 px) | 450 ms per frame |
 | `slide-paper` | flat right hand rides on the sheet as it slides to the front edge, retract (1), glow 4 | push 250 to 1000 ms, retract to 1200 ms, glow 1000 to 1600 ms (once); sheet clickable from 1000 ms |
+| `slide-card` (115, app/frontend kit only) | the `slide-paper` push with a small business card (white, red end) at native x 57 so the hand does not cover it; the card leaves the desk once it lands | push 250 to 1000 ms; rests 220 ms, then the frontend grows it into the full-screen business card over 460 ms (at once with reduced motion) |
 | `coach` | left hand to the face 2, glasses on, rest, planner up | 0, 250, glasses at 450, 600, 850 ms; glasses stay on in every later state (coach mode) |
 
 Emotes change eyebrows, eyes and mouth together:
