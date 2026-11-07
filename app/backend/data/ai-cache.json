@@ -21,43 +21,43 @@
  },
  "wording:39f33503e82c6e1d4221a7c6a509f514": {
   "purpose": "wording",
-  "text": "You're using 79% of your £1,200 total limit, which is £950. Getting that under 30% would show lenders you're keeping things in control.",
-  "at": "2026-11-07T17:35:43.911Z"
+  "text": "You're using 79% of your £1,200 total limit, which is £950. Staying under 30% reads as being in control.",
+  "at": "2026-11-07T19:16:15.577Z"
  },
  "wording:95dc4924b2615ae08a8aba135fbb49f1": {
   "purpose": "wording",
-  "text": "You're not on the electoral roll at your current address yet. Lenders use it to confirm who you are, so it's worth sorting out.",
-  "at": "2026-11-07T17:35:43.911Z"
+  "text": "You're not on the electoral roll at your current address. Lenders use it to confirm who you are, so it's worth sorting out.",
+  "at": "2026-11-07T19:16:15.577Z"
  },
  "wording:ae3377da672e0c4b9f9d2e389a6980ed": {
   "purpose": "wording",
   "text": "You've had 3 hard searches in the last year, and all 3 were in the last 3 months. Lots of applications close together can look credit-hungry.",
-  "at": "2026-11-07T17:35:43.912Z"
+  "at": "2026-11-07T19:16:15.578Z"
  },
  "wording:47709c3b6496e121890d2d82528639bd": {
   "purpose": "wording",
-  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That should bring your card balance to about £91. You'll know it worked when your statement shows £91 or less.",
-  "at": "2026-11-07T17:35:46.549Z"
+  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £91, under 30% of your limit.",
+  "at": "2026-11-07T19:16:17.528Z"
  },
  "wording:e6f6c4076161ee0e3f7bef6f7098da89": {
   "purpose": "wording",
-  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That should clear your balance to about £0. You'll know it worked when your statement shows £0.",
-  "at": "2026-11-07T17:35:46.550Z"
+  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That should take your total card balance to about £0.",
+  "at": "2026-11-07T19:16:17.529Z"
  },
  "wording:c3da64c911ddc62c24334b9435c2330d": {
   "purpose": "wording",
-  "text": "On 9 May 2027, you can look ahead to your next card. Check Balance Transfer in Jul 2027. The app will remind you to run QuickCheck then, so you can see where you stand.",
-  "at": "2026-11-07T17:35:46.550Z"
+  "text": "On 9 May 2027, your next card step is to check Balance Transfer in Jul 2027. The app will remind you to run QuickCheck then.",
+  "at": "2026-11-07T19:16:17.529Z"
  },
  "wording:84587102d9b989735a147c55bfa65a2f": {
   "purpose": "wording",
-  "text": "From 9 Nov 2026, steer clear of the thin-file traps. Apply for one thing at a time, only after a soft-search check, and avoid buy now, pay later and payday loans.",
-  "at": "2026-11-07T17:35:48.809Z"
+  "text": "On 9 Nov 2026, let's steer clear of the thin-file traps. Apply for one thing at a time, only after a soft-search check, and skip buy now, pay later plans and payday loans.",
+  "at": "2026-11-07T19:16:21.205Z"
  },
  "wording:4b7ac52646a07556e30a026e19767ea7": {
   "purpose": "wording",
-  "text": "On 9 Nov 2026, register to vote at your current address at gov.uk/register-to-vote. It takes 5 minutes, and you'll need your National Insurance number.",
-  "at": "2026-11-07T17:35:48.810Z"
+  "text": "On 9 Nov 2026, register to vote at your current address at gov.uk/register-to-vote. It takes 5 minutes and you'll need your National Insurance number. It should show in 6 to 8 weeks.",
+  "at": "2026-11-07T19:16:21.207Z"
  },
  "wording:c4883fc9c570f57cf7cc928bc9e18d0a": {
   "purpose": "wording",
@@ -67,52 +67,52 @@
  "wording:9bc6bd887d1d09342329905bc59b2805": {
   "purpose": "wording",
   "text": "On 9 Nov 2026, connect Experian Boost by linking your current account in the Experian app. It can count Council Tax, Spotify and Netflix as on-time payments, and it can't lower your score.",
-  "at": "2026-11-07T17:35:48.811Z"
+  "at": "2026-11-07T19:16:21.209Z"
  },
  "wording:9689195a278d92ecd30f6fca26b15fa3": {
   "purpose": "wording",
-  "text": "From 9 Nov 2026, finish your current buy now, pay later plans but don't start new ones. That frees up £40/month for your card from month 2.",
-  "at": "2026-11-07T17:35:48.811Z"
+  "text": "On 9 Nov 2026, finish your current buy now, pay later plans but don't start new ones. That frees up £40/month for your card from month 2.",
+  "at": "2026-11-07T19:16:21.210Z"
  },
  "wording:5c2a034b427b0a0d43a8e619d5400ffc": {
   "purpose": "wording",
-  "text": "On 16 Nov 2026, sign up to a rent-reporting service such as CreditLadder for your £650 rent. It takes about 8 weeks to show on your report.",
-  "at": "2026-11-07T17:35:48.811Z"
+  "text": "On 16 Nov 2026, sign up to a rent-reporting service such as CreditLadder for your £650 rent. It reports to all three agencies and takes about 8 weeks to show.",
+  "at": "2026-11-07T19:16:21.210Z"
  },
  "wording:5296468a1412716cd68cd1b58173bc95": {
   "purpose": "wording",
-  "text": "On 8 Dec 2026, pay £175 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £770.",
-  "at": "2026-11-07T17:35:48.811Z"
+  "text": "On 8 Dec 2026, pay £175 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £770, which is 64% of your limit.",
+  "at": "2026-11-07T19:16:21.211Z"
  },
  "wording:36a18496d8b7f45437188ca1d2c776d4": {
   "purpose": "wording",
-  "text": "On 8 Jan 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £549.",
-  "at": "2026-11-07T17:35:48.812Z"
+  "text": "On 8 Jan 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £549, which is 46% of your limit.",
+  "at": "2026-11-07T19:16:21.211Z"
  },
  "wording:19dbea75b11e2750ea24df46d8ea1ef0": {
   "purpose": "wording",
-  "text": "On 9 Jan 2027, run Capital One Classic through QuickCheck first, as it's a soft search. If it says no, wait 3 months and check again rather than applying anyway.",
-  "at": "2026-11-07T17:35:48.812Z"
+  "text": "From 9 Jan 2027, run QuickCheck for the Capital One Classic first, as it's a soft search. If it says yes, apply once. If it says no, wait 3 months and check again.",
+  "at": "2026-11-07T19:16:21.212Z"
  },
  "wording:38690e6230bf6101793afb0e15eb7721": {
   "purpose": "wording",
-  "text": "On 23 Jan 2027, move Netflix £10.99 and Spotify £11.99 onto your Classic card. Set a Direct Debit for the full balance so you pay £0 interest.",
-  "at": "2026-11-07T17:35:48.812Z"
+  "text": "On 23 Jan 2027, move Netflix at £10.99 and Spotify at £11.99 onto your Classic card. Set a Direct Debit for the full balance so you pay £0 interest.",
+  "at": "2026-11-07T19:16:21.212Z"
  },
  "wording:cd29f99867ce91bec51b4ac6a476ad04": {
   "purpose": "wording",
-  "text": "On 8 Feb 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £323, under 30% of your limit.",
-  "at": "2026-11-07T17:35:48.813Z"
+  "text": "On 8 Feb 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £323, which is 27% of your limit and under 30%.",
+  "at": "2026-11-07T19:16:21.213Z"
  },
  "whatif:7675a0e06107c21ae368550da9ff7f26": {
   "purpose": "whatif",
   "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
-  "at": "2026-11-07T17:35:50.780Z"
+  "at": "2026-11-07T19:17:10.861Z"
  },
  "read-report:4dd97b4187eea9fd06efbf15b52f34cf": {
   "purpose": "read-report",
-  "text": "{\n \"format\": \"credit-coach-report/v1\",\n \"provider\": \"Experian\",\n \"reportDate\": \"2026-11-01\",\n \"score\": {\"value\": 682, \"scaleMax\": 999, \"band\": \"Poor\"},\n \"personal\": {\"name\": \"Alex Morgan\", \"dateOfBirth\": \"2001-03-14\", \"declaredIncome\": 29000, \"residentialStatus\": \"rent\"},\n \"addresses\": [\n  {\"address\": \"Flat 4, 18 Spencer Street, Coventry CV1 3EZ\", \"from\": \"2026-05-01\", \"current\": true},\n  {\"address\": \"27 Gulson Road, Coventry CV1 2JG\", \"from\": \"2023-08-01\", \"to\": \"2026-04-30\", \"current\": false}\n ],\n \"electoralRoll\": [\n  {\"address\": \"27 Gulson Road, Coventry CV1 2JG\", \"registered\": true},\n  {\"address\": \"Flat 4, 18 Spencer Street, Coventry CV1 3EZ\", \"registered\": false}\n ],\n \"accounts\": [\n  {\n   \"type\": \"credit_card\",\n   \"lender\": \"Barclaycard\",\n   \"opened\": \"2023-03-10\",\n   \"status\": \"open\",\n   \"limit\": 1500,\n   \"balance\": 1180,\n   \"apr\": 28.9,\n   \"directDebit\": false,\n   \"paymentPattern\": \"minimum\",\n   \"paymentHistory\": [\n    {\"month\": \"2025-11\", \"status\": \"OK\"},\n    {\"month\": \"2025-12\", \"status\": \"OK\"},\n    {\"month\": \"2026-01\", \"status\": \"OK\"},\n    {\"month\": \"2026-02\", \"status\": \"OK\"},\n    {\"month\": \"2026-03\", \"status\": \"OK\"},\n    {\"month\": \"2026-04\", \"status\": \"OK\"},\n    {\"month\": \"2026-05\", \"status\": \"OK\"},\n    {\"month\": \"2026-06\", \"status\": \"1\"},\n    {\"month\": \"2026-07\", \"status\": \"OK\"},\n    {\"month\": \"2026-08\", \"status\": \"OK\"},\n    {\"month\": \"2026-09\", \"status\": \"OK\"},\n    {\"month\": \"2026-10\", \"status\": \"OK\"}\n   ]\n  },\n  {\n   \"type\": \"credit_card\",\n   \"lender\": \"Aqua\",\n   \"opened\": \"2025-09-02\",\n   \"status\": \"open\",\n   \"limit\": 600,\n   \"balance\": 420,\n   \"apr\": 34.9,\n   \"directDebit\": true,\n   \"paymentPattern\": \"minimum\",\n   \"paymentHistory\": [\n    {\"month\": \"2025-11\", \"status\": \"OK\"},\n    {\"month\": \"2025-12\", \"status\": \"OK\"},\n    {\"month\": \"2026-01\", \"status\": \"OK\"},\n    {\"month\": \"2026-02\", \"status\": \"OK\"},\n    {\"month\": \"2026-03\", \"status\": \"OK\"},\n    {\"month\": \"2026-04\", \"status\": \"OK\"},\n    {\"month\": \"2026-05\", \"status\": \"OK\"},\n    {\"month\": \"2026-06\", \"status\": \"OK\"},\n    {\"month\": \"2026-07\", \"status\": \"OK\"},\n    {\"month\": \"2026-08\", \"status\": \"OK\"},\n    {\"month\": \"2026-09\", \"status\": \"OK\"},\n    {\"month\": \"2026-10\", \"status\": \"OK\"}\n   ]\n  },\n  {\n   \"type\": \"communications\",\n   \"lender\": \"O2\",\n   \"opened\": \"2024-01-15\",\n   \"status\": \"open\",\n   \"monthlyPayment\": 28,\n   \"directDebit\": true,\n   \"paymentHistory\": [\n    {\"month\": \"2026-10\", \"status\": \"OK\"}\n   ]\n  },\n  {\n   \"type\": \"current_account_overdraft\",\n   \"lender\": \"Monzo\",\n   \"opened\": \"2022-09-01\",\n   \"status\": \"open\",\n   \"limit\": 250,\n   \"balance\": 0\n  }\n ],\n \"searches\": [\n  {\"date\": \"2026-09-14\", \"organisation\": \"Vanquis\", \"purpose\": \"Credit card application\", \"type\": \"hard\"},\n  {\"date\": \"2026-10-02\", \"organisation\": \"Capital One\", \"purpose\": \"Credit card application\", \"type\": \"hard\"},\n  {\"date\": \"2026-10-20\", \"organisation\": \"Zopa\", \"purpose\": \"Loan quotation\", \"type\": \"soft\"}\n ],\n \"publicRecords\": [],\n \"defaults\": [],\n \"financialAssociates\": [\n  {\"name\": \"Jordan Morgan\", \"reason\": \"Joint current account (closed March 2024)\", \"stillLinked\": true}\n ],\n \"declineLetters\": []\n}",
-  "at": "2026-11-07T17:43:12.657Z"
+  "text": "{\"format\":\"credit-coach-report/v1\",\"provider\":\"Experian\",\"reportDate\":\"2026-11-01\",\"score\":{\"value\":682,\"scaleMax\":999,\"band\":\"Poor\"},\"personal\":{\"name\":\"Alex Morgan\",\"dateOfBirth\":\"2001-03-14\",\"declaredIncome\":29000,\"residentialStatus\":\"rent\"},\"addresses\":[{\"address\":\"Flat 4, 18 Spencer Street, Coventry CV1 3EZ\",\"from\":\"2026-05-01\",\"current\":true},{\"address\":\"27 Gulson Road, Coventry CV1 2JG\",\"from\":\"2023-08-01\",\"to\":\"2026-04-30\",\"current\":false}],\"electoralRoll\":[{\"address\":\"27 Gulson Road, Coventry CV1 2JG\",\"registered\":true},{\"address\":\"Flat 4, 18 Spencer Street, Coventry CV1 3EZ\",\"registered\":false}],\"accounts\":[{\"type\":\"credit_card\",\"lender\":\"Barclaycard\",\"opened\":\"2023-03-10\",\"status\":\"open\",\"limit\":1500,\"balance\":1180,\"apr\":28.9,\"directDebit\":false,\"paymentPattern\":\"minimum\",\"paymentHistory\":[{\"month\":\"2025-11\",\"status\":\"OK\"},{\"month\":\"2025-12\",\"status\":\"OK\"},{\"month\":\"2026-01\",\"status\":\"OK\"},{\"month\":\"2026-02\",\"status\":\"OK\"},{\"month\":\"2026-03\",\"status\":\"OK\"},{\"month\":\"2026-04\",\"status\":\"OK\"},{\"month\":\"2026-05\",\"status\":\"OK\"},{\"month\":\"2026-06\",\"status\":\"1\"},{\"month\":\"2026-07\",\"status\":\"OK\"},{\"month\":\"2026-08\",\"status\":\"OK\"},{\"month\":\"2026-09\",\"status\":\"OK\"},{\"month\":\"2026-10\",\"status\":\"OK\"}]},{\"type\":\"credit_card\",\"lender\":\"Aqua\",\"opened\":\"2025-09-02\",\"status\":\"open\",\"limit\":600,\"balance\":420,\"apr\":34.9,\"directDebit\":true,\"paymentPattern\":\"minimum\",\"paymentHistory\":[{\"month\":\"2025-11\",\"status\":\"OK\"},{\"month\":\"2025-12\",\"status\":\"OK\"},{\"month\":\"2026-01\",\"status\":\"OK\"},{\"month\":\"2026-02\",\"status\":\"OK\"},{\"month\":\"2026-03\",\"status\":\"OK\"},{\"month\":\"2026-04\",\"status\":\"OK\"},{\"month\":\"2026-05\",\"status\":\"OK\"},{\"month\":\"2026-06\",\"status\":\"OK\"},{\"month\":\"2026-07\",\"status\":\"OK\"},{\"month\":\"2026-08\",\"status\":\"OK\"},{\"month\":\"2026-09\",\"status\":\"OK\"},{\"month\":\"2026-10\",\"status\":\"OK\"}]},{\"type\":\"communications\",\"lender\":\"O2\",\"opened\":\"2024-01-15\",\"status\":\"open\",\"monthlyPayment\":28,\"directDebit\":true,\"paymentHistory\":[{\"month\":\"2026-10\",\"status\":\"OK\"}]},{\"type\":\"current_account_overdraft\",\"lender\":\"Monzo\",\"opened\":\"2022-09-01\",\"status\":\"open\",\"limit\":250,\"balance\":0}],\"searches\":[{\"date\":\"2026-09-14\",\"organisation\":\"Vanquis\",\"purpose\":\"Credit card application\",\"type\":\"hard\"},{\"date\":\"2026-10-02\",\"organisation\":\"Capital One\",\"purpose\":\"Credit card application\",\"type\":\"hard\"},{\"date\":\"2026-10-20\",\"organisation\":\"Zopa\",\"purpose\":\"Loan quotation\",\"type\":\"soft\"}],\"publicRecords\":[],\"defaults\":[],\"financialAssociates\":[{\"name\":\"Jordan Morgan\",\"reason\":\"Joint current account (closed March 2024)\",\"stillLinked\":true}]}",
+  "at": "2026-11-07T19:16:45.158Z"
  },
  "read-letter:e17437bf5210716ef6d6107388228acf": {
   "purpose": "read-letter",
@@ -126,8 +126,8 @@
  },
  "bank-payees:9858063a2dc8a4a8086ffe9be5427f44": {
   "purpose": "bank-payees",
-  "text": "{\"categories\": {\"SQ *HAIR BY JO\": \"other\", \"PAYPAL *VINTED\": \"other\"}}",
-  "at": "2026-11-07T17:43:39.775Z"
+  "text": "{\"categories\":[{\"payee\":\"SQ *HAIR BY JO\",\"category\":\"other\"},{\"payee\":\"PAYPAL *VINTED\",\"category\":\"other\"}]}",
+  "at": "2026-11-07T19:16:46.421Z"
  },
  "wording:f5a882744b7dfeab4ca59b02d5ea2d73": {
   "purpose": "wording",
@@ -136,43 +136,43 @@
  },
  "wording:6e80b24ca5678ef24a27327a5fd01a99": {
   "purpose": "wording",
-  "text": "You're using 79% of your £1,200 total limit, which is £950. Utilisation means how much of your limit you use. Under 30% looks in control.",
-  "at": "2026-11-07T17:45:15.844Z"
+  "text": "You're using 79% of your £1,200 total limit (£950). Under 30% shows lenders you're in control of your borrowing.",
+  "at": "2026-11-07T19:16:30.106Z"
  },
  "wording:95a1148e18df24f73ea73976b4f9cf8e": {
   "purpose": "wording",
-  "text": "You're not on the electoral roll at your current address. Lenders use it to check who you are, so being on it helps.",
-  "at": "2026-11-07T17:45:15.844Z"
+  "text": "You're not on the electoral roll at your current address. Lenders use the roll to check who you are, so it helps to be on it.",
+  "at": "2026-11-07T19:16:30.106Z"
  },
  "wording:1fd65eca5c2a65d01ff07f2b938ea1e3": {
   "purpose": "wording",
-  "text": "You have 3 hard searches in the last year, and all 3 were in the last 3 months. Many applications close together can look credit-hungry.",
-  "at": "2026-11-07T17:45:15.845Z"
+  "text": "You've had 3 hard searches in the last year, and 3 in the last 3 months. Lots of applications close together can look like you're hungry for credit.",
+  "at": "2026-11-07T19:16:30.106Z"
  },
  "wording:6522a6ffd4e9c9786980133cde11ffb6": {
   "purpose": "wording",
-  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That would take your card balance to about £91. Aim for a statement balance of £91 or less.",
-  "at": "2026-11-07T17:45:18.595Z"
+  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £91. You'll know it worked if your statement balance is £91 or less.",
+  "at": "2026-11-07T19:16:32.701Z"
  },
  "wording:85fc18ed58b02ddfd3441a2df081d9a7": {
   "purpose": "wording",
-  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That would take your balance to about £0. Aim for a statement balance of £0.",
-  "at": "2026-11-07T17:45:18.596Z"
+  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That should take your card balance to about £0. Your statement balance should then show £0 or less.",
+  "at": "2026-11-07T19:16:32.702Z"
  },
  "wording:b123b5ff122edd9784832eee34228ca4": {
   "purpose": "wording",
-  "text": "On 9 May 2027, look ahead to your next card. Your file may fit the Balance Transfer rules by Jul 2027. The app will remind you to run QuickCheck then.",
-  "at": "2026-11-07T17:45:18.598Z"
+  "text": "On 9 May 2027, your next card step is to check Balance Transfer in Jul 2027. The app will remind you then to run QuickCheck, so you can see the result.",
+  "at": "2026-11-07T19:16:32.702Z"
  },
  "wording:11c629fb04717bc49eb617fe6b3ade63": {
   "purpose": "wording",
-  "text": "9 Nov 2026: Keep your credit file safe. Apply for one thing at a time, and only after a soft-search check. Skip buy now, pay later plans and payday loans.",
-  "at": "2026-11-07T17:45:21.052Z"
+  "text": "On 9 Nov 2026, steer clear of the thin-file traps. Apply for one thing at a time, and only after a soft-search check. Skip buy now, pay later plans and payday loans.",
+  "at": "2026-11-07T19:16:36.250Z"
  },
  "wording:2dd9ac58fe0fccf9cb5d88bf2104221a": {
   "purpose": "wording",
-  "text": "9 Nov 2026: Register to vote at your current address on gov.uk/register-to-vote. It takes 5 minutes. Have your National Insurance number ready. It shows on your report in 6 to 8 weeks.",
-  "at": "2026-11-07T17:45:21.053Z"
+  "text": "On 9 Nov 2026, register to vote at your current address. It takes 5 minutes at gov.uk/register-to-vote. You need your National Insurance number. It should show on your report in 6 to 8 weeks.",
+  "at": "2026-11-07T19:16:36.251Z"
  },
  "wording:c5891378cac84b96f2355a16552a67dd": {
   "purpose": "wording",
@@ -181,58 +181,58 @@
  },
  "wording:71ec445ca5903401c64efe01510731af": {
   "purpose": "wording",
-  "text": "9 Nov 2026: Connect Experian Boost. Link your current account in the Experian app. It counts bills like Council Tax, Spotify and Netflix as on-time payments. It can't lower your score.",
-  "at": "2026-11-07T17:45:21.054Z"
+  "text": "On 9 Nov 2026, connect Experian Boost. Link your current account in the Experian app. It finds Council Tax, Spotify and Netflix and counts them as on-time payments. It can't lower your score.",
+  "at": "2026-11-07T19:16:36.251Z"
  },
  "wording:ed51802825e455c7383f0c249fdc37d6": {
   "purpose": "wording",
-  "text": "9 Nov 2026: Finish your current buy now, pay later plans, but don't start new ones. That frees £40/month for your card from month 2.",
-  "at": "2026-11-07T17:45:21.054Z"
+  "text": "On 9 Nov 2026, stop starting new buy now, pay later plans. Finish the ones you have. That frees £40/month for your card from month 2.",
+  "at": "2026-11-07T19:16:36.252Z"
  },
  "wording:6c09aec7e2c7fb79fbac93c881ea6186": {
   "purpose": "wording",
-  "text": "16 Nov 2026: Sign up to a rent-reporting service like CreditLadder for your £650 rent. It tells all three credit agencies. It takes about 8 weeks to show.",
-  "at": "2026-11-07T17:45:21.055Z"
+  "text": "On 16 Nov 2026, get your rent reported. Sign up to a service like CreditLadder for your £650 rent. It reports to all three agencies and takes about 8 weeks to show.",
+  "at": "2026-11-07T19:16:36.252Z"
  },
  "wording:0027832d8afc95bd78a25e0b9b55d1b9": {
   "purpose": "wording",
-  "text": "8 Dec 2026: Pay £175 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £770, which is 64% of your limit.",
-  "at": "2026-11-07T17:45:21.056Z"
+  "text": "On 8 Dec 2026, pay £175 extra off your Barclaycard, on top of the minimum. That brings your card balance to about £770, which is 64% of your limit.",
+  "at": "2026-11-07T19:16:36.252Z"
  },
  "wording:4206e7b3c39ef7c7318d9788b8dda8ca": {
   "purpose": "wording",
-  "text": "8 Jan 2027: Pay £215 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £549, which is 46% of your limit.",
-  "at": "2026-11-07T17:45:21.056Z"
+  "text": "On 8 Jan 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your card balance to about £549, which is 46% of your limit.",
+  "at": "2026-11-07T19:16:36.252Z"
  },
  "wording:aae0baff44e71f83b35134473badc3e3": {
   "purpose": "wording",
-  "text": "9 Jan 2027: Run Capital One QuickCheck for the Classic card. It's a soft search. If it says yes, apply once. If it says no, wait 3 months and check again.",
-  "at": "2026-11-07T17:45:21.056Z"
+  "text": "On 9 Jan 2027, run Capital One QuickCheck for the Classic card. It's a soft search, so no score impact. If it says no, wait 3 months and check again.",
+  "at": "2026-11-07T19:16:36.253Z"
  },
  "wording:bc15d2f3698d895fd231616b3c4612f5": {
   "purpose": "wording",
-  "text": "23 Jan 2027: Move Netflix £10.99 and Spotify £11.99 onto the Classic card. Set a Direct Debit for the full balance, so you pay £0 interest.",
-  "at": "2026-11-07T17:45:21.057Z"
+  "text": "On 23 Jan 2027, move Netflix and Spotify onto your Classic card. That's £22.98/month. Set a Direct Debit for the full balance, so you pay £0 interest.",
+  "at": "2026-11-07T19:16:36.253Z"
  },
  "wording:3b70e8f8e7e3f804e18db1b647509278": {
   "purpose": "wording",
-  "text": "8 Feb 2027: Pay £215 extra off your Barclaycard, on top of the minimum. That takes your total card balance to about £323, which is 27% of your limit.",
-  "at": "2026-11-07T17:45:21.057Z"
+  "text": "On 8 Feb 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your card balance to about £323, which is 27% of your limit.",
+  "at": "2026-11-07T19:16:36.253Z"
  },
  "wording:e880550a8fb1d313c4a0307ea2ef845f": {
   "purpose": "wording",
-  "text": "From 9 Nov 2026, please pause all credit applications until 9 Jan 2027. To check a card, use a soft-search checker like Capital One QuickCheck. It has no score impact.",
-  "at": "2026-11-07T17:45:22.915Z"
+  "text": "On 9 Nov 2026, pause all credit applications until 9 Jan 2027. To check a card, use a soft-search checker like Capital One QuickCheck. It has no score impact.",
+  "at": "2026-11-07T19:16:36.251Z"
  },
  "wording:37a7bdea7ca105e7a0362f8e55a90d08": {
   "purpose": "wording",
-  "text": "On 9 Nov 2026, set up a Direct Debit on your Barclaycard for at least the minimum, about £29, dated 2 days after payday. That way a late payment can't happen by accident.",
-  "at": "2026-11-07T17:45:52.626Z"
+  "text": "On 9 Nov 2026, set up a Direct Debit on your Barclaycard for at least the minimum, about £29. Date it 2 days after payday so a late payment can't happen by accident.",
+  "at": "2026-11-07T19:16:21.208Z"
  },
  "wording:dd31d07e25d90c1b3d7bc32ed32f2c78": {
   "purpose": "wording",
-  "text": "From 9 Nov 2026, please hold off applying for credit until 9 Jan 2027. If you want to check a card, a soft-search checker like Capital One QuickCheck won't affect your score.",
-  "at": "2026-11-07T17:45:52.627Z"
+  "text": "From 9 Nov 2026, please pause credit applications until 9 Jan 2027. If you'd like to check a card, use a soft-search checker like Capital One QuickCheck, which has no score impact.",
+  "at": "2026-11-07T19:16:21.209Z"
  },
  "goal:67a420e3aabb6fdec27d268a7005e8d6": {
   "purpose": "goal",
@@ -242,7 +242,7 @@
  "whatif:aad11e6ebba971e552b8c05f29cf7901": {
   "purpose": "whatif",
   "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
-  "at": "2026-11-07T18:51:45.432Z"
+  "at": "2026-11-07T19:16:24.609Z"
  },
  "wording:004c1df3a002754d0bee930de283cbd8": {
   "purpose": "wording",
@@ -251,12 +251,117 @@
  },
  "wording:e447fdc023ffc3652bac3d3507cb1127": {
   "purpose": "wording",
-  "text": "On 9 Nov 2026, set up a Direct Debit on your Barclaycard. Make it at least the minimum, about £29, and date it 2 days after payday. Then you can't pay late by accident.",
-  "at": "2026-11-07T18:53:45.202Z"
+  "text": "On 9 Nov 2026, set up a Direct Debit on your Barclaycard. Pay at least the minimum, about £29, dated 2 days after payday. Then a late payment can't happen by accident.",
+  "at": "2026-11-07T19:16:36.251Z"
  },
  "wording:a5bc00e57f3f108380a5f753a02769fe": {
   "purpose": "wording",
   "text": "Two things are holding you back most. One is utilisation, how much of your card limit you use. The other is identity and stability, how well lenders can confirm who you are.",
   "at": "2026-11-07T18:54:26.779Z"
+ },
+ "wording:333d3e963b178663362185f0de0cc999": {
+  "purpose": "wording",
+  "text": "Two things are holding you back most right now: how much of your credit limit you're using, and how well lenders can confirm your identity and stability.",
+  "at": "2026-11-07T19:16:15.576Z"
+ },
+ "wording:1799a1e5d836f50965f9bf0ae624450a": {
+  "purpose": "wording",
+  "text": "Two things are holding you back most right now: how much of your card limit you use, and how well lenders can confirm who you are and that you're settled.",
+  "at": "2026-11-07T19:16:30.105Z"
+ },
+ "read-letter:bbe8309cc2de32ce82235eab58f1d340": {
+  "purpose": "read-letter",
+  "text": "{\"lender\":\"Capital One\",\"product\":\"Capital One Balance Transfer credit card\",\"date\":\"2026-10-06\",\"cra\":\"Experian\",\"reasons\":[]}",
+  "at": "2026-11-07T19:16:47.824Z"
+ },
+ "wording:3e4eda378acac1254f7a93d33f3ad45a": {
+  "purpose": "wording",
+  "text": "Two things are holding you back most right now: how much of your credit limit you're using, and the number of recent applications you've made.",
+  "at": "2026-11-07T19:16:58.265Z"
+ },
+ "wording:a82552668b204e3c1f060c196ac0df36": {
+  "purpose": "wording",
+  "text": "You were late on your Barclaycard 4 months ago. Lenders tend to give recent late payments the most weight, so it's worth knowing about.",
+  "at": "2026-11-07T19:16:58.266Z"
+ },
+ "wording:ca0e9b613625108dfc0fd100e1ab12e3": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, check whether you can register to vote at gov.uk/register-to-vote. If you can't, use the same address on every account so lenders can still verify you.",
+  "at": "2026-11-07T19:17:02.957Z"
+ },
+ "whatif:98e5064fe25894483241fa78b5482cbb": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":400}]}",
+  "at": "2026-11-07T19:17:12.601Z"
+ },
+ "whatif:2176d6e1fe87c1f92777f70da13daa50": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"stop\",\"what\":\"bnpl\"}]}",
+  "at": "2026-11-07T19:17:13.590Z"
+ },
+ "wording:f1869135697577e4812e562439239667": {
+  "purpose": "wording",
+  "text": "On 9 May 2027, your next card step is to check Balance Transfer in Jul 2027. By then your file should meet every published criterion, and the app will remind you to run QuickCheck.",
+  "at": "2026-11-07T19:17:45.675Z"
+ },
+ "wording:01bd7cedc16af1e74b8e9d0f73f56720": {
+  "purpose": "wording",
+  "text": "From 9 Jan 2027, run QuickCheck first to see if Capital One Classic suits you. It's a soft search, so no score impact. If it says no, wait 3 months and check again.",
+  "at": "2026-11-07T19:17:46.187Z"
+ },
+ "wording:3337d8971a0a9b5e10fb71ad0807ad4f": {
+  "purpose": "wording",
+  "text": "On 23 Jan 2027, move Netflix £10.99 and Spotify £11.99 onto your Classic card. Set a Direct Debit for the full balance, so you pay £0 interest.",
+  "at": "2026-11-07T19:17:46.187Z"
+ },
+ "wording:078b7620a15db0bfb840db93d25f87a8": {
+  "purpose": "wording",
+  "text": "On 9 May 2027, your next card step is to check Balance Transfer in Jul 2027. The app will remind you to run QuickCheck then, so you can see where you stand.",
+  "at": "2026-11-07T19:18:30.576Z"
+ },
+ "wording:fe0f8cd0069dc134c42a7f6cc0f5ae26": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, start a 6-month quiet period. Hold off on new cards, loans, finance phone contracts and BNPL until your mortgage application, as lenders look closely at those last 6 months.",
+  "at": "2026-11-07T19:18:31.246Z"
+ },
+ "wording:3dbbb4ba21c3253db566c9883c01fe8d": {
+  "purpose": "wording",
+  "text": "Two things are holding your credit back most. One is utilisation, which is how much of your card limit you use. The other is the number of recent credit applications.",
+  "at": "2026-11-07T19:20:03.134Z"
+ },
+ "wording:62c4228894b047f52b812dd6b39f6689": {
+  "purpose": "wording",
+  "text": "You paid your Barclaycard late 4 months ago. Lenders pay most attention to late payments that happened recently, so this one counts for more.",
+  "at": "2026-11-07T19:20:03.136Z"
+ },
+ "wording:a6151e925e83c9e79904adbc00d9e402": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, check if you can register to vote at gov.uk/register-to-vote. Not everyone can. If you can't, use the same address on every account so lenders can still check who you are.",
+  "at": "2026-11-07T19:20:04.961Z"
+ },
+ "wording:e416b65bea65a4eb4c1af2005409ee28": {
+  "purpose": "wording",
+  "text": "On 9 May 2027, your next card step is to check Balance Transfer in Jul 2027. By then, your file should meet every published rule. The app will remind you to run QuickCheck.",
+  "at": "2026-11-07T19:20:46.635Z"
+ },
+ "wording:518f6db14dc6ac1a867c160ffd889a64": {
+  "purpose": "wording",
+  "text": "On 9 Jan 2027, run QuickCheck for Capital One Classic. It is a soft search, so it has no score impact. If it says yes, apply once. If it says no, wait 3 months and check again.",
+  "at": "2026-11-07T19:20:47.402Z"
+ },
+ "wording:dea9b2e40b11e2c2314b3d438736a348": {
+  "purpose": "wording",
+  "text": "On 23 Jan 2027, move Netflix £10.99 and Spotify £11.99 onto the Classic card. Set a Direct Debit for the full balance, so you pay £0 interest.",
+  "at": "2026-11-07T19:20:47.406Z"
+ },
+ "wording:0fdec1d2df13d2d9f1521753fa86241e": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, start a 6-month quiet period. Don't open new cards, loans, finance phone contracts or buy now pay later accounts until your mortgage application. Lenders look closely at the last 6 months.",
+  "at": "2026-11-07T19:21:31.898Z"
+ },
+ "wording:898f1b95259e0e1888db640d5741b8d5": {
+  "purpose": "wording",
+  "text": "9 May 2027: your next card step is to check Balance Transfer in Jul 2027. By then, your file should match every published Balance Transfer rule. The app will remind you to run QuickCheck.",
+  "at": "2026-11-07T19:21:35.174Z"
  }
 }
