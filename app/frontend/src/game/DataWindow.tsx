@@ -52,20 +52,35 @@ function MiniChart({ plans, plan, scaleMax }: { plans: RunResult['plans']; plan:
 }
 
 /**
- * `minTop`: the y (CSS px) where Cap's desk ends. The window never reaches above it: when the box is tall
- * (a menu) and there is no floor left, it shrinks to its title and buttons, and if that still covers the
- * desk it steps aside (the item is in the notebook). Checked again whenever the box changes size.
+ * `minTop`: the y (CSS px) the window never reaches above (116: where Cap's desk ends; 117 with the camera: just
+ * under his chin, so it may cover his chest and the desk but never his face). When the box is tall (a menu) and
+ * there is no room left, it shrinks to its title and buttons, and if that still reaches too high it steps aside
+ * (the item is in the notebook). Checked again whenever the box changes size.
+ * `maxBottom` (117): a y its bottom stays above, so it never covers the paper on the desk; it rises to it.
+ * `side` (117): which side of the box it floats on (left when the speech bubble is on the right).
  */
-export function DataWindow({ msg, onDetails, minTop }: { msg: AgentMessage; onDetails: (msgId: string) => void; minTop: number }) {
+export function DataWindow({ msg, onDetails, minTop, maxBottom, side = 'right' }: {
+  msg: AgentMessage
+  onDetails: (msgId: string) => void
+  minTop: number
+  maxBottom?: number
+  side?: 'left' | 'right'
+}) {
   const ctx = useCards()
   const ref = useRef<HTMLElement>(null)
   const [tick, setTick] = useState(0)
-  const fitKey = `${msg.id}:${minTop}:${tick}`
+  const fitKey = `${msg.id}:${minTop}:${maxBottom}:${tick}`
   const [fit, setFit] = useState({ key: '', level: 0 })
   const level = fit.key === fitKey ? fit.level : 0
+  const [lift, setLift] = useState(0)
   useLayoutEffect(() => {
     const el = ref.current
-    if (!el || level >= 2) return
+    if (!el) return
+    // rise above maxBottom: the HUD's top is where the window sits by default
+    const hudTop = el.parentElement?.getBoundingClientRect().top ?? 0
+    const want = maxBottom === undefined ? 0 : Math.max(0, Math.round(hudTop - 4 - maxBottom))
+    if (want !== lift) return setLift(want)
+    if (level >= 2) return
     if (el.getBoundingClientRect().top < minTop - 1) setFit({ key: fitKey, level: level + 1 })
   })
   useEffect(() => {
@@ -157,7 +172,8 @@ export function DataWindow({ msg, onDetails, minTop }: { msg: AgentMessage; onDe
   return (
     <aside
       ref={ref}
-      className={level === 1 ? 'gwin gwin--compact' : 'gwin'}
+      className={`${level === 1 ? 'gwin gwin--compact' : 'gwin'}${side === 'left' ? ' gwin--left' : ''}`}
+      style={lift ? { bottom: `calc(100% + 0.25rem + ${lift}px)` } : undefined}
       hidden={level >= 2}
       aria-label={`${tag}: ${title}`}
       data-testid="data-window"

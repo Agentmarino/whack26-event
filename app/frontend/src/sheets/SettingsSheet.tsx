@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { speakNow, speechAvailable } from '../chat/useSpeech'
 import type { Speed } from '../npc'
 import { primeBlip } from '../game/blip'
-import { useSettings, type ColourMode, type TextSize, type VoiceRate } from '../settings'
+import { useSettings, type ColourMode, type FramingSetting, type TextSize, type VoiceRate } from '../settings'
 import { Sheet } from '../ui/Sheet'
 
 function Choice<T extends string | number>(props: {
@@ -155,6 +155,18 @@ export function SettingsSheet(props: { open: boolean; onClose: () => void; onRes
             checked={settings.demo}
             onChange={(v) => set('demo', v)}
             testId="toggle-demo"
+          />
+          <Choice<FramingSetting>
+            legend="Camera (for testing)"
+            name="framing"
+            value={settings.framing}
+            onChange={(v) => set('framing', v)}
+            options={[
+              { value: 'A', label: 'A', hint: 'head and shoulders' },
+              { value: 'B', label: 'B', hint: 'waist up' },
+              { value: 'C', label: 'C', hint: 'hands' },
+              { value: 'full', label: 'Full', hint: 'whole desk' },
+            ]}
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 border-t-2 border-dashed border-paper-line pt-4">

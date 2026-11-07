@@ -9,14 +9,14 @@ import { AGENT_NAME } from './chat/Transcript'
 import { useConversation } from './chat/useConversation'
 import { useSpeech } from './chat/useSpeech'
 import {
-  ExtendedScene, extendedLayout, NATIVE_H, usePrefersReducedMotion, useTypewriter, type FacialHair, type NpcHandle,
+  ExtendedScene, extendedLayout, frameCamera, NATIVE_H, usePrefersReducedMotion, useTypewriter, type FacialHair, type NpcHandle,
   type NpcSnapshot,
 } from './npc'
 import { blip, primeBlip } from './game/blip'
 import { Guard } from './ui/Guard'
 import { DataWindow } from './game/DataWindow'
-import { GameBox } from './game/GameBox'
-import { GearIcon, NotebookIcon, SidePanel, type PanelTab } from './game/SidePanel'
+import { GameBox, type BubblePlace } from './game/GameBox'
+import { GearIcon, LetterIcon, NotebookIcon, SidePanel, type PanelTab } from './game/SidePanel'
 import { useSettings } from './settings'
 import { PaperSheet } from './sheets/PaperSheet'
 import { LetterSheet, PersonaSheet, WhySheet } from './sheets/PickSheets'
@@ -43,6 +43,36 @@ function useViewport() {
     }
   }, [])
   return v
+}
+
+/**
+ * 117: an on-screen keyboard is open: a text box has focus on a touch screen and the visual viewport is much
+ * shorter than the window. Returns the visible height and its top then (null when closed).
+ */
+function useKeyboard() {
+  const [k, setK] = useState<{ h: number; top: number } | null>(null)
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const on = () => {
+      const typing =
+        !!document.activeElement?.matches('input:not([type=radio]):not([type=checkbox]):not([type=file]), textarea') &&
+        window.matchMedia('(pointer: coarse)').matches
+      const open = typing && vv.height < window.innerHeight - 120
+      setK((p) => (open ? (p && p.h === vv.height && p.top === vv.offsetTop ? p : { h: vv.height, top: vv.offsetTop }) : null))
+    }
+    vv.addEventListener('resize', on)
+    vv.addEventListener('scroll', on)
+    window.addEventListener('focusin', on)
+    window.addEventListener('focusout', on)
+    return () => {
+      vv.removeEventListener('resize', on)
+      vv.removeEventListener('scroll', on)
+      window.removeEventListener('focusin', on)
+      window.removeEventListener('focusout', on)
+    }
+  }, [])
+  return k
 }
 
 function useMedia(query: string) {
@@ -89,14 +119,71 @@ export default function App() {
   const dpr = window.devicePixelRatio || 1
   const minBox = vp.h * (wide ? 0.45 : settings.textSize === 150 ? 0.7 : settings.textSize === 125 ? 0.48 : 0.4)
   const { scale } = extendedLayout(stageW, vp.h, 0, minBox, dpr)
-  const boxMax = Math.floor(vp.h - NATIVE_H * scale - 4)
+  const boxMax116 = Math.floor(vp.h - NATIVE_H * scale - 4)
   // The dialogue font: Press Start 2P at a crisp size (16 px on a phone, 24 px wide). VT323 with Readable
   // font, and with bigger text on a phone: Press Start 2P's next crisp size there (24 px) fits 13 letters
   // a line and one menu choice a page.
   const pf = crispPx((wide ? 24 : 16) * (settings.textSize / 100), dpr)
   const boxVt = settings.readable || (settings.textSize > 100 && stageW < 600)
-  // 116: 2 to 4 lines a page (at most 4 on a phone): fewer when the text is big.
-  const lines = boxVt ? (settings.textSize === 150 ? 3 : 4) : wide ? 3 : pf > 16 ? 3 : 4
+
+  // ---------- 117: the camera ----------
+  // Cap fills the screen: the camera (npc/camera.ts) crops the scene to the framing and picks a whole number of
+  // device px per scene px. It needs the room the box takes at rest: the name plate, three lines, the Next row
+  // and the fine print (measured in WebKit: 7.25rem of padding, plate and buttons, plus the lines, plus the
+  // fine print at 0.875rem a line, two lines on a phone). 'full' is 116's whole desk.
+  const kbd = useKeyboard()
+  const rem = 16 * (settings.textSize / 100)
+  const lineLh = boxVt ? 1.2 * (wide ? 1.75 : 1.375) * rem : pf * 1.5
+  const fine = (stageW < 600 ? (settings.textSize > 100 ? 3 : 2) : 1) * 0.875 * rem
+  const cam = useMemo(
+    () =>
+      settings.framing === 'full'
+        ? null
+        : frameCamera({
+            w: stageW,
+            h: vp.h,
+            dpr,
+            framing: settings.framing,
+            restBox: 7.25 * rem + 3 * lineLh + fine,
+            dockBox: 4.5 * rem + fine,
+            // a bubble above his head: under the corner icons, the plate, three lines, padding and the tail
+            bubbleTop: 3.5 * rem + 3 * lineLh + 5.5 * rem,
+            bubbleSide: Math.min(18 * rem, 15 * (boxVt ? 0.55 * lineLh : pf) + 3 * rem),
+            topPad: 4,
+            corner: { w: 3.5 * rem, h: 3.5 * rem },
+            minFill: vp.h > stageW ? 0.55 : 0.5,
+          }),
+    [settings.framing, stageW, vp.h, dpr, rem, lineLh, fine, boxVt, pf],
+  )
+  // 116: 2 to 4 lines a page (at most 4 on a phone): fewer when the text is big. 117: 3 with the camera, so
+  // the box at rest leaves his hands and the desk strip in view.
+  const lines = cam ? 3 : boxVt ? (settings.textSize === 150 ? 3 : 4) : wide ? 3 : pf > 16 ? 3 : 4
+  // The line goes to a speech bubble when the box has no room for it under his chin, or a keyboard is open.
+  const bubble = useMemo<BubblePlace | null>(() => {
+    if (!cam || (cam.mode === 'box' && !kbd)) return null
+    const maxW = Math.min(stageW - 16, 26 * rem)
+    if (kbd) {
+      // over the top of the visible part, pointing down at him (the field is pinned over the keyboard)
+      const width = maxW
+      return { left: Math.round((stageW - width) / 2), width, top: kbd.top + 3.5 * rem + 22, tail: 'down', tailAt: cam.mouth.x - (stageW - width) / 2 }
+    }
+    if (cam.side === 'above') {
+      const width = maxW
+      const left = Math.min(Math.max(8, cam.mouth.x - width / 2), stageW - 8 - width)
+      return { left, width, bottom: vp.h - (cam.head.top - 14), tail: 'down', tailAt: cam.mouth.x - left }
+    }
+    const top = Math.max(3.5 * rem + 22, cam.mouth.y - 2.5 * rem)
+    if (cam.side === 'right') {
+      const left = cam.head.right + 18
+      return { left, width: Math.min(maxW, stageW - left - 10), top, tail: 'left', tailAt: cam.mouth.y - top }
+    }
+    const right = cam.head.left - 18
+    const width = Math.min(maxW, right - 10)
+    return { left: right - width, width, top, tail: 'right', tailAt: cam.mouth.y - top }
+  }, [cam, kbd, stageW, vp.h, rem])
+  const [bubbleHost, setBubbleHost] = useState<HTMLDivElement | null>(null)
+  // The box (or, in bubble mode, the inputs) may grow up to just under his chin, never over his face.
+  const boxMax = cam ? Math.floor(vp.h - cam.chinY - 8) : boxMax116
 
   // ---------- samples ----------
   const [personas, setPersonas] = useState<Persona[] | null>(null)
@@ -393,13 +480,20 @@ export default function App() {
         data-api={api.mode}
         data-step={state.step ?? 'none'}
         data-panel={panel.open ? (wide ? 'side' : 'sheet') : undefined}
+        data-framing={settings.framing}
+        data-text-in={bubble ? 'bubble' : 'box'}
+        data-layout={cam?.layout ?? 'standard'}
+        data-fill={cam ? cam.fill.toFixed(3) : undefined}
+        data-k={cam?.k}
       >
         <div className="game__stage" style={{ width: stageW }}>
           {/* 116: the scene fills the stage; Cap's desk ends just above the box's room */}
           <div className="game__scene">
             <ExtendedScene
               ref={npc}
-              reserveBottom={boxMax + 4}
+              reserveBottom={boxMax116 + 4}
+              camera={cam ? { k: cam.k, left: cam.base.left, top: cam.base.top } : null}
+              layout={cam?.layout ?? 'standard'}
               reducedMotion={reduced}
               wordmarkSrc={LOGO}
               facialHair={FACIAL_HAIR}
@@ -409,16 +503,24 @@ export default function App() {
               onChange={onNpcChange}
             />
           </div>
+          {/* 117: the speech bubble, over the scene and under the corner icons and the box */}
+          <div className="game__bubbles" ref={setBubbleHost} />
 
           <div className="game__corner game__corner--left">
             <button type="button" className="gicon" onClick={() => setSheet('settings')} aria-label="Settings: text speed, size, font, voice, colours" data-action="settings">
               <GearIcon />
             </button>
-            {showLetter && (
-              <button type="button" className="gbtn gbtn--small" onClick={() => setSheet('letter')} data-action="letter">
-                Have a decline letter?
-              </button>
-            )}
+            {showLetter &&
+              (cam ? (
+                // 117: Cap's head is up here now: an envelope icon, not a wide button over his hair
+                <button type="button" className="gicon" onClick={() => setSheet('letter')} aria-label="Have a decline letter?" title="Have a decline letter?" data-action="letter">
+                  <LetterIcon />
+                </button>
+              ) : (
+                <button type="button" className="gbtn gbtn--small" onClick={() => setSheet('letter')} data-action="letter">
+                  Have a decline letter?
+                </button>
+              ))}
           </div>
           <div className="game__corner game__corner--right">
             <button
@@ -439,7 +541,14 @@ export default function App() {
             </p>
             {windowMsg && (
               <Guard>
-                <DataWindow key={current!.key} msg={windowMsg} onDetails={openDetails} minTop={vp.h - boxMax - 4} />
+                <DataWindow
+                  key={current!.key}
+                  msg={windowMsg}
+                  onDetails={openDetails}
+                  minTop={cam ? cam.chinY + 8 : vp.h - boxMax116 - 4}
+                  maxBottom={cam && windowMsg.kind === 'paper' ? cam.deskTopY - 2 : undefined}
+                  side={bubble?.tail === 'left' ? 'left' : 'right'}
+                />
               </Guard>
             )}
             <GameBox
@@ -453,7 +562,10 @@ export default function App() {
               onPages={onPages}
               onAdvance={advance}
               status={status}
-              layoutKey={`${settings.textSize}:${boxVt}:${pf}:${stageW}`}
+              layoutKey={`${settings.textSize}:${boxVt}:${pf}:${stageW}:${bubble ? `bubble${Math.round(bubble.width)}` : 'box'}`}
+              bubble={bubble}
+              bubbleHost={bubbleHost}
+              strictLines={!!cam}
               inputKey={mode.kind}
               maxPx={boxMax}
             >

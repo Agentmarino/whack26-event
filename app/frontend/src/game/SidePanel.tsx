@@ -156,6 +156,14 @@ export function GearIcon() {
     </svg>
   )
 }
+/** 117: the decline letter, an envelope on the same 9x9 grid. */
+export function LetterIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" fill="currentColor">
+      <path d="M0 1h9v1H0zM0 7h9v1H0zM0 2h1v5H0zM8 2h1v5H8zM1 2h1v1H1zM7 2h1v1H7zM2 3h1v1H2zM6 3h1v1H6zM3 4h1v1H3zM5 4h1v1H5zM4 5h1v1H4z" />
+    </svg>
+  )
+}
 export function NotebookIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" fill="currentColor">

@@ -6,6 +6,8 @@ import type { Speed } from './npc'
 export type ColourMode = 'standard' | 'okabe' | 'contrast'
 export type TextSize = 100 | 125 | 150
 export type VoiceRate = 0.85 | 1 | 1.2
+/** 117: the camera (npc/camera.ts): A head and shoulders, B waist up (default), C tightest with his hands; 'full' is 116's whole desk. */
+export type FramingSetting = 'A' | 'B' | 'C' | 'full'
 
 export interface Settings {
   speed: Speed
@@ -21,6 +23,8 @@ export interface Settings {
   readable: boolean
   /** 116: a soft blip per letter while a line types (never during read aloud). */
   blip: boolean
+  /** 117: the camera, in the debug part of Settings (and ?framing=A|B|C|full). */
+  framing: FramingSetting
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -33,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   colour: 'standard',
   readable: false,
   blip: false,
+  framing: 'B',
 }
 
 const KEY = 'whack26.settings.v1'
@@ -40,7 +45,12 @@ const KEY = 'whack26.settings.v1'
 function load(): Settings {
   try {
     const raw = window.localStorage.getItem(KEY)
-    const fromUrl = new URLSearchParams(window.location.search).get('demo') === '1' ? { demo: true } : {}
+    const q = new URLSearchParams(window.location.search)
+    const fr = q.get('framing')
+    const fromUrl = {
+      ...(q.get('demo') === '1' ? { demo: true } : {}),
+      ...(fr === 'A' || fr === 'B' || fr === 'C' || fr === 'full' ? { framing: fr as FramingSetting } : {}),
+    }
     return { ...DEFAULT_SETTINGS, ...(raw ? (JSON.parse(raw) as Partial<Settings>) : {}), ...fromUrl }
   } catch {
     return DEFAULT_SETTINGS
