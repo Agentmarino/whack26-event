@@ -1,0 +1,35 @@
+{
+  "request": {
+    "sessionId": "021f5d31-56e0-4eba-9079-2eb9617ae4b1",
+    "input": {
+      "type": "sample",
+      "fileKind": "letter"
+    }
+  },
+  "resultKey": null,
+  "response": {
+    "sessionId": "021f5d31-56e0-4eba-9079-2eb9617ae4b1",
+    "step": "questions",
+    "messages": [
+      {
+        "id": "ack-letter-file",
+        "kind": "text",
+        "text": "Thanks, that's a letter from Capital One. I'll go through it after your results.",
+        "emote": "warm",
+        "gesture": "receive-document",
+        "writtenBy": "template"
+      }
+    ],
+    "expects": {
+      "kind": "choice",
+      "chips": [
+        "Yes, I can",
+        "No, I can't",
+        "Not sure"
+      ]
+    },
+    "paperUrl": null,
+    "branch": "report",
+    "result": null
+  }
+}

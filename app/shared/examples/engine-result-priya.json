@@ -38,6 +38,7 @@
       "productId": "bt",
       "monthsAgo": 1
     },
+    "canRegisterToVote": true,
     "bank": {
       "rent": 650,
       "councilTax": 120,
@@ -71,6 +72,7 @@
   "result": {
     "profile": {
       "name": "Priya",
+      "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One",
       "age": 23,
       "grossIncome": 24000,
       "netIncome": 1680,
@@ -154,8 +156,7 @@
         "lateFees3m": 0,
         "overdraftDays3m": 0,
         "billsInOwnName": true
-      },
-      "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One"
+      }
     },
     "start": "2026-11-09T00:00:00.000Z",
     "scaleMax": 999,

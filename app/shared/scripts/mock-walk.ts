@@ -1,53 +1,61 @@
-// Walks mockTurn from start to coach on Priya (all three samples) and prints the step sequence.
+// Walks mockTurn through each 115 branch from start to a what-if, checks every reply against the
+// contract and that message ids stay unique, and prints the step sequence per branch.
 //   pnpm --filter shared exec tsx scripts/mock-walk.ts
-import { initialMockState, mockTurn } from '../mock-conversation.ts'
+import { TurnResponse } from '../contract.ts'
 import type { TurnRequest } from '../contract.ts'
+import { initialMockState, mockTurn, type MockState } from '../mock-conversation.ts'
 
-const inputs: TurnRequest['input'][] = [
-  { type: 'start' },
-  { type: 'choice', value: "Let's start" },
-  { type: 'sample', fileKind: 'credit_report', personaId: 'priya' },
-  { type: 'sample', fileKind: 'bank' },
-  { type: 'sample', fileKind: 'letter' },
-  { type: 'choice', value: 'A credit card' },
-  { type: 'choice', value: '3 months' },
-  { type: 'choice', value: 'Yes, I can' },
-  { type: 'choice', value: 'No' },
-  { type: 'skip' },
-  { type: 'choice', value: 'Tell me about the letter' },
-  { type: 'choice', value: 'Got it' },
-  { type: 'choice', value: 'Make me a plan' },
-  { type: 'choice', value: '3 months' },
-  { type: 'text', value: 'What if I pay £300 a month?' },
-]
-let state = initialMockState
-const steps: string[] = []
-for (const input of inputs) {
-  const out = mockTurn(state, { sessionId: state.sessionId, input })
-  state = out.state
-  steps.push(out.response.step)
-}
-console.log(steps.join(', '))
+type Input = TurnRequest['input']
+const choice = (value: string): Input => ({ type: 'choice', value })
 
-// Edge paths: skip everything, a letter mid-questions, the 6-month plan, a BNPL what-if, then start again.
-const ids = new Set<string>()
-let s2 = initialMockState
-const seen: string[] = []
-for (const input of [
-  { type: 'start' }, { type: 'choice', value: "Let's start" }, { type: 'skip' }, { type: 'skip' }, { type: 'skip' },
-  { type: 'sample', fileKind: 'letter' }, { type: 'sample', fileKind: 'letter' }, { type: 'choice', value: 'A credit card' },
-  { type: 'choice', value: '6 months' }, { type: 'choice', value: 'Not sure' }, { type: 'choice', value: 'Not sure' }, { type: 'skip' },
-  { type: 'choice', value: 'Tell me about the letter' }, { type: 'choice', value: 'Got it' }, { type: 'choice', value: 'Make me a plan' },
-  { type: 'choice', value: '6 months' }, { type: 'choice', value: 'What if I stop buy now, pay later?' }, { type: 'text', value: 'What if I pay £300 a month?' },
-  { type: 'start' },
-] as TurnRequest['input'][]) {
-  const out = mockTurn(s2, { sessionId: s2.sessionId, input })
-  s2 = out.state
-  for (const m of out.response.messages) {
-    const id = `${out.response.sessionId}/${m.id}`
-    if (ids.has(id)) throw new Error(`duplicate message id ${id}`)
-    ids.add(id)
+function run(inputs: Input[], label: string) {
+  let state: MockState = initialMockState
+  const steps: string[] = []
+  const ids = new Set<string>()
+  let last: TurnResponse | null = null
+  for (const input of inputs) {
+    const out = mockTurn(state, { sessionId: state.sessionId, input })
+    state = out.state
+    last = TurnResponse.parse(out.response)
+    steps.push(last.step)
+    for (const m of last.messages) {
+      const id = `${last.sessionId}/${m.id}`
+      if (ids.has(id)) throw new Error(`${label}: duplicate message id ${id}`)
+      ids.add(id)
+    }
   }
-  seen.push(out.response.messages.at(-1)?.text.slice(0, 48) ?? '')
+  return { steps, last: last!, state }
 }
-console.log(`edge walk OK, ${ids.size} unique message ids; last what-ifs:\n  ${seen.slice(-3, -1).join('\n  ')}`)
+
+/** Taps whatever is offered until the plan, then a plan and a what-if. */
+function branchInputs(opening: string, extra: Input[] = []): Input[] {
+  const ins: Input[] = [{ type: 'start' }, choice('Nice to meet you, Cap!'), choice(opening), ...extra]
+  for (let i = 0; i < 16; i++) ins.push({ type: 'skip' })
+  return ins
+}
+
+const OPEN = ["I've been declined already", "I've got a credit report I want help with", 'I want to get ready before I apply', "I'm new to credit or new to the UK"]
+for (const [i, name] of ['declined', 'report', 'prepare', 'new'].entries()) {
+  // Walk until coach, then pick the plan and ask a what-if.
+  let ins = branchInputs(OPEN[i]!)
+  let out = run(ins, name)
+  const coachAt = out.steps.indexOf('coach')
+  if (coachAt < 0) throw new Error(`${name}: never reached coach: ${out.steps.join(', ')}`)
+  ins = [...ins.slice(0, coachAt + 1), choice('3 months'), choice('What if I pay £300 a month?'), choice('6 months'), choice('What if I stop buy now, pay later?')]
+  out = run(ins, name)
+  if (out.state.branch !== name) throw new Error(`${name}: mock picked ${out.state.branch}`)
+  if (out.last.messages[0]?.kind !== 'whatif') throw new Error(`${name}: the last what-if is not a what-if`)
+  console.log(`${name.padEnd(9)} ${out.steps.join(' → ')}`)
+}
+
+// Edge paths: a letter at the opening, a letter mid-questions, an unclear opening, then start again.
+const edge = run(
+  [
+    { type: 'start' }, choice('Nice to meet you, Cap!'), choice('banana'),
+    { type: 'sample', fileKind: 'letter', personaId: 'priya' }, { type: 'sample', fileKind: 'credit_report' },
+    { type: 'sample', fileKind: 'letter' }, { type: 'skip' }, { type: 'start' }, choice('Nice to meet you, Cap!'),
+  ],
+  'edge',
+)
+console.log(`edge      ${edge.steps.join(' → ')}`)
+console.log('mock walk OK: every reply valid, ids unique per session')

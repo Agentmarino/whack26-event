@@ -1,6 +1,6 @@
 {
   "request": {
-    "sessionId": "example-priya",
+    "sessionId": "example",
     "changes": [
       {
         "lever": "paydown",
@@ -13,23 +13,23 @@
     ]
   },
   "response": {
-    "sessionId": "example-priya",
+    "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
     "messages": [
       {
-        "id": "whatif-slider",
+        "id": "whatif-3",
         "kind": "whatif",
-        "text": "Paying £400 a month and stopping buy now, pay later: by Feb 2027 your score could be 747 to 854, up from 735 to 836. An estimate. You'd get under 30% by Jan 2027.",
-        "emote": "pleased",
+        "text": "Paying £400 extra a month and stopping buy now, pay later: your estimate by May 2027 stays at 772 to 891. Your plan already gets you there. You'd get under 30% by Jan 2027.",
+        "emote": "neutral",
         "gesture": "explaining",
         "ref": {
           "on": "whatif",
-          "whatIfId": "wi-slider"
+          "whatIfId": "wi-3"
         },
         "writtenBy": "template"
       }
     ],
     "whatIf": {
-      "id": "wi-slider",
+      "id": "wi-3",
       "text": null,
       "changes": [
         {
@@ -112,6 +112,7 @@
         "result": {
           "profile": {
             "name": "Priya",
+            "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One",
             "age": 23,
             "grossIncome": 24000,
             "netIncome": 1680,
@@ -195,8 +196,7 @@
               "lateFees3m": 0,
               "overdraftDays3m": 0,
               "billsInOwnName": true
-            },
-            "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One"
+            }
           },
           "start": "2026-11-09T00:00:00.000Z",
           "scaleMax": 999,
@@ -1691,6 +1691,7 @@
         },
         "profile": {
           "name": "Priya",
+          "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One",
           "age": 23,
           "grossIncome": 24000,
           "netIncome": 1680,
@@ -1774,8 +1775,7 @@
             "lateFees3m": 0,
             "overdraftDays3m": 0,
             "billsInOwnName": true
-          },
-          "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One"
+          }
         }
       }
     }

@@ -1,0 +1,86 @@
+{
+  "start": {
+    "request": {
+      "sessionId": null,
+      "input": {
+        "type": "start"
+      }
+    },
+    "resultKey": null,
+    "response": {
+      "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+      "step": "intro",
+      "messages": [
+        {
+          "id": "intro-hello",
+          "kind": "text",
+          "text": "Hi, nice to meet you. My name's Cap, here's my card.",
+          "emote": "warm",
+          "gesture": "slide-card",
+          "writtenBy": "template"
+        },
+        {
+          "id": "intro-card",
+          "kind": "card",
+          "text": "Cap, Credit Coach. Here to make your credit make sense.",
+          "emote": "warm",
+          "gesture": "none",
+          "writtenBy": "template"
+        }
+      ],
+      "expects": {
+        "kind": "choice",
+        "chips": [
+          "Nice to meet you, Cap!"
+        ]
+      },
+      "paperUrl": null,
+      "branch": null,
+      "result": null
+    }
+  },
+  "opening": {
+    "request": {
+      "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+      "input": {
+        "type": "choice",
+        "value": "Nice to meet you, Cap!"
+      }
+    },
+    "resultKey": null,
+    "response": {
+      "sessionId": "d7e1f005-81cc-4b46-9a9a-2622ac97046f",
+      "step": "opening",
+      "messages": [
+        {
+          "id": "opening-safe",
+          "kind": "text",
+          "text": "Nothing we do here is a credit search, so it can't harm your score.",
+          "emote": "warm",
+          "gesture": "none",
+          "writtenBy": "template"
+        },
+        {
+          "id": "opening",
+          "kind": "text",
+          "text": "I understand you're here to make your credit better. Where should we start?",
+          "emote": "pleased",
+          "gesture": "asking",
+          "writtenBy": "template"
+        }
+      ],
+      "expects": {
+        "kind": "choice",
+        "chips": [
+          "I've been declined already",
+          "I've got a credit report I want help with",
+          "I want to get ready before I apply",
+          "I'm new to credit or new to the UK"
+        ]
+      },
+      "paperUrl": null,
+      "branch": null,
+      "result": null
+    }
+  }
+}

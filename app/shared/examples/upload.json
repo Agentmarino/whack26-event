@@ -3,7 +3,7 @@
     "multipart": {
       "file": "<experian-report.json>",
       "fileKind": "credit_report",
-      "sessionId": "example-priya"
+      "sessionId": "example"
     }
   },
   "response": {

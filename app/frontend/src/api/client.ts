@@ -62,7 +62,7 @@ export function createMockApi(opts: { latencyMs?: number } = {}): Api {
     async turn(req) {
       const gen = req.input.type === 'start' ? ++generation : generation
       // The analysis turn takes a little longer, so the thinking pose has time to show.
-      await wait(state.at === 'assessing' ? latency * 3 : latency)
+      await wait(state.last?.step === 'assessing' ? latency * 3 : latency)
       if (forceError) fail()
       if (gen !== generation) throw new ApiFailure('That answer was for the earlier conversation.', 'stale')
       const out = mockTurn(state, req)

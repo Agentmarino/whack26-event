@@ -1,67 +1,37 @@
-// Regenerates app/shared/examples/ from the REAL engine run on Priya, then validates every example
-// against the zod schemas and checks that every message's `ref` resolves. Exits 1 on any problem.
+// Regenerates app/shared/examples/ by driving the REAL backend (app/backend, template wording, offline)
+// through each 115 branch on its persona, then validates every response against the zod schemas,
+// checks every message (40 words, British spelling, refs resolve, ids unique per session) and writes
+// the bundle mockTurn replays. Exits 1 on any problem.
 //
 //   pnpm --filter shared exec tsx scripts/make-examples.ts
 //
-// The message builders below are the first cut of the templates in conversation.md.
-// 113 can lift them into the backend; the wording rules (40 words, "you", British spelling) are checked here.
+// declined: Priya with her letter · report: Priya · prepare: Priya aiming for the Classic · new: Mei Lin.
+// Each branch walk runs from `start` to the plan, then both plans and two what-ifs.
+
+process.env.DEMO_OFFLINE = 'true' // never call Claude here; what-ifs use the keyword reader
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as E from '../../backend/engine/index.ts'
-import {
-  AgentMessage,
-  Change,
-  CreditReport,
-  EngineResult,
-  Persona,
-  PersonasResponse,
-  TurnRequest,
-  TurnResponse,
-  UploadResult,
-  WhatIfRequest,
-  WhatIfResponse,
-  paperUrlFor,
-  resolveRef,
-} from '../contract.ts'
-import type {
-  Emote,
-  Expects,
-  Gesture,
-  MessageKind,
-  PlanId,
-  Profile,
-  Ref,
-  Step,
-  WhatIfRun,
-} from '../contract.ts'
+import { buildApp } from '../../backend/src/app.ts'
+import { templateWording } from '../../backend/src/messages.ts'
+import { CreditReport, EngineResult, PersonasResponse, TurnResponse, UploadResult, WhatIfResponse, resolveRef } from '../contract.ts'
+import type { AgentMessage, Branch, Persona, Profile, TurnInput, WhatIfRun } from '../contract.ts'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const OUT = join(here, '..', 'examples')
 const DATA = join(here, '..', '..', 'backend', 'data', 'personas')
-const SESSION = 'example-priya'
 const MAX_WORDS = 40
-
 const readJson = <T>(file: string): T => JSON.parse(readFileSync(join(DATA, file), 'utf8')) as T
+const problems: string[] = []
 
-// ---------- engine runs ----------
-const priya = readJson<Profile>('priya.json')
-// The samples split Priya so each upload adds a piece (conversation.md): report, then bank, then letter.
-const { bank: _bank, decline: _decline, ...reportPart } = priya
-const analysis = E.analyse(priya) // what the backend holds once all three samples are in
-const r = analysis.result
-const paperUrl = paperUrlFor(SESSION)
-
-// Every sample input must also fit the schema, not only Priya.
+// ---------- every sample input fits the schema, and two engine branches the samples never reach ----------
 const indexed = readJson<Array<Persona & { file: string }>>('index.json')
 for (const file of ['priya.json', 'sam.json', 'dan.json', 'mock-credit-report.json', 'mock-report-mei.json']) {
-  const input = readJson<Profile | CreditReport>(file)
-  const check = EngineResult.safeParse(E.analyse(input))
+  const check = EngineResult.safeParse(E.analyse(readJson<Profile | CreditReport>(file)))
   if (!check.success) fail(`engine output for ${file} does not match EngineResult:\n${check.error.message}`)
 }
-// Engine branches the samples never reach (found in the 112 review): the Balance Transfer ladder
-// (clean file, expensive card) and a decline letter that names no agency.
 const edgeCases: Array<[string, Profile | CreditReport]> = [
   ['balance-transfer branch', { age: 30, grossIncome: 30000, cards: [{ name: 'Old card', limit: 5000, balance: 1000, apr: 34.9, hasDD: true, openedYears: 4 }], loans: [{ name: 'Car finance', monthly: 150, openedYears: 3 }], searches: [], electoralRoll: true }],
   ['letter without agency', (() => {
@@ -75,419 +45,196 @@ for (const [label, input] of edgeCases) {
   if (!check.success) fail(`engine output for ${label} does not match EngineResult:\n${check.error.message}`)
 }
 
-// ---------- message helpers ----------
-const msg = (id: string, kind: MessageKind, text: string, emote: Emote, gesture: Gesture, ref?: Ref) =>
-  AgentMessage.parse({ id, kind, text, emote, gesture, ...(ref ? { ref } : {}), writtenBy: 'template' })
+// ---------- the backend ----------
+const app = await buildApp({ wording: templateWording })
 
-const emoteFor = (rag: 'red' | 'amber' | 'green'): Emote => (rag === 'red' ? 'concerned' : rag === 'amber' ? 'warm' : 'pleased')
-const round = (n: number) => E.gbp(Math.round(n))
-const lowerFirst = (t: string) => t.charAt(0).toLowerCase() + t.slice(1)
-const count = (n: number) => ['No', 'One', 'Two', 'Three', 'Four', 'Five'][n] ?? String(n)
+type Rec = { request: { sessionId: string | null; input: TurnInput }; response: TurnResponse }
 
-const CHIPS = {
-  start: ["Let's start"],
-  goal: ['A credit card', 'Car finance', 'A mortgage', 'Just build my credit'],
-  horizon: ['3 months', '6 months'],
-  yesNo: ['Yes', 'No', 'Not sure'],
-  canRegister: ['Yes, I can', "No, I can't", 'Not sure'],
-  // Only the paydown amount moves the estimate: stopping BNPL and registering to vote are already in the baseline plan.
-  whatIfs: ['What if I pay £300 a month?', 'What if I pay £400 a month?', 'What if I stop buy now, pay later?'],
-}
-
-const expectsWhatIf: Expects = { kind: 'text', chips: CHIPS.whatIfs, placeholder: 'What if I…', allowVoice: true }
-
-// ---------- the conversation, step by step (Priya, all three samples) ----------
-type Turn = {
-  key: string
-  request: TurnRequest
-  step: Step
-  messages: AgentMessage[]
-  expects: Expects
-  hasResult: boolean
-  hasPaper: boolean
-  whatIf?: WhatIfRun
-}
-const turns: Turn[] = []
-const turn = (t: Turn) => turns.push(t)
-const req = (input: TurnRequest['input'], first = false): TurnRequest =>
-  TurnRequest.parse({ sessionId: first ? null : SESSION, input, settings: { plainEnglish: false } })
-
-turn({
-  key: 'greet',
-  request: req({ type: 'start' }, true),
-  step: 'greet',
-  messages: [
-    msg('greet-1', 'text', "Hello, welcome to the Capital One desk. I'll look at your credit the way a lender would, then help you fix what's holding you back.", 'warm', 'wave'),
-    msg('greet-2', 'text', "It takes about five minutes. Nothing here is a credit search, so it can't harm your score.", 'neutral', 'none'),
-  ],
-  expects: { kind: 'choice', chips: CHIPS.start },
-  hasResult: false,
-  hasPaper: false,
-})
-
-turn({
-  key: 'ask_report',
-  request: req({ type: 'choice', value: "Let's start" }),
-  step: 'ask_report',
-  messages: [
-    msg('ask-report', 'text', 'First, your credit report. Upload it from Experian, Equifax or TransUnion, or use one of our samples.', 'neutral', 'asking'),
-  ],
-  expects: { kind: 'file', fileKinds: ['credit_report'], optional: true },
-  hasResult: false,
-  hasPaper: false,
-})
-
-turn({
-  key: 'ask_bank',
-  request: req({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' }),
-  step: 'ask_bank',
-  messages: [
-    msg('ack-report', 'text', `Thanks, ${reportPart.name}. I've got your ${r.bureau} report. Your score there is ${reportPart.score} out of ${r.scaleMax}.`, 'warm', 'receive-document'),
-    msg('ask-bank', 'text', 'Next, three months of your bank statement, as a CSV or PDF. It shows me what you can afford each month. You can skip this.', 'neutral', 'asking'),
-  ],
-  expects: { kind: 'file', fileKinds: ['bank'], optional: true },
-  hasResult: false,
-  hasPaper: false,
-})
-
-turn({
-  key: 'ask_letter',
-  request: req({ type: 'sample', fileKind: 'bank' }),
-  step: 'ask_letter',
-  messages: [
-    msg('ack-bank', 'text', `Got it. After rent, bills and the basics you have about ${round(r.cash.surplus)} a month left over.`, 'neutral', 'reading'),
-    msg('ask-letter', 'text', "Have you been turned down for credit lately? If you've got the letter, hand it over and I'll explain what it means. If not, skip this.", 'neutral', 'asking'),
-  ],
-  expects: { kind: 'file', fileKinds: ['letter'], optional: true },
-  hasResult: false,
-  hasPaper: false,
-})
-
-const lender = priya.decline?.lender ?? 'the lender'
-turn({
-  key: 'questions-1',
-  request: req({ type: 'sample', fileKind: 'letter' }),
-  step: 'questions',
-  messages: [
-    msg('ack-letter', 'text', `Thanks, that's your ${lender} letter. I'll go through it once I've seen everything.`, 'warm', 'receive-document'),
-    msg('q-goal', 'text', 'What are you hoping to get? Pick one, or tell me in your own words.', 'neutral', 'asking'),
-  ],
-  expects: { kind: 'text', chips: CHIPS.goal, placeholder: 'Or type your own', allowVoice: true },
-  hasResult: false,
-  hasPaper: false,
-})
-
-turn({
-  key: 'questions-2',
-  request: req({ type: 'choice', value: 'A credit card' }),
-  step: 'questions',
-  messages: [msg('q-horizon', 'text', 'And how soon? I can plan for the next 3 months or the next 6.', 'neutral', 'asking')],
-  expects: { kind: 'choice', chips: CHIPS.horizon },
-  hasResult: false,
-  hasPaper: false,
-})
-
-// Data questions (at most 2), built from the profile. Priya: not on the roll; minimum-only card with no Direct Debit.
-const card = priya.cards?.[0]
-turn({
-  key: 'questions-3',
-  request: req({ type: 'choice', value: '3 months' }),
-  step: 'questions',
-  messages: [
-    msg('q-roll', 'text', "Your report says you're not on the electoral roll at your current address. Can you register to vote there?", 'neutral', 'asking'),
-  ],
-  expects: { kind: 'choice', chips: CHIPS.canRegister },
-  hasResult: false,
-  hasPaper: false,
-})
-
-turn({
-  key: 'questions-4',
-  request: req({ type: 'choice', value: 'Yes, I can' }),
-  step: 'questions',
-  messages: [msg('q-dd', 'text', `You pay the minimum on your ${card?.name ?? 'card'} each month. Is that set up as a Direct Debit?`, 'neutral', 'asking')],
-  expects: { kind: 'choice', chips: CHIPS.yesNo },
-  hasResult: false,
-  hasPaper: false,
-})
-
-turn({
-  key: 'assessing',
-  request: req({ type: 'choice', value: 'No' }),
-  step: 'assessing',
-  messages: [msg('assess-1', 'text', "Thanks, that's everything I need. Give me a moment to go through it all.", 'neutral', 'thinking')],
-  expects: { kind: 'none' },
-  hasResult: true,
-  hasPaper: false,
-})
-
-const top3 = r.diagnosis.ranked.slice(0, 3)
-const flags = r.diagnosis.flags
-turn({
-  key: 'diagnosis',
-  request: req({ type: 'skip' }),
-  step: 'diagnosis',
-  messages: [
-    msg('diag-headline', 'text', r.headline, 'warm', 'explaining', { on: 'headline' }),
-    msg('diag-intro', 'text', `${count(top3.length)} things are holding your score back most. Here they are, worst first.`, 'neutral', 'explaining'),
-    ...top3.map(f => msg(`diag-${f.id}`, 'reason', f.reason, emoteFor(f.rag), 'explaining', { on: 'factor', factorId: f.id })),
-    ...(flags.length
-      ? [msg('diag-flags', 'text', `${count(flags.length)} ${flags.length === 1 ? 'thing' : 'things'} in your spending stand out: ${flags.join(' and ')}.`, 'concerned', 'explaining', { on: 'flags' })]
-      : []),
-  ],
-  expects: { kind: 'choice', chips: analysis.decline ? ['Tell me about the letter'] : ['What can I do?'] },
-  hasResult: true,
-  hasPaper: false,
-})
-
-const d = analysis.decline
-if (!d) fail('Priya has no decoded decline; the decline step needs one')
-turn({
-  key: 'decline',
-  request: req({ type: 'choice', value: 'Tell me about the letter' }),
-  step: 'decline',
-  messages: [
-    msg(
-      'decline-reasons',
-      'decline',
-      d.stated === 'No specific reason given'
-        ? `About your ${d.lender} letter. It didn't give a reason, so I've worked out the most likely ones from your report.`
-        : `About your ${d.lender} letter. It said: "${d.stated}". Here's what most likely sat behind it.`,
-      'concerned',
-      'explaining',
-      { on: 'decline', part: 'reasons' },
-    ),
-    msg('decline-fix', 'text', `The one fix that matters most: ${lowerFirst(d.fix.title)}. ${d.fix.how}`, 'warm', 'explaining', { on: 'decline', part: 'fix' }),
-    msg('decline-reapply', 'text', `Don't apply again before ${d.reapply.when}. ${d.reapply.how}`, 'warm', 'explaining', { on: 'decline', part: 'reapply' }),
-    msg('decline-rights', 'text', `You have rights here too. The lender must name the agency it used, and you can see and correct your ${d.agency} report for free.`, 'warm', 'none', { on: 'decline', part: 'rights' }),
-  ],
-  expects: { kind: 'choice', chips: ['Got it'] },
-  hasResult: true,
-  hasPaper: false,
-})
-
-turn({
-  key: 'paper',
-  request: req({ type: 'choice', value: 'Got it' }),
-  step: 'paper',
-  messages: [msg('paper-1', 'paper', "Here's all of that on one sheet. Tap it to read it, or take a copy with you.", 'pleased', 'slide-paper', { on: 'paper' })],
-  expects: { kind: 'choice', chips: ['Make me a plan'] },
-  hasResult: true,
-  hasPaper: true,
-})
-
-turn({
-  key: 'coach-choose',
-  request: req({ type: 'choice', value: 'Make me a plan' }),
-  step: 'coach',
-  messages: [msg('coach-choose', 'text', "Right, let's make you a plan. You said 3 months. Shall we stick with that, or go for 6?", 'warm', 'coach')],
-  expects: { kind: 'choice', chips: CHIPS.horizon },
-  hasResult: true,
-  hasPaper: true,
-})
-
-const planMessages = (plan: PlanId): AgentMessage[] => {
-  const p = r.plans[plan]
-  const end = p.projection.at(-1)
-  if (!end) fail(`plan ${plan} has no projection`)
-  const ladder = r.ladder
-  const months = plan === '3m' ? 3 : 6
-  return [
-    msg(`plan-${plan}-intro`, 'text', `Here's your ${months}-month plan: ${p.steps.length} steps, week by week. Tap any step to see why it's there.`, 'warm', 'coach'),
-    ...p.steps.map((s, i) =>
-      msg(`plan-${plan}-step-${i}`, 'step', `${E.fmtDate(s.date)}: ${s.title}.`, 'neutral', 'explaining', { on: 'step', plan, stepIndex: i }),
-    ),
-    msg(
-      `plan-${plan}-projection`,
-      'projection',
-      `If you stick to it, your ${r.bureau} score could be ${end.low} to ${end.high} by ${end.date}. That's an estimate, not a promise.`,
-      'pleased',
-      'explaining',
-      { on: 'projection', plan },
-    ),
-    ...(ladder
-      ? [
-          msg(
-            `plan-${plan}-ladder`,
-            'ladder',
-            ladder.entry && ladder.applyFrom
-              ? `When you're ready for a new card, start with the ${ladder.entry.name}, from ${E.fmtMonth(ladder.applyFrom)}. Check with QuickCheck first: it won't leave a mark.`
-              : ladder.reason,
-            'warm',
-            'explaining',
-            { on: 'ladder' },
-          ),
-        ]
-      : []),
-    msg(`plan-${plan}-whatif`, 'text', 'Now ask me anything that starts with "what if". For example: what if I pay £300 a month?', 'warm', 'coach'),
-  ]
-}
-
-for (const plan of ['3m', '6m'] as const) {
-  turn({
-    key: `coach-plan-${plan}`,
-    request: req({ type: 'choice', value: plan === '3m' ? '3 months' : '6 months' }),
-    step: 'coach',
-    messages: planMessages(plan),
-    expects: expectsWhatIf,
-    hasResult: true,
-    hasPaper: true,
-  })
-}
-
-// Free-text what-ifs in the chat (113 turns the text into changes with Claude; here we know them).
-// The answer quotes the plan the person chose (m3 or m6).
-const whatIfMessage = (id: string, lead: string, run: WhatIfRun, plan: PlanId = '3m') => {
-  const k = plan === '3m' ? 'm3' : 'm6'
-  const b = run.output.before[k]
-  const a = run.output.after[k]
-  const delta = run.output.delta[k]
-  const end = r.plans[plan].projection.at(-1)
-  const by = end ? end.date : 'the end of the plan'
-  const up = delta.high > 0 || delta.low > 0
-  const under30 = run.output.because.under30
-  const tail = under30?.after ? ` You'd get under 30% by ${under30.after}.` : ''
-  // No change or a drop: the baseline plan already gets there (BNPL and the roll are in it; on the 6-month
-  // plan extra paydown lands on the same range). Say so instead of showing a lower number (112 RESULT).
-  return msg(
-    id,
-    'whatif',
-    up
-      ? `${lead}: by ${by} your score could be ${a.low} to ${a.high}, up from ${b.low} to ${b.high}. An estimate.${tail}`
-      : `${lead}: your estimate by ${by} stays at ${b.low} to ${b.high}. Your plan already gets you there.${tail}`,
-    up ? 'pleased' : 'neutral',
-    'explaining',
-    { on: 'whatif', whatIfId: run.id },
-  )
-}
-const WHAT_IFS = [
-  { lever: 'paydown', text: 'What if I pay £300 a month?', lead: 'Paying £300 extra a month', changes: [{ lever: 'paydown', value: 300 }] },
-  { lever: 'bnpl', text: 'What if I stop buy now, pay later?', lead: 'Stopping buy now, pay later', changes: [{ lever: 'stop', what: 'bnpl' }] },
-] as const satisfies ReadonlyArray<{ lever: string; text: string; lead: string; changes: readonly Change[] }>
-let whatIfN = 0
-for (const w of WHAT_IFS) {
-  for (const plan of ['3m', '6m'] as const) {
-    whatIfN += 1
-    const changes: Change[] = [...w.changes]
-    const run: WhatIfRun = { id: `wi-${whatIfN}`, text: w.text, changes, output: E.whatIf(priya, changes) }
-    turn({
-      key: `coach-whatif-${w.lever}-${plan}`,
-      // Typed text; a chip sends {type:'choice'} with the same words, and counts the same (conversation.md).
-      request: req({ type: 'text', value: w.text }),
-      step: 'coach',
-      messages: [whatIfMessage(`whatif-${whatIfN}`, w.lead, run, plan)],
-      expects: expectsWhatIf,
-      hasResult: true,
-      hasPaper: true,
-      whatIf: run,
-    })
+/** One conversation: every response is checked as it comes in. */
+function session(label: string) {
+  let sessionId: string | null = null
+  const ids = new Set<string>()
+  const whatIfs: Record<string, WhatIfRun> = {}
+  const send = async (input: TurnInput): Promise<Rec> => {
+    const request = { sessionId, input }
+    const res = await app.inject({ method: 'POST', url: '/api/turn', payload: request })
+    if (res.statusCode !== 200) fail(`${label}: ${JSON.stringify(input)} → HTTP ${res.statusCode} ${res.body}`)
+    const parsed = TurnResponse.safeParse(res.json())
+    if (!parsed.success) fail(`${label}: ${JSON.stringify(input)} → not a TurnResponse:\n${parsed.error.message}`)
+    const response = parsed.data
+    sessionId = response.sessionId
+    if (response.whatIf) whatIfs[response.whatIf.id] = response.whatIf
+    check(`${label} ${response.step}`, response.messages, response.result, whatIfs, response.paperUrl, ids)
+    return { request, response }
   }
+  return { send, get sessionId() { return sessionId! }, whatIfs, ids }
 }
 
-// ---------- build, validate, write ----------
-const problems: string[] = []
-const toResponse = (t: Turn): TurnResponse =>
-  ({
-    sessionId: SESSION,
-    step: t.step,
-    messages: t.messages,
-    expects: t.expects,
-    result: t.hasResult ? analysis : null,
-    paperUrl: t.hasPaper ? paperUrl : null,
-    ...(t.whatIf ? { whatIf: t.whatIf } : {}),
-  }) satisfies TurnResponse
-
-function checkMessages(where: string, messages: AgentMessage[], result: EngineResult | null, whatIfs: Record<string, WhatIfRun>, paper: string | null) {
+function check(where: string, messages: AgentMessage[], result: EngineResult | null, whatIfs: Record<string, WhatIfRun>, paper: string | null, ids?: Set<string>) {
   for (const m of messages) {
     const words = m.text.trim().split(/\s+/).length
     if (words > MAX_WORDS) problems.push(`${where} ${m.id}: ${words} words (max ${MAX_WORDS}): ${m.text}`)
     if (/\b(color|favor|realize|organize|center|program)\b/i.test(m.text)) problems.push(`${where} ${m.id}: American spelling: ${m.text}`)
     if (m.ref && !resolveRef(m.ref, result, { whatIfs, paperUrl: paper })) problems.push(`${where} ${m.id}: ref ${JSON.stringify(m.ref)} does not resolve`)
+    if (m.kind !== 'text' && m.kind !== 'card' && !m.ref) problems.push(`${where} ${m.id}: a ${m.kind} message needs a ref`)
+    if (ids) {
+      if (ids.has(m.id)) problems.push(`${where}: duplicate message id ${m.id}`)
+      ids.add(m.id)
+    }
   }
 }
 
-const responses = turns.map(t => {
-  const response = toResponse(t)
-  const parsed = TurnResponse.safeParse(response)
-  if (!parsed.success) problems.push(`${t.key}: not a TurnResponse:\n${parsed.error.message}`)
-  checkMessages(t.key, response.messages, response.result, t.whatIf ? { [t.whatIf.id]: t.whatIf } : {}, response.paperUrl)
-  return { turn: t, response }
-})
-
-// Letter handed over in the middle of the questions: one acknowledgement, step and expects unchanged.
-const q2 = turns.find(t => t.key === 'questions-2')!
-const letterAck: TurnResponse = {
-  sessionId: SESSION,
-  step: 'questions',
-  messages: [msg('ack-letter-file', 'text', `Thanks, that's a letter from ${lender}. I'll go through it after your results.`, 'warm', 'receive-document')],
-  expects: q2.expects,
-  result: null,
-  paperUrl: null,
+const choice = (value: string): TurnInput => ({ type: 'choice', value })
+const OPENING: Record<Branch, string> = {
+  declined: "I've been declined already",
+  report: "I've got a credit report I want help with",
+  prepare: 'I want to get ready before I apply',
+  new: "I'm new to credit or new to the UK",
 }
-const letterAckRequest = req({ type: 'file', fileKind: 'letter', fileId: 'up-letter-1' })
-if (!TurnResponse.safeParse(letterAck).success) problems.push('letter-ack: not a TurnResponse')
-checkMessages('letter-ack', letterAck.messages, null, {}, null)
 
-// Sliders sheet: POST /api/whatif with changes.
-const sliderChanges: Change[] = [{ lever: 'paydown', value: 400 }, { lever: 'stop', what: 'bnpl' }]
-const sliderRequest = WhatIfRequest.parse({ sessionId: SESSION, changes: sliderChanges })
-const sliderRun: WhatIfRun = { id: 'wi-slider', text: null, changes: sliderChanges, output: E.whatIf(priya, sliderChanges) }
-const whatIfResponse: WhatIfResponse = {
-  sessionId: SESSION,
-  messages: [whatIfMessage('whatif-slider', 'Paying £400 a month and stopping buy now, pay later', sliderRun)],
-  whatIf: sliderRun,
+/** The scripted start of each branch; after it, every question gets its first chip, every upload is skipped. */
+const SCRIPTS: Record<Branch, { persona: string; inputs: TurnInput[] }> = {
+  declined: {
+    persona: 'priya',
+    inputs: [
+      { type: 'sample', fileKind: 'letter', personaId: 'priya' },
+      { type: 'sample', fileKind: 'credit_report' },
+      { type: 'sample', fileKind: 'bank' },
+      choice('What can I do?'),
+      choice('The Balance Transfer card'),
+      choice('3 months'),
+      choice('Yes, I can'),
+      choice('No'),
+    ],
+  },
+  report: {
+    persona: 'priya',
+    inputs: [{ type: 'sample', fileKind: 'credit_report', personaId: 'priya' }, { type: 'sample', fileKind: 'bank' }, choice('Yes, I can'), choice('No'), choice('A specific card'), choice('Capital One Classic'), choice('3 months')],
+  },
+  prepare: {
+    persona: 'priya',
+    inputs: [choice('Capital One Classic'), { type: 'sample', fileKind: 'credit_report', personaId: 'priya' }, { type: 'sample', fileKind: 'bank' }, choice('The Classic card'), choice('3 months'), choice('Yes, I can'), choice('No')],
+  },
+  new: {
+    persona: 'mei',
+    inputs: [choice("I'm new to the UK"), choice('Under 6 months'), choice('Under 6 months'), { type: 'sample', fileKind: 'credit_report', personaId: 'mei' }, { type: 'skip' }],
+  },
 }
-if (!WhatIfResponse.safeParse(whatIfResponse).success) problems.push('whatif: not a WhatIfResponse')
-checkMessages('whatif', whatIfResponse.messages, analysis, { [sliderRun.id]: sliderRun }, null)
 
-// Upload: Alex's report file through the engine's parser.
+const isCoachChoose = (r: TurnResponse) => r.step === 'coach' && r.messages[0]?.id === 'coach-choose'
+
+async function walkBranch(branch: Branch) {
+  const c = session(branch)
+  const intro = await c.send({ type: 'start' })
+  const opening = await c.send(choice('Nice to meet you, Cap!'))
+  const turns: Rec[] = [await c.send(choice(OPENING[branch]))]
+  if (turns[0]!.response.branch !== branch) fail(`${branch}: the opening chip gave branch ${turns[0]!.response.branch}`)
+  for (const input of SCRIPTS[branch].inputs) turns.push(await c.send(input))
+  const typed = ['31', 'about 28k', 'yes']
+  for (let i = 0; !isCoachChoose(turns.at(-1)!.response) && i < 30; i++) {
+    const r = turns.at(-1)!.response
+    const e = r.expects
+    turns.push(await c.send(e.kind === 'file' || e.kind === 'none' ? { type: 'skip' } : e.chips?.length ? choice(e.chips[0]!) : { type: 'text', value: typed.shift() ?? 'yes' }))
+  }
+  if (!isCoachChoose(turns.at(-1)!.response)) fail(`${branch}: never reached the plan choice`)
+  const plan3m = await c.send(choice('3 months'))
+  const plan6m = await c.send(choice('6 months'))
+  const paydown = await c.send(choice('What if I pay £300 a month?'))
+  const chips = plan6m.response.expects.chips ?? []
+  const bnpl = chips.includes('What if I stop buy now, pay later?') ? await c.send(choice('What if I stop buy now, pay later?')) : null
+  for (const r of [paydown, bnpl]) if (r && r.response.messages[0]?.kind !== 'whatif') fail(`${branch}: a what-if chip did not give a what-if`)
+  return { persona: SCRIPTS[branch].persona, intro, opening, turns, coach: { plan3m, plan6m, whatIfs: { paydown, bnpl } }, session: c }
+}
+
+const branches = {} as Record<Branch, Awaited<ReturnType<typeof walkBranch>>>
+for (const b of ['declined', 'report', 'prepare', 'new'] as const) branches[b] = await walkBranch(b)
+
+// A letter handed over in the middle of the questions (report branch): one acknowledgement, step unchanged.
+const la = session('letter-ack')
+await la.send({ type: 'start' })
+await la.send(choice('Nice to meet you, Cap!'))
+await la.send(choice(OPENING.report))
+await la.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
+const beforeAck = await la.send({ type: 'sample', fileKind: 'bank' })
+const letterAck = await la.send({ type: 'sample', fileKind: 'letter' })
+if (letterAck.response.step !== beforeAck.response.step || letterAck.response.messages.length !== 1) problems.push('letter-ack: the step changed or more than one message')
+
+// The sliders sheet: POST /api/whatif with changes, on the declined session.
+const d = branches.declined.session
+const slider = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: d.sessionId, changes: [{ lever: 'paydown', value: 400 }, { lever: 'stop', what: 'bnpl' }] } })
+const whatIfParsed = WhatIfResponse.safeParse(slider.json())
+if (!whatIfParsed.success) fail(`whatif: not a WhatIfResponse:\n${whatIfParsed.error.message}`)
+const whatIfResponse = whatIfParsed.data
+const declinedFinal = branches.declined.coach.plan3m.response.result!
+check('whatif', whatIfResponse.messages, declinedFinal, { [whatIfResponse.whatIf.id]: whatIfResponse.whatIf }, null)
+
+// Upload: Alex's report file through the engine's parser (the shape POST /api/upload answers with).
 const alexReport = CreditReport.parse(readJson('mock-credit-report.json'))
-const upload: UploadResult = {
-  ok: true,
-  fileId: 'up-report-1',
-  fileKind: 'credit_report',
-  fileName: 'experian-report.json',
-  findings: E.parseReport(alexReport).found.report,
-  error: null,
-}
-const uploadError: UploadResult = {
-  ok: false,
-  fileId: null,
-  fileKind: 'credit_report',
-  fileName: 'holiday-photo.jpg',
-  findings: [],
-  error: "I couldn't read that one. Is it your credit report? You can try the sample instead.",
-}
+const upload: UploadResult = { ok: true, fileId: 'up-report-1', fileKind: 'credit_report', fileName: 'experian-report.json', findings: E.parseReport(alexReport).found.report, error: null }
+const uploadError: UploadResult = { ok: false, fileId: null, fileKind: 'credit_report', fileName: 'holiday-photo.jpg', findings: [], error: "I couldn't read that one. Is it your credit report? You can try the sample instead." }
 for (const u of [upload, uploadError]) if (!UploadResult.safeParse(u).success) problems.push(`upload ${u.fileName}: not an UploadResult`)
-
 const personas = PersonasResponse.parse(indexed.map(({ id, name, blurb }) => ({ id, name, blurb })))
 
+await app.close()
 if (problems.length) fail(`${problems.length} problem(s):\n- ${problems.join('\n- ')}`)
 
-// Write. JSON files for people and tests; bundle.ts (result stored once) for mockTurn.
+// ---------- write ----------
+// Results are big and repeat across turns: each is stored once by key; responses carry `resultKey`.
+const results: Record<string, EngineResult> = {}
+const keyOf = new Map<string, string>()
+function store(rec: Rec) {
+  const { result, ...rest } = rec.response
+  let resultKey: string | null = null
+  if (result) {
+    const json = JSON.stringify(result)
+    resultKey = keyOf.get(json) ?? `r${keyOf.size + 1}`
+    if (!keyOf.has(json)) {
+      keyOf.set(json, resultKey)
+      results[resultKey] = result
+    }
+  }
+  return { request: rec.request, resultKey, response: { ...rest, result: null } }
+}
+const strip = ({ request: _r, ...s }: ReturnType<typeof store>) => s
+
 rmSync(OUT, { recursive: true, force: true })
-mkdirSync(join(OUT, 'turns'), { recursive: true })
+mkdirSync(join(OUT, 'branches'), { recursive: true })
 const write = (file: string, data: unknown) => writeFileSync(join(OUT, file), JSON.stringify(data, null, 2) + '\n')
 
-const walk: Array<{ file: string; request: TurnRequest }> = []
-responses.forEach(({ turn: t, response }, i) => {
-  const file = `turns/${String(i + 1).padStart(2, '0')}-${t.key}.json`
-  write(file, response)
-  walk.push({ file, request: t.request })
-})
-write('turns/letter-ack.json', letterAck)
-write('walk.json', { note: 'The request that produced each turn example, in order. Priya, all three samples, 3-month plan.', walk, letterAck: { file: 'turns/letter-ack.json', request: letterAckRequest } })
-write('whatif.json', { request: sliderRequest, response: whatIfResponse })
-write('upload.json', { request: { multipart: { file: '<experian-report.json>', fileKind: 'credit_report', sessionId: SESSION } }, response: upload, errorResponse: uploadError })
+const bundleBranches = {} as Record<Branch, unknown>
+for (const [b, w] of Object.entries(branches) as Array<[Branch, (typeof branches)[Branch]]>) {
+  const turns = w.turns.map(store)
+  const coach = { plan3m: store(w.coach.plan3m), plan6m: store(w.coach.plan6m), whatIfs: { paydown: store(w.coach.whatIfs.paydown), bnpl: w.coach.whatIfs.bnpl ? store(w.coach.whatIfs.bnpl) : null } }
+  const used = new Set([...turns, coach.plan3m, coach.plan6m, coach.whatIfs.paydown, ...(coach.whatIfs.bnpl ? [coach.whatIfs.bnpl] : [])].map(t => t.resultKey).filter(Boolean) as string[])
+  write(`branches/${b}.json`, {
+    note: `115 ${b} branch on ${w.persona}: the request behind each turn and the real backend response (template wording). result is stored once under results, by resultKey.`,
+    persona: w.persona,
+    walk: turns,
+    coach,
+    results: Object.fromEntries([...used].map(k => [k, results[k]])),
+  })
+  bundleBranches[b] = { persona: w.persona, turns: turns.map(strip), coach: { plan3m: strip(coach.plan3m), plan6m: strip(coach.plan6m), whatIfs: { paydown: strip(coach.whatIfs.paydown), bnpl: coach.whatIfs.bnpl ? strip(coach.whatIfs.bnpl) : null } } }
+}
+const intro = store(branches.declined.intro)
+const opening = store(branches.declined.opening)
+write('intro.json', { start: intro, opening })
+write('letter-ack.json', store(letterAck))
+write('whatif.json', { request: { sessionId: 'example', changes: whatIfResponse.whatIf.changes }, response: whatIfResponse })
+write('upload.json', { request: { multipart: { file: '<experian-report.json>', fileKind: 'credit_report', sessionId: 'example' } }, response: upload, errorResponse: uploadError })
 write('personas.json', personas)
-write('engine-result-priya.json', analysis)
+write('engine-result-priya.json', declinedFinal)
+write('walk.json', {
+  note: '115: each branch walk is in branches/<branch>.json (requests and responses in order). intro.json holds the first two turns, shared by every branch.',
+  branches: Object.fromEntries(Object.entries(branches).map(([b, w]) => [b, { persona: w.persona, steps: w.turns.map(t => t.response.step) }])),
+})
 
-const strip = (res: TurnResponse) => ({ ...res, result: null })
 const bundle = {
-  sessionId: SESSION,
-  result: analysis,
-  turns: Object.fromEntries(responses.map(({ turn: t, response }) => [t.key, { hasResult: t.hasResult, response: strip(response) }])),
-  letterAck,
+  sessionId: 'example',
+  results,
+  intro: strip(intro),
+  opening: strip(opening),
+  branches: bundleBranches,
+  letterAck: strip(store(letterAck)),
   whatIfResponse,
   upload,
   uploadError,
@@ -495,16 +242,14 @@ const bundle = {
 }
 writeFileSync(
   join(OUT, 'bundle.ts'),
-  `// GENERATED by scripts/make-examples.ts from the real engine on Priya. Do not edit; re-run the script.\n` +
+  `// GENERATED by scripts/make-examples.ts from the real backend (template wording). Do not edit; re-run the script.\n` +
     `// mock-conversation.ts validates this with zod on first use.\n` +
     `export const bundle: unknown = ${JSON.stringify(bundle)}\n`,
 )
 
-for (const { turn: t, response } of responses) console.log(`${t.key.padEnd(14)} step=${response.step.padEnd(10)} ${response.messages.length} messages`)
-console.log(`letter-ack     step=questions  ${letterAck.messages.length} message (step unchanged)`)
-console.log(`whatif         ${whatIfResponse.messages.length} message, after 3m ${sliderRun.output.after.m3.low}-${sliderRun.output.after.m3.high}`)
-console.log(`upload         ${upload.findings.length} findings; personas ${personas.map(p => p.id).join(', ')}`)
-console.log(`OK: ${responses.length + 1} turn examples written to app/shared/examples/, all valid, all refs resolve`)
+for (const [b, w] of Object.entries(branches)) console.log(`${b.padEnd(9)} ${w.persona.padEnd(6)} ${w.turns.length} turns: ${w.turns.map(t => t.response.step).join(' → ')}`)
+console.log(`results stored once: ${Object.keys(results).length}; letter ack, slider what-if, upload, personas`)
+console.log('OK: every response valid, every ref resolves, every message 40 words or fewer, ids unique per session')
 
 function fail(message: string): never {
   console.error(`make-examples FAILED: ${message}`)
