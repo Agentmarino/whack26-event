@@ -238,5 +238,25 @@
   "purpose": "goal",
   "text": "{\"goal\": \"card\"}",
   "at": "2026-11-07T17:59:45.729Z"
+ },
+ "whatif:aad11e6ebba971e552b8c05f29cf7901": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
+  "at": "2026-11-07T18:51:45.432Z"
+ },
+ "wording:004c1df3a002754d0bee930de283cbd8": {
+  "purpose": "wording",
+  "text": "Two things are holding you back most right now: how much of your credit limit you're using, and not being on the electoral roll at your current address.",
+  "at": "2026-11-07T18:53:20.828Z"
+ },
+ "wording:e447fdc023ffc3652bac3d3507cb1127": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, set up a Direct Debit on your Barclaycard. Make it at least the minimum, about £29, and date it 2 days after payday. Then you can't pay late by accident.",
+  "at": "2026-11-07T18:53:45.202Z"
+ },
+ "wording:a5bc00e57f3f108380a5f753a02769fe": {
+  "purpose": "wording",
+  "text": "Two things are holding you back most. One is utilisation, how much of your card limit you use. The other is identity and stability, how well lenders can confirm who you are.",
+  "at": "2026-11-07T18:54:26.779Z"
  }
 }
