@@ -1,7 +1,7 @@
 ---
 id: 112
 title: Phase A, shared contract, engine import, examples and mock conversation
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
