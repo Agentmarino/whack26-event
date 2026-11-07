@@ -14,7 +14,7 @@ export const PAPER_SIZE = { w: 16, h: 5 }
 export const PAPER_START = { x: 152, y: 101 }
 export const PAPER_END = { x: 152, y: 112 }
 export const SCREEN = { x: 223, y: 47, w: 32, h: 22 }
-export const BUBBLE_AT = { x: 172, y: 34 }
+export const BUBBLE_AT = { x: 170, y: 39 }
 
 // ---------- pixel font for the wordmark placeholder ----------
 const GLYPHS: Record<string, string[]> = {
@@ -87,7 +87,7 @@ export function buildBackdrop(): IndexBuffer {
   b.rect(44, 12, 232, 116, IDX.standPanel)
   b.rect(44, 34, 232, 4, IDX.red)
   b.rect(44, 38, 232, 1, IDX.redShade)
-  b.rect(40, 124, 240, 5, IDX.uniformShade)
+  b.rect(40, 124, 240, 5, IDX.brandNavyShade)
   // left poster: a generic card illustration (not a logo)
   b.rect(62, 52, 32, 20, IDX.outline)
   b.rect(63, 53, 30, 18, IDX.shirt)
@@ -113,11 +113,11 @@ export function buildCounter(): IndexBuffer {
   b.rect(62, 117, 196, 1, IDX.shirt)
   b.rect(62, 118, 196, 1, IDX.outline)
   // front panel in navy with the red band
-  b.rect(64, 119, 192, 40, IDX.uniform)
-  b.rect(64, 119, 192, 2, IDX.uniformShade)
+  b.rect(64, 119, 192, 40, IDX.brandNavy)
+  b.rect(64, 119, 192, 2, IDX.brandNavyShade)
   b.rect(64, 127, 192, 4, IDX.red)
   b.rect(64, 131, 192, 1, IDX.redShade)
-  b.rect(64, 152, 192, 7, IDX.uniformShade)
+  b.rect(64, 152, 192, 7, IDX.brandNavyShade)
   b.rect(63, 119, 1, 40, IDX.outline)
   b.rect(256, 119, 1, 40, IDX.outline)
   b.rect(60, 159, 200, 3, IDX.silhouette)
@@ -128,7 +128,7 @@ export function buildCounter(): IndexBuffer {
 export function buildCounterProps(): IndexBuffer {
   const b = new IndexBuffer(NATIVE_W, NATIVE_H)
   // leaflet holder
-  const leaflets = [IDX.uniformLight, IDX.red, IDX.shirt]
+  const leaflets = [IDX.brandNavyLight, IDX.red, IDX.shirt]
   leaflets.forEach((c, i) => {
     const x = 72 + i * 6
     b.rect(x, 88 + i, 6, 12 - i, IDX.outline)

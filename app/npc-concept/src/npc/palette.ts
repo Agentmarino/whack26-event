@@ -48,6 +48,9 @@ export const PALETTE_DEF = [
   ['J', 'plantShade', '#2a5534'],
   ['K', 'pot', '#7b5a44'],
   ['N', 'standPanel', '#06375a'],
+  ['M', 'brandNavy', '#004977'], // stand and counter navy, separate from the uniform
+  ['L', 'brandNavyShade', '#00304f'],
+  ['V', 'brandNavyLight', '#2a6f9c'],
 ] as const
 
 export type ColorName = (typeof PALETTE_DEF)[number][1]

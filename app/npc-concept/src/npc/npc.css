@@ -40,9 +40,11 @@
   background: transparent;
   cursor: pointer;
 }
+/* Yellow ring with a dark halo on both sides: at least 3:1 on the navy stand and the beige counter. */
 .npc-scene .npc-hotspot:focus-visible {
   outline: 0.1875rem solid var(--npc-ui-focus);
   outline-offset: 0.125rem;
+  box-shadow: 0 0 0 0.4375rem #15131c;
 }
 
 /* ---------- dialogue box ---------- */

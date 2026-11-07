@@ -77,7 +77,7 @@ export const ARM_POSES = {
   readL: arm(9, 40, 16, 42, 'grip'),
   readR: arm(38, 40, 31, 42, 'grip'),
   chinR: arm(37, 40, 27, 23, 'grip'),
-  pointDownR: arm(40, 38, 37, 50, 'pointDown'),
+  pointDownR: arm(42, 36, 46, 46, 'pointDown'),
   pointSideR: arm(41, 31, 47, 30, 'pointRight'),
   tapUpR: arm(42, 41, 50, 51, 'pointDown'),
   tapDownR: arm(42, 42, 50, 53, 'pointDown', true),
@@ -395,7 +395,7 @@ export class NpcEngine {
         f.bubbleDots = rm ? 3 : 1 + (Math.floor(st / 400) % 3)
         break
       case 'explaining':
-        f.R = !rm && Math.floor(st / 450) % 2 === 1 ? { ...A.pointDownR, hand: pt(37, 51) } : A.pointDownR
+        f.R = !rm && Math.floor(st / 450) % 2 === 1 ? { ...A.pointDownR, hand: pt(46, 47) } : A.pointDownR
         f.eyes = 'open'
         break
       case 'slide-paper': {
