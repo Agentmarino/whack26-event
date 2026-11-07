@@ -44,7 +44,7 @@
       "output": {
         "applied": [
           "Pay £400 extra a month off cards",
-          "Stop bnpl (£40/month)"
+          "Stopping buy now, pay later is already in your plan (its £40/month already goes to your card)"
         ],
         "before": {
           "score": 700,
@@ -80,7 +80,7 @@
             400
           ],
           "nextCard": "Jul 2027",
-          "steps6": 12
+          "steps6": 13
         },
         "delta": {
           "m3": {
@@ -99,7 +99,6 @@
             "Pay £112 extra off your Barclaycard"
           ],
           "stepsRemoved": [
-            "Stop new buy now, pay later",
             "Pay £175 extra off your Barclaycard",
             "Pay £215 extra off your Barclaycard",
             "Pay £68 extra off your Barclaycard"
@@ -188,7 +187,7 @@
               ],
               "groceries": 320,
               "transport": 130,
-              "bnpl": 0,
+              "bnpl": 40,
               "gambling": 0,
               "payday": 0,
               "cashAdvances": 0,
@@ -202,7 +201,7 @@
           "start": "2026-11-09T00:00:00.000Z",
           "scaleMax": 999,
           "bureau": "Experian",
-          "headline": "You don't have bad credit, you have very little of it. This plan builds it from zero.",
+          "headline": "Your credit utilisation and identity & stability are holding you back most.",
           "diagnosis": {
             "factors": [
               {
@@ -247,14 +246,14 @@
                 "id": "affordability",
                 "label": "Affordability",
                 "weight": 0.15,
-                "health": 100,
-                "reason": "After rent, bills, debt payments and everyday spending you have about £330 a month left. Lenders run the same sum before saying yes.",
-                "rag": "green",
-                "drag": 0,
+                "health": 60,
+                "reason": "After rent, bills, debt payments and everyday spending you have about £290 a month left. Lenders run the same sum before saying yes.",
+                "rag": "amber",
+                "drag": 6,
                 "because": {
                   "weight": 0.15,
                   "weightSource": "Our assumption, loosely based on FICO weights (https://www.myfico.com/CreditEducation/WhatsInYourScore.aspx)",
-                  "dataPoint": "net £1,680 − rent £650 − bills £221 − debt minimums £29 − everyday £450 − BNPL/gambling/payday £0 = £330",
+                  "dataPoint": "net £1,680 − rent £650 − bills £221 − debt minimums £29 − everyday £450 − BNPL/gambling/payday £40 = £290",
                   "rule": "≥£300 → 100, £100-300 → 60, £0-100 → 30, <£0 → 0",
                   "source": {
                     "label": "Financial Ombudsman DRN-5943753 (Capital One affordability)",
@@ -398,6 +397,25 @@
                 }
               },
               {
+                "id": "affordability",
+                "label": "Affordability",
+                "weight": 0.15,
+                "health": 60,
+                "reason": "After rent, bills, debt payments and everyday spending you have about £290 a month left. Lenders run the same sum before saying yes.",
+                "rag": "amber",
+                "drag": 6,
+                "because": {
+                  "weight": 0.15,
+                  "weightSource": "Our assumption, loosely based on FICO weights (https://www.myfico.com/CreditEducation/WhatsInYourScore.aspx)",
+                  "dataPoint": "net £1,680 − rent £650 − bills £221 − debt minimums £29 − everyday £450 − BNPL/gambling/payday £40 = £290",
+                  "rule": "≥£300 → 100, £100-300 → 60, £0-100 → 30, <£0 → 0",
+                  "source": {
+                    "label": "Financial Ombudsman DRN-5943753 (Capital One affordability)",
+                    "url": "https://www.financial-ombudsman.org.uk/decision/DRN-5943753.pdf"
+                  }
+                }
+              },
+              {
                 "id": "depth",
                 "label": "History depth",
                 "weight": 0.1,
@@ -415,28 +433,10 @@
                     "url": "https://www.experian.co.uk/consumer/guides/new-to-the-uk.html"
                   }
                 }
-              },
-              {
-                "id": "affordability",
-                "label": "Affordability",
-                "weight": 0.15,
-                "health": 100,
-                "reason": "After rent, bills, debt payments and everyday spending you have about £330 a month left. Lenders run the same sum before saying yes.",
-                "rag": "green",
-                "drag": 0,
-                "because": {
-                  "weight": 0.15,
-                  "weightSource": "Our assumption, loosely based on FICO weights (https://www.myfico.com/CreditEducation/WhatsInYourScore.aspx)",
-                  "dataPoint": "net £1,680 − rent £650 − bills £221 − debt minimums £29 − everyday £450 − BNPL/gambling/payday £0 = £330",
-                  "rule": "≥£300 → 100, £100-300 → 60, £0-100 → 30, <£0 → 0",
-                  "source": {
-                    "label": "Financial Ombudsman DRN-5943753 (Capital One affordability)",
-                    "url": "https://www.financial-ombudsman.org.uk/decision/DRN-5943753.pdf"
-                  }
-                }
               }
             ],
             "flags": [
+              "£40/month on buy now, pay later",
               "minimum-only payments on your Barclaycard"
             ],
             "declineWhy": [
@@ -449,8 +449,8 @@
             "bills": 220.98,
             "debtMins": 29,
             "essentials": 450,
-            "surplus": 330.02,
-            "freed": 0
+            "surplus": 290.02,
+            "freed": 40
           },
           "sim": {
             "rows": [
@@ -612,6 +612,23 @@
                   }
                 },
                 {
+                  "date": "2026-11-09T00:00:00.000Z",
+                  "title": "Stop new buy now, pay later",
+                  "instruction": "Finish your current BNPL plans but don't start new ones. That frees £40/month for your card from month 2.",
+                  "why": "affordability",
+                  "check": "No new BNPL payments in your bank feed",
+                  "because": {
+                    "rule": "R12",
+                    "name": "Cut risky spending",
+                    "dataPoint": "Bank data: BNPL £40/mo, gambling £0/mo, payday £0/mo",
+                    "source": {
+                      "label": "Which?: how to improve your credit score (Experian figures)",
+                      "url": "https://www.which.co.uk/reviews/credit-scores/article/how-to-improve-your-credit-score-am4S05w3aUIE"
+                    },
+                    "pointsSource": "Indirect: frees cash for the card paydown"
+                  }
+                },
+                {
                   "date": "2026-11-16T00:00:00.000Z",
                   "title": "Get your rent reported",
                   "instruction": "Sign up to a rent-reporting service such as CreditLadder (reports to all three agencies) for your £650 rent. It takes about 8 weeks to show.",
@@ -637,7 +654,7 @@
                   "because": {
                     "rule": "R3",
                     "name": "Card paydown",
-                    "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                    "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                     "source": {
                       "label": "Experian: how to improve your credit score",
                       "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -654,7 +671,7 @@
                   "because": {
                     "rule": "R3",
                     "name": "Card paydown",
-                    "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                    "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                     "source": {
                       "label": "Experian: how to improve your credit score",
                       "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -705,7 +722,7 @@
                   "because": {
                     "rule": "R3",
                     "name": "Card paydown",
-                    "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                    "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                     "source": {
                       "label": "Experian: how to improve your credit score",
                       "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -952,6 +969,23 @@
                   }
                 },
                 {
+                  "date": "2026-11-09T00:00:00.000Z",
+                  "title": "Stop new buy now, pay later",
+                  "instruction": "Finish your current BNPL plans but don't start new ones. That frees £40/month for your card from month 2.",
+                  "why": "affordability",
+                  "check": "No new BNPL payments in your bank feed",
+                  "because": {
+                    "rule": "R12",
+                    "name": "Cut risky spending",
+                    "dataPoint": "Bank data: BNPL £40/mo, gambling £0/mo, payday £0/mo",
+                    "source": {
+                      "label": "Which?: how to improve your credit score (Experian figures)",
+                      "url": "https://www.which.co.uk/reviews/credit-scores/article/how-to-improve-your-credit-score-am4S05w3aUIE"
+                    },
+                    "pointsSource": "Indirect: frees cash for the card paydown"
+                  }
+                },
+                {
                   "date": "2026-11-16T00:00:00.000Z",
                   "title": "Get your rent reported",
                   "instruction": "Sign up to a rent-reporting service such as CreditLadder (reports to all three agencies) for your £650 rent. It takes about 8 weeks to show.",
@@ -977,7 +1011,7 @@
                   "because": {
                     "rule": "R3",
                     "name": "Card paydown",
-                    "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                    "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                     "source": {
                       "label": "Experian: how to improve your credit score",
                       "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -994,7 +1028,7 @@
                   "because": {
                     "rule": "R3",
                     "name": "Card paydown",
-                    "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                    "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                     "source": {
                       "label": "Experian: how to improve your credit score",
                       "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -1045,7 +1079,7 @@
                   "because": {
                     "rule": "R3",
                     "name": "Card paydown",
-                    "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                    "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                     "source": {
                       "label": "Experian: how to improve your credit score",
                       "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -1505,7 +1539,7 @@
               "because": {
                 "rule": "R3",
                 "name": "Card paydown",
-                "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                 "source": {
                   "label": "Experian: how to improve your credit score",
                   "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -1521,7 +1555,7 @@
               "because": {
                 "rule": "R3",
                 "name": "Card paydown",
-                "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                 "source": {
                   "label": "Experian: how to improve your credit score",
                   "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -1537,7 +1571,7 @@
               "because": {
                 "rule": "R3",
                 "name": "Card paydown",
-                "dataPoint": "Card use 79% of £1,200; surplus £330 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
+                "dataPoint": "Card use 79% of £1,200; surplus £290 → 60% = £400/mo, then £400/mo once BNPL/gambling/payday stop; cards over 75% first, then highest APR",
                 "source": {
                   "label": "Experian: how to improve your credit score",
                   "url": "https://www.experian.co.uk/consumer/guides/improve-credit-score.html"
@@ -1732,7 +1766,7 @@
             ],
             "groceries": 320,
             "transport": 130,
-            "bnpl": 0,
+            "bnpl": 40,
             "gambling": 0,
             "payday": 0,
             "cashAdvances": 0,

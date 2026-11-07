@@ -5,7 +5,7 @@
     {
       "id": "diag-headline",
       "kind": "text",
-      "text": "You don't have bad credit, you have very little of it. This plan builds it from zero.",
+      "text": "Your credit utilisation and identity & stability are holding you back most.",
       "emote": "warm",
       "gesture": "explaining",
       "ref": {
@@ -237,7 +237,7 @@
       "start": "2026-11-09T00:00:00.000Z",
       "scaleMax": 999,
       "bureau": "Experian",
-      "headline": "You don't have bad credit, you have very little of it. This plan builds it from zero.",
+      "headline": "Your credit utilisation and identity & stability are holding you back most.",
       "diagnosis": {
         "factors": [
           {
