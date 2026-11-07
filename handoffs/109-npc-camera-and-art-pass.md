@@ -1,7 +1,7 @@
 ---
 id: 109
 title: NPC art pass, camera in, chunky businessman, iPhone first
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
