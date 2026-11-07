@@ -1,0 +1,24 @@
+{
+  "sessionId": "example-priya",
+  "step": "questions",
+  "messages": [
+    {
+      "id": "q-roll",
+      "kind": "text",
+      "text": "Your report says you're not on the electoral roll at your current address. Can you register to vote there?",
+      "emote": "neutral",
+      "gesture": "asking",
+      "writtenBy": "template"
+    }
+  ],
+  "expects": {
+    "kind": "choice",
+    "chips": [
+      "Yes, I can",
+      "No, I can't",
+      "Not sure"
+    ]
+  },
+  "result": null,
+  "paperUrl": null
+}

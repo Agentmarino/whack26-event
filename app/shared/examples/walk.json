@@ -1,0 +1,226 @@
+{
+  "note": "The request that produced each turn example, in order. Priya, all three samples, 3-month plan.",
+  "walk": [
+    {
+      "file": "turns/01-greet.json",
+      "request": {
+        "sessionId": null,
+        "input": {
+          "type": "start"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/02-ask_report.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "Let's start"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/03-ask_bank.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "sample",
+          "fileKind": "credit_report",
+          "personaId": "priya"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/04-ask_letter.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "sample",
+          "fileKind": "bank"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/05-questions-1.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "sample",
+          "fileKind": "letter"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/06-questions-2.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "A credit card"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/07-questions-3.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "3 months"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/08-questions-4.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "Yes, I can"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/09-assessing.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "No"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/10-diagnosis.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "skip"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/11-decline.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "Tell me about the letter"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/12-paper.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "Got it"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/13-coach-choose.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "Make me a plan"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/14-coach-plan-3m.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "3 months"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/15-coach-plan-6m.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "choice",
+          "value": "6 months"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    },
+    {
+      "file": "turns/16-coach-whatif.json",
+      "request": {
+        "sessionId": "example-priya",
+        "input": {
+          "type": "text",
+          "value": "What if I pay £300 a month?"
+        },
+        "settings": {
+          "plainEnglish": false
+        }
+      }
+    }
+  ],
+  "letterAck": {
+    "file": "turns/letter-ack.json",
+    "request": {
+      "sessionId": "example-priya",
+      "input": {
+        "type": "file",
+        "fileKind": "letter",
+        "fileId": "up-letter-1"
+      },
+      "settings": {
+        "plainEnglish": false
+      }
+    }
+  }
+}

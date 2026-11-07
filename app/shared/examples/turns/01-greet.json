@@ -1,0 +1,30 @@
+{
+  "sessionId": "example-priya",
+  "step": "greet",
+  "messages": [
+    {
+      "id": "greet-1",
+      "kind": "text",
+      "text": "Hello, welcome to the Capital One desk. I'll look at your credit the way a lender would, then help you fix what's holding you back.",
+      "emote": "warm",
+      "gesture": "wave",
+      "writtenBy": "template"
+    },
+    {
+      "id": "greet-2",
+      "kind": "text",
+      "text": "It takes about five minutes. Nothing here is a credit search, so it can't harm your score.",
+      "emote": "neutral",
+      "gesture": "none",
+      "writtenBy": "template"
+    }
+  ],
+  "expects": {
+    "kind": "choice",
+    "chips": [
+      "Let's start"
+    ]
+  },
+  "result": null,
+  "paperUrl": null
+}

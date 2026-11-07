@@ -1,0 +1,23 @@
+{
+  "sessionId": "example-priya",
+  "step": "ask_report",
+  "messages": [
+    {
+      "id": "ask-report",
+      "kind": "text",
+      "text": "First, your credit report. Upload it from Experian, Equifax or TransUnion, or use one of our samples.",
+      "emote": "neutral",
+      "gesture": "asking",
+      "writtenBy": "template"
+    }
+  ],
+  "expects": {
+    "kind": "file",
+    "fileKinds": [
+      "credit_report"
+    ],
+    "optional": true
+  },
+  "result": null,
+  "paperUrl": null
+}

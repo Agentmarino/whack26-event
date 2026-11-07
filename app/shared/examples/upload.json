@@ -1,0 +1,91 @@
+{
+  "request": {
+    "multipart": {
+      "file": "<experian-report.json>",
+      "fileKind": "credit_report",
+      "sessionId": "example-priya"
+    }
+  },
+  "response": {
+    "ok": true,
+    "fileId": "up-report-1",
+    "fileKind": "credit_report",
+    "fileName": "experian-report.json",
+    "findings": [
+      {
+        "label": "Score",
+        "value": "682 / 999 (Experian, Poor)",
+        "tone": "neutral"
+      },
+      {
+        "label": "Barclaycard card",
+        "value": "£1,180 of £1,500 (79%) · 28.9% APR · minimum payments · no Direct Debit",
+        "tone": "bad"
+      },
+      {
+        "label": "Aqua card",
+        "value": "£420 of £600 (70%) · 34.9% APR · minimum payments",
+        "tone": "bad"
+      },
+      {
+        "label": "All cards",
+        "value": "£1,600 of £2,100 (76%)",
+        "tone": "bad"
+      },
+      {
+        "label": "O2",
+        "value": "£28/month, paid on time",
+        "tone": "good"
+      },
+      {
+        "label": "Late payment",
+        "value": "Barclaycard, Jun 2026 (4 months ago)",
+        "tone": "bad"
+      },
+      {
+        "label": "Hard search",
+        "value": "Vanquis, 14 Sep 2026",
+        "tone": "warn"
+      },
+      {
+        "label": "Hard search",
+        "value": "Capital One, 2 Oct 2026",
+        "tone": "warn"
+      },
+      {
+        "label": "Soft search",
+        "value": "Zopa (lenders can't see this)",
+        "tone": "neutral"
+      },
+      {
+        "label": "Electoral roll",
+        "value": "Not registered at Flat 4",
+        "tone": "bad"
+      },
+      {
+        "label": "Addresses",
+        "value": "2 in the last 3 years",
+        "tone": "warn"
+      },
+      {
+        "label": "Financial associate",
+        "value": "Jordan Morgan: Joint current account (closed March 2024)",
+        "tone": "warn"
+      },
+      {
+        "label": "Defaults / CCJs",
+        "value": "None",
+        "tone": "good"
+      }
+    ],
+    "error": null
+  },
+  "errorResponse": {
+    "ok": false,
+    "fileId": null,
+    "fileKind": "credit_report",
+    "fileName": "holiday-photo.jpg",
+    "findings": [],
+    "error": "I couldn't read that one. Is it your credit report? You can try the sample instead."
+  }
+}

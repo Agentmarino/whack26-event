@@ -1,0 +1,35 @@
+{
+  "sessionId": "example-priya",
+  "step": "questions",
+  "messages": [
+    {
+      "id": "ack-letter",
+      "kind": "text",
+      "text": "Thanks, that's your Capital One letter. I'll go through it once I've seen everything.",
+      "emote": "warm",
+      "gesture": "receive-document",
+      "writtenBy": "template"
+    },
+    {
+      "id": "q-goal",
+      "kind": "text",
+      "text": "What are you hoping to get? Pick one, or tell me in your own words.",
+      "emote": "neutral",
+      "gesture": "asking",
+      "writtenBy": "template"
+    }
+  ],
+  "expects": {
+    "kind": "text",
+    "chips": [
+      "A credit card",
+      "Car finance",
+      "A mortgage",
+      "Just build my credit"
+    ],
+    "placeholder": "Or type your own",
+    "allowVoice": true
+  },
+  "result": null,
+  "paperUrl": null
+}

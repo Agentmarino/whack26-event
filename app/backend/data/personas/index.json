@@ -1,0 +1,26 @@
+[
+  {
+    "id": "priya",
+    "name": "Priya",
+    "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One",
+    "file": "priya.json",
+    "format": "profile",
+    "note": "Main demo persona. Engine Profile from PERSONAS in engine.js. The samples split it: report = everything except bank and decline, bank = bank, letter = decline"
+  },
+  {
+    "id": "mei",
+    "name": "Mei Lin",
+    "blurb": "International student, 4 months in the UK, no credit history, turned down for a phone contract",
+    "file": "mock-report-mei.json",
+    "format": "credit-coach-report/v1",
+    "note": "Report already holds bank data and the decline letter"
+  },
+  {
+    "id": "alex",
+    "name": "Alex Morgan",
+    "blurb": "Two cards at 76%, a late payment, two hard searches, turned down by Capital One",
+    "file": "mock-credit-report.json",
+    "format": "credit-coach-report/v1",
+    "note": "Report already holds bank data and the Capital One decline letter"
+  }
+]
