@@ -33,10 +33,17 @@
   image-rendering: crisp-edges;
   image-rendering: pixelated;
 }
+/* Official logo on the desk monitor: a white screen-sized box; the image inside is scaled, smoothing allowed. */
 .npc-logo {
   position: absolute;
-  object-fit: contain;
+  overflow: hidden;
+  background: #ffffff;
   pointer-events: none;
+}
+.npc-logo img {
+  position: absolute;
+  max-width: none;
+  image-rendering: auto;
 }
 .npc-hotspot {
   position: absolute;

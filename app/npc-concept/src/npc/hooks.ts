@@ -15,11 +15,11 @@ export function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Largest whole-number scale (in device pixels) at which the 160x120 scene fits.
+ * Largest whole-number scale (in device pixels) at which the 128x96 scene fits.
  * reserveRem: height kept free for the dialogue box etc., in rem so it grows with text size.
  * reserveWidthPx: width kept free (e.g. an open side panel).
  * On a phone-width screen (under 640 CSS px) the scene runs edge to edge: no side gutter.
- * Example: iPhone 15 portrait is 393 CSS px at dpr 3 = 1179 device px, so 1179 / 160 gives 7x.
+ * Example: iPhone 15 portrait is 393 CSS px at dpr 3 = 1179 device px, so 1179 / 128 gives 9x.
  */
 export function useIntegerScale(reserveRem: number, reserveWidthPx = 0) {
   const compute = () => {

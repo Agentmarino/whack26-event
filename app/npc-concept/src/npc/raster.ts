@@ -1,9 +1,9 @@
-// Tiny palette-indexed raster. Everything is drawn into a 160x120 index buffer,
+// Tiny palette-indexed raster. Everything is drawn into a 128x96 index buffer,
 // then converted to RGBA once per frame. Integer coordinates only.
 import { CHAR_INDEX } from './palette'
 
-export const NATIVE_W = 160
-export const NATIVE_H = 120
+export const NATIVE_W = 128
+export const NATIVE_H = 96
 
 export interface Sprite {
   w: number
@@ -136,6 +136,17 @@ export class IndexBuffer {
     for (let i = 0; i < this.px.length; i++) {
       const v = this.px[i]
       out[i] = v ? colors[v] : colors[background]
+    }
+  }
+}
+
+/** Replace palette indices inside a mask with their mapped index (used for glass reflections). */
+export function tintWhere(b: IndexBuffer, map: Map<number, number>, inside: (x: number, y: number) => boolean) {
+  for (let y = 0; y < b.h; y++) {
+    for (let x = 0; x < b.w; x++) {
+      const i = y * b.w + x
+      const to = map.get(b.px[i])
+      if (to !== undefined && inside(x, y)) b.px[i] = to
     }
   }
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  DebugPanel, DialogueBox, NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion,
-  type DialogueLine, type NpcHandle, type NpcSnapshot, type Speed,
+  BACKGROUND_NAMES, DebugPanel, DialogueBox, FACIAL_HAIR, NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion,
+  type Background, type DialogueLine, type FacialHair, type NpcHandle, type NpcSnapshot, type Speed,
 } from './npc'
 import { OPENING, SAMPLE, TEST_LINE } from './sample'
 
@@ -31,6 +31,8 @@ export default function App() {
   const [ambient, setAmbient] = useState(true)
   const [motionPref, setMotionPref] = useState<MotionPref>('system')
   const [green, setGreen] = useState(false)
+  const [facialHair, setFacialHair] = useState<FacialHair>('none')
+  const [background, setBackground] = useState<Background>('day')
   const [line, setLine] = useState<DialogueLine>({ id: 0, speaker: SPEAKER, text: OPENING.text })
   const [chips, setChips] = useState<string[]>(OPENING.chips)
   const [hasNext, setHasNext] = useState(false)
@@ -188,6 +190,8 @@ export default function App() {
             onFileDrop={onFileDrop}
             onPaperClick={onPaperClick}
             wordmarkSrc={LOGO_URL || undefined}
+            facialHair={facialHair}
+            background={background}
           />
           <DialogueBox
             line={line}
@@ -228,6 +232,7 @@ export default function App() {
               ['emote', snap?.emote ?? ''],
               ['gesture', snap?.gesture ?? ''],
               ['mode', snap?.mode ?? ''],
+              ['look', `${snap?.facialHair ?? ''}, ${snap?.background ?? ''}`],
               ['paper', snap?.paper ?? ''],
               ['scale', `${deviceScale}x device, ${+(NATIVE_W * scale).toFixed(2)}x${+(NATIVE_H * scale).toFixed(2)} css`],
               ['reduced motion', reduced ? 'on' : 'off'],
@@ -260,6 +265,24 @@ export default function App() {
                 >
                   Say a test line
                 </button>
+              </div>
+            </section>
+            <section>
+              <h3>Facial hair</h3>
+              <div className="npc-debug__grid">
+                {FACIAL_HAIR.map((f) => (
+                  <button key={f} type="button" data-npc-facial-hair={f} aria-pressed={facialHair === f} onClick={() => setFacialHair(f)}>
+                    {f === 'stubble' ? 'moustache + stubble' : f}
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>Background</h3>
+              <div className="npc-debug__grid">
+                {BACKGROUND_NAMES.map((b) => (
+                  <button key={b} type="button" data-npc-background={b} aria-pressed={background === b} onClick={() => setBackground(b)}>{b}</button>
+                ))}
               </div>
             </section>
             <section>
