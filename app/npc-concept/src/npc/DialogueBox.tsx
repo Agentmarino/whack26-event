@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useTypewriter, type Speed } from './hooks'
 
 export interface DialogueLine {
@@ -54,7 +54,9 @@ export function DialogueBox(props: DialogueBoxProps) {
     } else if (props.hasNext) props.onNext?.()
   }
   const advanceRef = useRef(advance)
-  advanceRef.current = advance
+  useLayoutEffect(() => {
+    advanceRef.current = advance
+  })
 
   // Space finishes the line (or goes to the next one) unless focus is on a control.
   useEffect(() => {

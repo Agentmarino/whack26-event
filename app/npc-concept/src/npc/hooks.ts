@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { NATIVE_H, NATIVE_W } from './raster'
 
 /** True when the user asked the OS for reduced motion. */
@@ -30,7 +30,9 @@ export function useIntegerScale(reserveRem: number, reserveWidthPx = 0) {
   }
   const [v, setV] = useState(compute)
   const computeRef = useRef(compute)
-  computeRef.current = compute
+  useLayoutEffect(() => {
+    computeRef.current = compute
+  })
   useEffect(() => {
     const on = () => {
       const next = computeRef.current()
@@ -66,14 +68,16 @@ export function useTypewriter(
   const done = printed >= text.length
   const onChar = useRef(opts.onChar)
   const onDone = useRef(opts.onDone)
-  onChar.current = opts.onChar
-  onDone.current = opts.onDone
+  useLayoutEffect(() => {
+    onChar.current = opts.onChar
+    onDone.current = opts.onDone
+  })
 
   useEffect(() => {
     if (done) return
     if (instant) {
-      setSt({ key: lineKey, n: text.length })
-      return
+      const id = window.setTimeout(() => setSt({ key: lineKey, n: text.length }), 0)
+      return () => window.clearTimeout(id)
     }
     const base = opts.speed === '2x' ? 14 : 28
     const prev = text[printed - 1]
