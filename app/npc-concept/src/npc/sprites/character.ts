@@ -94,7 +94,7 @@ export type BrowKey = keyof typeof BROWS
 export const MOUTH_POS = { x: 8, y: 19 }
 export const MOUTHS = {
   flat: sprite(['........', '..mmmm..', '........', '........']),
-  smile: sprite(['........', '.m....m.', '..mmmm..', '........']),
+  smile: sprite(['........', 'm......m', '.mmmmmm.', '........']),
   frown: sprite(['........', '..mmmm..', '.m....m.', '........']),
   grin: sprite(['.mmmmmm.', '.mwwwwm.', '..mnnm..', '...mm...']),
   small: sprite(['........', '..mmmm..', '..mnnm..', '...mm...']),

@@ -38,7 +38,7 @@ export default function App() {
   const systemReduced = usePrefersReducedMotion()
   const reduced = motionPref === 'system' ? systemReduced : motionPref === 'on'
   const wide = useWide()
-  const { scale, deviceScale } = useIntegerScale(16, debug && wide ? 16 * 16 + 16 : 0)
+  const { scale, deviceScale } = useIntegerScale(20, debug && wide ? 16 * 16 + 16 : 0)
 
   const lineId = useRef(0)
   const lineDone = useRef<(() => void) | null>(null)
