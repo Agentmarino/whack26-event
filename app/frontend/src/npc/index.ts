@@ -3,6 +3,8 @@
 import './npc.css'
 
 export { NpcScene, type NpcHandle, type NpcSceneProps } from './NpcScene'
+export { ExtendedScene, type ExtendedSceneLayout, type ExtendedSceneProps } from './ExtendedScene'
+export { extendedLayout } from './extend'
 export { DialogueBox, type DialogueBoxProps, type DialogueLine } from './DialogueBox'
 export { DebugPanel, type DebugPanelProps } from './DebugPanel'
 export { useIntegerScale, usePrefersReducedMotion, useTypewriter, type Speed } from './hooks'

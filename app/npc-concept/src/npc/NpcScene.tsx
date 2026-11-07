@@ -3,7 +3,7 @@ import { describeAgent } from './describe'
 import { NpcEngine, type AgentState, type Emote, type Gesture, type NpcSnapshot } from './engine'
 import type { Background, ColorName } from './palette'
 import { NATIVE_H, NATIVE_W } from './raster'
-import { PAPER_END, PAPER_SIZE, SCREEN, TRAY } from './scene'
+import { CARD_END, CARD_SIZE, PAPER_END, PAPER_SIZE, SCREEN, TRAY } from './scene'
 import type { FacialHair } from './sprites/character'
 
 export interface NpcHandle {
@@ -16,6 +16,10 @@ export interface NpcHandle {
   setTrayDoc(on: boolean): void
   setDropHover(on: boolean): void
   clearPaper(): void
+  /** 115: take the business card off the desk (call when the app shows it as an overlay). */
+  clearCard(): void
+  /** 115: where the business card lands on the desk, in viewport CSS px (null before the scene mounts). */
+  cardRect(): { x: number; y: number; width: number; height: number } | null
   setPalette(overrides: Partial<Record<ColorName, string>>): void
   /** Facial hair layer: 'moustache-stubble' (default since 111), 'moustache', 'none'. The 110 name 'stubble' still works. */
   setFacialHair(f: FacialHair | 'stubble'): void
@@ -146,6 +150,13 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
     setTrayDoc: (on) => engineRef.current?.setTrayDoc(on),
     setDropHover: (on) => engineRef.current?.setDropHover(on),
     clearPaper: () => engineRef.current?.clearPaper(),
+    clearCard: () => engineRef.current?.clearCard(),
+    cardRect: () => {
+      const r = sceneRef.current?.getBoundingClientRect()
+      const k = propsRef.current.scale
+      if (!r) return null
+      return { x: r.left + CARD_END.x * k, y: r.top + CARD_END.y * k, width: CARD_SIZE.w * k, height: CARD_SIZE.h * k }
+    },
     setPalette: (o) => engineRef.current?.setPalette(o),
     setFacialHair: (f) => engineRef.current?.setFacialHair(f),
     setBackground: (b) => engineRef.current?.setBackground(b),

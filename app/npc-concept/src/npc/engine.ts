@@ -3,7 +3,8 @@
 import { BACKGROUNDS, buildColorTable, IDX, type Background, type ColorName } from './palette'
 import { IndexBuffer, NATIVE_H, NATIVE_W } from './raster'
 import {
-  AGENT_ORIGIN, BUBBLE_AT, buildDesk, buildOffice, CALC, CALCULATOR, DESK_PLANT, drawGlass, drawMonitor, drawOfficeLife,
+  AGENT_ORIGIN, BUBBLE_AT, buildDesk, buildOffice, BUSINESS_CARD, CALC, CALCULATOR, CARD_END, CARD_START, DESK_PLANT, drawGlass,
+  drawMonitor, drawOfficeLife,
   drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT, SCREEN,
   TRAY, TRAY_DOC,
 } from './scene'
@@ -15,7 +16,7 @@ import {
 
 export const AGENT_STATES = [
   'idle', 'greeting', 'talking', 'listening', 'asking', 'receive-document', 'reading', 'thinking',
-  'explaining', 'slide-paper', 'coach',
+  'explaining', 'slide-paper', 'coach', 'slide-card',
 ] as const
 export type AgentState = (typeof AGENT_STATES)[number]
 
@@ -26,6 +27,8 @@ export const GESTURES = ['none', 'wave', 'point-down', 'point-side', 'chin', 'ta
 export type Gesture = (typeof GESTURES)[number]
 
 export type PaperState = 'none' | 'sliding' | 'ready'
+/** 115: Cap's business card on the desk. It only exists during 'slide-card'; it never stays on the desk. */
+export type CardState = 'none' | 'sliding' | 'landed'
 
 export interface NpcSnapshot {
   state: AgentState
@@ -34,6 +37,7 @@ export interface NpcSnapshot {
   mode: 'checker' | 'coach'
   trayDoc: boolean
   paper: PaperState
+  card: CardState
   dropHover: boolean
   reducedMotion: boolean
   ambient: boolean
@@ -50,6 +54,7 @@ export const SEQUENCE_MS: Partial<Record<AgentState, number>> = {
   'receive-document': 1200,
   'slide-paper': 1600,
   coach: 1300,
+  'slide-card': 1200,
 }
 const GESTURE_MS: Record<Gesture, number> = {
   none: 0, wave: 1600, 'point-down': 2000, 'point-side': 2000, chin: 2500, 'tap-calc': 2000, 'open-palm': 1800,
@@ -183,6 +188,7 @@ export class NpcEngine {
   private mode: 'checker' | 'coach' = 'checker'
   private trayDoc = false
   private paper: PaperState = 'none'
+  private card: CardState = 'none'
   private paperHover = false
   private dropHover = false
   private reduced: boolean
@@ -237,6 +243,8 @@ export class NpcEngine {
   }
   setState(s: AgentState) {
     if (this.paper === 'sliding') this.paper = 'ready'
+    // The business card leaves the desk with its state (the app shows it as an overlay once it lands).
+    this.card = s === 'slide-card' ? 'sliding' : 'none'
     this.state = s
     this.stateStart = this.t
     this.gestureV = 'none'
@@ -285,6 +293,12 @@ export class NpcEngine {
     this.paperHover = false
     this.emit()
   }
+  /** Take the business card off the desk now (the app calls this when the card overlay opens). */
+  clearCard() {
+    if (this.card === 'none') return
+    this.card = 'none'
+    this.emit()
+  }
   setAmbient(on: boolean) {
     this.ambient = on
     this.emit()
@@ -298,6 +312,7 @@ export class NpcEngine {
     if (on) {
       this.mouthOpenUntil = 0
       if (this.paper === 'sliding') this.paper = 'ready'
+      if (this.card === 'sliding') this.card = 'landed'
     }
     this.applyStateEffects()
     this.emit()
@@ -322,6 +337,7 @@ export class NpcEngine {
     this.mode = 'checker'
     this.trayDoc = false
     this.paper = 'none'
+    this.card = 'none'
     this.emoteV = 'neutral'
     this.setState('idle')
   }
@@ -333,7 +349,7 @@ export class NpcEngine {
   snapshot(): NpcSnapshot {
     return {
       state: this.state, emote: this.emoteV, gesture: this.gestureV, mode: this.mode, trayDoc: this.trayDoc,
-      paper: this.paper, dropHover: this.dropHover, reducedMotion: this.reduced, ambient: this.ambient,
+      paper: this.paper, card: this.card, dropHover: this.dropHover, reducedMotion: this.reduced, ambient: this.ambient,
       facialHair: this.facialHairV, background: this.backgroundV,
     }
   }
@@ -365,6 +381,10 @@ export class NpcEngine {
     }
     if (this.state === 'slide-paper' && this.paper === 'sliding' && st >= 1000) {
       this.paper = 'ready'
+      changed = true
+    }
+    if (this.state === 'slide-card' && this.card === 'sliding' && st >= 1000) {
+      this.card = 'landed'
       changed = true
     }
     if (this.state === 'coach' && this.mode !== 'coach' && st >= 450) {
@@ -451,10 +471,12 @@ export class NpcEngine {
         f.R = !rm && Math.floor(st / 450) % 2 === 1 ? A.explainTapR : A.explainR
         f.eyes = 'open'
         break
-      case 'slide-paper': {
-        // the flat hand rides on the sheet as it slides to the front edge
+      case 'slide-paper':
+      case 'slide-card': {
+        // the flat hand rides on the sheet (or the business card, same rows) as it slides to the front edge
+        const [from, to] = this.state === 'slide-card' ? [CARD_START, CARD_END] : [PAPER_START, PAPER_END]
         const p = clamp01((T - 250) / 750)
-        const paperY = Math.round(PAPER_START.y + (PAPER_END.y - PAPER_START.y) * p)
+        const paperY = Math.round(from.y + (to.y - from.y) * p)
         const handY = paperY + 2 - AGENT_ORIGIN.y
         if (T < 1000) f.R = { elbow: pt(44, 49 + Math.round(p * 3)), hand: pt(27, handY), sprite: 'flat', grounded: true }
         else if (T < 1200) f.R = A.retractR
@@ -564,6 +586,7 @@ export class NpcEngine {
     drawTray(b)
     if (this.trayDoc) b.blit(TRAY_DOC, TRAY.x + 3, TRAY.y + 1)
     if (this.paper !== 'none') this.drawPaper()
+    if (this.card !== 'none') this.drawCard()
     if (this.dropHover) {
       const phase = this.reduced ? 0 : Math.floor(t / 120)
       b.dashed(TRAY.x - 2, TRAY.y - 2, TRAY.w + 4, TRAY.h + 4, IDX.glow, phase)
@@ -616,6 +639,16 @@ export class NpcEngine {
     } else if (this.paper === 'ready' && this.paperHover) {
       b.frame(PAPER_END.x - 1, PAPER_END.y - 1, w + 2, h + 2, IDX.glow)
     }
+  }
+
+  /** The business card slides with the same timing as the sheet (250 to 1000 ms), then waits at the front edge. */
+  private drawCard() {
+    let y = CARD_END.y
+    if (this.card === 'sliding') {
+      const p = clamp01((this.t - this.stateStart - 250) / 750)
+      y = Math.round(CARD_START.y + (CARD_END.y - CARD_START.y) * p)
+    }
+    this.screen.blit(BUSINESS_CARD, CARD_START.x, y)
   }
 
   private drawHead(f: Frame, ox: number, oy: number) {

@@ -66,6 +66,33 @@
   box-shadow: 0 0 0 0.4375rem #15131c;
 }
 
+/* ---------- extended scene (116) ---------- */
+/* Fills its parent. One stacking layer (isolation), so the scene's own z-indexes (logo 0, canvas 1, hotspots 2)
+   never rise above the app's dialogue box or panels. The extension canvas is behind the base scene. */
+.npc-ext {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #dde3e8;
+}
+.npc-ext__canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  pointer-events: none;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+.npc-ext__base {
+  position: absolute;
+  z-index: 1;
+}
+.npc-ext__base .npc-scene {
+  margin: 0;
+}
+
 /* ---------- dialogue box ---------- */
 .npc-dialogue {
   box-sizing: border-box;

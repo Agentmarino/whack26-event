@@ -37,6 +37,37 @@ npc.current?.setState('reading'); npc.current?.emote('concerned'); npc.current?.
 
 **API since 108 (109 notes):** `NpcHandle` and the `DialogueBox` props are unchanged. `NpcScene` gained one optional prop, `wordmarkSrc` (see Logo). `useIntegerScale` keeps its signature; on screens under 640 CSS px it no longer reserves a side gutter. `NpcEngine` gained `setOutput()` and `setWordmarkVisible()` (used by `NpcScene`). The canvas backing store is now device resolution, not 160x120: read pixels from a screenshot, not from `getImageData` at native coordinates.
 
+## Extended scene (116): the scene filling the screen
+Since 116 both copies of the kit are the same again (`src/npc/` here is the source of truth; copy the folder to `app/frontend/src/npc/` after every change, `diff -r` must be empty). `ExtendedScene` fills its parent with the scene: the engine still draws the fixed 128 x 96 frame (the "base"), unchanged, and a second canvas behind it paints more of the same room around it, at the same whole device scale and on the same device-pixel grid. Nothing is ever stretched.
+
+```tsx
+import { ExtendedScene, type ExtendedSceneLayout } from './npc'
+<div style={{ position: 'relative', height: '100dvh' }}>          {/* any positioned parent; the scene fills it */}
+  <ExtendedScene ref={npc} reserveBottom={230} reserveTop={56} reducedMotion={reduced} wordmarkSrc={LOGO}
+    onLayout={(l: ExtendedSceneLayout) => ...} onPaperClick={...} onFileDrop={...} onChange={...} />
+  {/* the app's dialogue box over the bottom 230 px, corner icons in the top 56 px */}
+</div>
+```
+- **Props:** everything `NpcScene` takes except `scale`, plus `reserveBottom` (CSS px at the bottom covered by the dialogue box), `reserveTop` (CSS px for corner icons, default 0) and `onLayout({ scale, base: { left, top, width, height } })` (the base box in CSS px relative to the `ExtendedScene` element; called when it changes). The ref is the same `NpcHandle`; `setPalette` and `setBackground` through it repaint the extension too, and a `background` prop or a change seen in the engine snapshot does the same.
+- **Scale rule:** k (device px per native px) = min(floor(W x dpr / 128), floor((H - reserveTop - reserveBottom) x dpr / 96)), at least 1; scale = k / dpr CSS px. So the width sets the scale unless the base would not fit between the reserves. iPhone 15 (393 x 659, dpr 3, reserve 230): 9x, base 384 x 288 CSS px. 390 x 844: 9x. Desktop 1440 x 900 (reserve 260): 6x, 768 x 576; the same with the scene at 60% width (side panel open): 6x.
+- **Placement:** the base is centred horizontally (whole CSS px). Of the leftover height a quarter, at most 6 native rows, goes below the base and the rest above it, so the desk front, monitor, tray and Cap always sit just above `reserveBottom` and a tall screen gets more ceiling. If even 1x does not fit, the bottom wins and the ceiling is cut.
+- **Pixel grid:** both canvases sit on whole CSS px (the same relative-offset snap as `NpcScene`, rerun after every move); the extension is drawn at a device offset so its native pixels line up with the base's exactly, smoothing off, `image-rendering: pixelated`. Checked in WebKit at iPhone 15, 390 x 844, 1440 x 900 at dpr 1 and 2 (6.5 CSS px per native px), 60% width and a wrapper at a fractional page offset: every native block one flat colour, seams included.
+- **Layers:** `.npc-ext` is one stacking layer (`isolation: isolate`), so the scene's own z-indexes never rise above the app's dialogue box or panel.
+
+What the extension draws (`extend.ts`, base coordinates: the base is x 0..127, y 0..95), all in palette indices so colour modes and day/evening apply, static (no colleagues, no flicker):
+| Where | Rows / columns | What |
+|---|---|---|
+| Rail | y -2 to 2 | The base rail (y 0 to 1 `glassFrame`, y 2 `red`) gets one more `glassFrame` row (y -1) and a `glassFrameLight` top edge (y -2), and runs on sideways |
+| Transom | y -18 to -3 | An upper glass pane: the office ceiling behind it with one row of light panels (y -11 to -10, lip -9), mullions and the outer frames continuing up, the diagonal reflections continuing across it |
+| Head rail | y -21 to -19 | `officeWallShade` line, then 2 rows `glassFrame`: where the glass wall meets our ceiling |
+| Our ceiling | y -22 and up | `ceiling`, light panels at the base rhythm (22 px wide every 44 px from x 8); rows grow from 2 to 6 px tall and spread out as they come closer (first lip at y -27) |
+| Sides | x < 0, x >= 128, y 3 to 72 | The glass wall continues: a seam mullion (x -1 `glassFrameLight` against the base frame at x 0; x 127 frame + x 128 light), more mullions every 56 px; behind them the same ceiling lights, back wall, sky and city (tiled every 128 px; piers every 32), floor, frosted band (y 42 to 46) and reflections (the base's two band pairs continue across the mullions and repeat every 96 px). Desk B runs on 16 px past x 127 with a tall plant at x 157; further panes alternate a back desk with a monitor seen from behind and a low cabinet with a tall plant |
+| Counter | y 73 to 95 | Its rows are uniform, so the desk top and front just run on sideways |
+| Below | y 96, 97, 98 and down | The desk front's dark bottom gets one more `brandNavyShade` row and an `outline` edge; then our floor in `floor` with `floorLight` lines that open up towards us (y 100, 104, 111, 121, ...) |
+| Base region | x 0..127, y 0..95 | The static base (office, glass, desk) under the engine's canvas, so no gap can ever show through |
+
+Every edge row and column next to the base continues the base's own colours, so there is no visible seam. To change the setting, change `scene.ts` and `extend.ts` together; the shared constants (`LIGHTS`, `LIGHT_W`, `MULLIONS`, `FROSTED`, `WINDOW_BAND`, `buildings`, `drawTallPlant`, `shineMap`, `frostMap`) are exported from `scene.ts` for that. `NpcScene` and `useIntegerScale` still work as before for a fixed-size scene.
+
 ## Style
 Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`, never in the app or the repo). "Do more with less": few, chunky pixels, each one deliberate.
 
@@ -227,7 +258,7 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 | `thinking` | right hand to chin, forearm up across the chest (1); eyes up-right; bubble dots 3 | dots step every 400 ms |
 | `explaining` | right hand points down at the front-centre of the desk, where the summary lands (2: tap +1 px) | 450 ms per frame |
 | `slide-paper` | flat right hand rides on the sheet as it slides to the front edge, retract (1), glow 4 | push 250 to 1000 ms, retract to 1200 ms, glow 1000 to 1600 ms (once); sheet clickable from 1000 ms |
-| `slide-card` (115, app/frontend kit only) | the `slide-paper` push with a small business card (white, red end) at native x 57 so the hand does not cover it; the card leaves the desk once it lands | push 250 to 1000 ms; rests 220 ms, then the frontend grows it into the full-screen business card over 460 ms (at once with reduced motion) |
+| `slide-card` (115) | the `slide-paper` push with a small business card (white, red end) at native x 57 so the hand does not cover it; the card leaves the desk once it lands | push 250 to 1000 ms; rests 220 ms, then the frontend grows it into the full-screen business card over 460 ms (at once with reduced motion) |
 | `coach` | left hand to the face 2, glasses on, rest, planner up | 0, 250, glasses at 450, 600, 850 ms; glasses stay on in every later state (coach mode) |
 
 Emotes change eyebrows, eyes and mouth together:

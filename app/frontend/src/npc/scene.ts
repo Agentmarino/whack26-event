@@ -36,19 +36,28 @@ export const PLANT = { x: 107, y: 62 }
 export const BUBBLE_AT = { x: 82, y: 5 }
 
 // ---------- office behind the glass ----------
-const MULLIONS = [42, 98]
+// (116: the constants ExtendedScene continues sideways and upwards are exported; the drawing is unchanged.)
+/** Mullions (2 px: light edge, then dark) between the panes. The outer frames are the 1 px columns x 0 and 127. */
+export const MULLIONS = [42, 98]
 /** Frosted band, just under the back desk tops (111: moved down from y 37 so the colleagues' arms show). */
-const FROSTED = { y: 42, h: 5 }
+export const FROSTED = { y: 42, h: 5 }
 /** Head top-left of each seated colleague; their forearms rest on the back desk top at y 41. */
 const COLLEAGUE_A = { x: 21, y: 24 } // at desk A, their monitor beside them
 const COLLEAGUE_B = { x: 110, y: 24 } // at desk B with a mug
-const LIGHTS = [8, 52, 96]
+/** Ceiling light panels: 22 px wide, every 44 px from x 8 (rows 5-6 lit, row 7 the shade lip). */
+export const LIGHTS = [8, 52, 96]
+export const LIGHT_W = 22
+/** The window band on the back wall: sky from y 12, the city stands on y 34; wall piers every 32 px from x 30. */
+export const WINDOW_BAND = { top: 12, base: 34, pierX: 30, pierEvery: 32, pierW: 3 }
 
-function buildings(b: IndexBuffer, x0: number, x1: number, base: number) {
-  // far row: tall, plain; near row: lower, with window pairs. Fixed shapes, no randomness.
-  const far = [[0, 9, 16], [10, 19, 21], [20, 27, 14], [28, 39, 19], [40, 47, 23], [48, 59, 15], [60, 69, 20], [70, 81, 13], [82, 91, 18], [92, 103, 22], [104, 115, 16], [116, 127, 20]]
+/** Far row: tall, plain; near row: lower, with window pairs. Fixed shapes, no randomness. Together they span x 0..127. */
+const CITY_FAR = [[0, 9, 16], [10, 19, 21], [20, 27, 14], [28, 39, 19], [40, 47, 23], [48, 59, 15], [60, 69, 20], [70, 81, 13], [82, 91, 18], [92, 103, 22], [104, 115, 16], [116, 127, 20]]
+const CITY_NEAR = [[3, 14, 24], [18, 27, 27], [31, 44, 22], [50, 61, 26], [66, 77, 23], [82, 93, 27], [97, 108, 24], [112, 123, 26]]
+
+export function buildings(b: IndexBuffer, x0: number, x1: number, base: number) {
+  const far = CITY_FAR
   for (const [a, z, top] of far) b.rect(Math.max(a, x0), top, Math.min(z, x1) - Math.max(a, x0) + 1, base - top, IDX.cityFar)
-  const near = [[3, 14, 24], [18, 27, 27], [31, 44, 22], [50, 61, 26], [66, 77, 23], [82, 93, 27], [97, 108, 24], [112, 123, 26]]
+  const near = CITY_NEAR
   for (const [a, z, top] of near) {
     const l = Math.max(a, x0)
     const r = Math.min(z, x1)
@@ -58,34 +67,38 @@ function buildings(b: IndexBuffer, x0: number, x1: number, base: number) {
   }
 }
 
+/** The tall office plant: pot at (potX, 40), 8x7, behind the frosted band; leaves in chunky clumps above it. */
+export function drawTallPlant(b: IndexBuffer, potX: number, ox = 0, oy = 0) {
+  b.rect(potX + ox, 40 + oy, 8, 7, IDX.officePot)
+  const leaves: [number, number, number, number][] = [[2, 14, 3, 8], [-1, 19, 4, 7], [5, 17, 4, 9], [-2, 27, 4, 8], [6, 25, 4, 9], [1, 31, 5, 9]]
+  for (const [dx, y, w, h] of leaves) {
+    b.rect(potX + dx + ox, y + oy, w, h, IDX.officePlant)
+    b.rect(potX + dx + w - 1 + ox, y + 1 + oy, 1, h - 1, IDX.officePlantShade)
+  }
+}
+
 /** Static part of the office: ceiling, back wall with windows on the city, desks, the tall plant. */
 export function buildOffice(): IndexBuffer {
   const b = new IndexBuffer(NATIVE_W, NATIVE_H)
   // ceiling with three light panels
   b.rect(0, 0, NATIVE_W, 10, IDX.ceiling)
   for (const x of LIGHTS) {
-    b.rect(x, 5, 22, 2, IDX.ceilingLight)
-    b.rect(x, 7, 22, 1, IDX.officeWallShade)
+    b.rect(x, 5, LIGHT_W, 2, IDX.ceilingLight)
+    b.rect(x, 7, LIGHT_W, 1, IDX.officeWallShade)
   }
   // back wall and the long window band (sky, city), split by wall piers
   b.rect(0, 10, NATIVE_W, 36, IDX.officeWall)
   b.rect(0, 10, NATIVE_W, 1, IDX.officeWallShade)
-  const top = 12
-  const base = 34
+  const { top, base } = WINDOW_BAND
   b.rect(0, top, NATIVE_W, 10, IDX.skyTop)
   b.rect(0, top + 10, NATIVE_W, base - top - 10, IDX.skyLow)
   buildings(b, 0, NATIVE_W - 1, base)
-  for (let x = 30; x < NATIVE_W; x += 32) b.rect(x, top, 3, base - top, IDX.officeWall)
+  for (let x = WINDOW_BAND.pierX; x < NATIVE_W; x += WINDOW_BAND.pierEvery) b.rect(x, top, WINDOW_BAND.pierW, base - top, IDX.officeWall)
   b.rect(0, base, NATIVE_W, 2, IDX.officeWallShade)
   // floor
   b.rect(0, 46, NATIVE_W, NATIVE_H - 46, IDX.officeFloor)
   // tall plant in the back left corner (leaves in chunky clumps, pot behind the frosted band)
-  b.rect(3, 40, 8, 7, IDX.officePot)
-  const leaves: [number, number, number, number][] = [[5, 14, 3, 8], [2, 19, 4, 7], [8, 17, 4, 9], [1, 27, 4, 8], [9, 25, 4, 9], [4, 31, 5, 9]]
-  for (const [x, y, w, h] of leaves) {
-    b.rect(x, y, w, h, IDX.officePlant)
-    b.rect(x + w - 1, y + 1, 1, h - 1, IDX.officePlantShade)
-  }
+  drawTallPlant(b, 3)
   // back desk A (left) with colleague A's monitor, back desk B (right)
   b.rect(12, 41, 32, 2, IDX.deskBack)
   b.rect(12, 43, 32, 4, IDX.deskBackShade)
@@ -166,7 +179,7 @@ export function drawOfficeLife(b: IndexBuffer, t: number, animate: boolean) {
 
 /** Lighter index for each office colour: what a reflection on the glass turns it into. */
 let SHINE: Map<number, number> | null = null
-function shineMap() {
+export function shineMap() {
   SHINE ??= new Map([
     [IDX.skyTop, IDX.skyShine], [IDX.skyLow, IDX.skyLowShine], [IDX.cityFar, IDX.cityShine], [IDX.cityNear, IDX.cityFar],
     [IDX.cityWindow, IDX.skyLowShine], [IDX.officeWall, IDX.wallShine], [IDX.officeWallShade, IDX.officeWall],
@@ -178,7 +191,7 @@ function shineMap() {
 }
 
 let FROST: Map<number, number> | null = null
-function frostMap() {
+export function frostMap() {
   if (FROST) return FROST
   const darker = [IDX.cityNear, IDX.cityFar, IDX.officeWallShade, IDX.deskBackShade, IDX.monitorBack, IDX.officePlant,
     IDX.officePlantShade, IDX.colleagueTopA, IDX.colleagueTopB, IDX.colleagueTopAShade, IDX.colleagueTopBShade,
