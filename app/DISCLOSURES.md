@@ -14,6 +14,8 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | Claude API (Anthropic) incl. web search tool | AI calls in the backend | mihael |
 | Impeccable (pbakaus/impeccable, Apache 2.0) | Claude Code design skill: UI design, critique, polish | partner |
 | Playwright MCP (@playwright/mcp) | Lets Claude Code open and screenshot the app to check the UI | partner, mihael (108 visual and accessibility checks) |
+| Playwright library 1.56.1 (Apache-2.0) with WebKit 26 (`iPhone 15` profile) and Chromium headless shell | 109: screenshots of every state, emote and gesture, contact sheets and the iPhone/desktop checks. Run from a script outside the repo; not part of the app | mihael |
+| Pillow 12.1.1 (Python, MIT-CMU) | 109: builds the contact sheets and the pixel test (every scaled block one flat colour). Outside the repo | mihael |
 | Claude Code web search | 108: looked for a pixel-art Claude Code skill. Candidates found (all MIT): sprite-forge (tdimino/claude-code-minoan), pixel-art (wanshuiyin/Auto-claude-code-research-in-sleep), pixel-art-sprites (AbsolutelySkilled). None used, see handoff 108 RESULT | mihael |
 
 ## Libraries
@@ -37,4 +39,6 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 |---|---|---|
 | Press Start 2P font by CodeMan38 | 108 dialogue box and page heading | https://fonts.google.com/specimen/Press+Start+2P via https://fontsource.org/fonts/press-start-2p, SIL Open Font License 1.1 |
 | Pixel art: credit agent, stand, hall, props, pixel font for the wordmark | 108 NPC concept | Drawn by us in code during the event (`app/npc-concept/src/npc/`). No outside art assets |
+| Pixel art redraw: chunky businessman agent, close-up stand, counter props | 109 NPC art pass | Drawn by us in code during the event (`app/npc-concept/src/npc/`). Original character; the style brief named a generic "pixel detective" sprite look only. No outside art assets |
+| "Capital One" name | 109 stand wordmark (plain pixel text in our own font) | Capital One name used with the sponsor's permission for their challenge. No logo file added yet; add a logo row here once `app/npc-concept/public/brand/capital-one-logo.svg` or `.png` is added |
 | "Capital One" name and navy/red colours | 108 stand placeholder wordmark and palette | Capital One branding allowed by the team (handoff 108). The wordmark is plain pixel text, not their logo; swap for the official asset. Hex values are approximations |

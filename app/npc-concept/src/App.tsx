@@ -165,7 +165,7 @@ export default function App() {
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Lender&rsquo;s Eyes &middot; credit agent</h1>
+        <h1>Lender&rsquo;s Eyes<span className="page-head__sub"> &middot; credit agent</span></h1>
         <button
           type="button"
           className="page-debug-toggle"

@@ -72,6 +72,11 @@ body {
     font-size: 0.625rem;
     line-height: 1.4;
   }
+  /* no room on a phone, and no D key either */
+  .page-head__sub,
+  .page-debug-toggle kbd {
+    display: none;
+  }
   .page-main {
     gap: 0.75rem;
   }
