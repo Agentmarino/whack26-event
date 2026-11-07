@@ -17,6 +17,10 @@ export interface Settings {
   readAloud: boolean
   voiceRate: VoiceRate
   colour: ColourMode
+  /** 116: VT323 in the dialogue box, menus and windows instead of Press Start 2P (font-options.png). */
+  readable: boolean
+  /** 116: a soft blip per letter while a line types (never during read aloud). */
+  blip: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -27,6 +31,8 @@ export const DEFAULT_SETTINGS: Settings = {
   readAloud: false,
   voiceRate: 1,
   colour: 'standard',
+  readable: false,
+  blip: false,
 }
 
 const KEY = 'whack26.settings.v1'

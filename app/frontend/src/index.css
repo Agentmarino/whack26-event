@@ -745,3 +745,576 @@ dialog.bizcard-dialog::backdrop {
     scroll-behavior: auto !important;
   }
 }
+
+/* =================================================================================================
+   116: the game screen. The scene fills the screen; Cap's words come up in a classic dialogue box
+   over it; data moments get a small item window; history and cards live in a notebook side panel.
+   ================================================================================================= */
+
+/* The game font (font-options.png). Press Start 2P in the dialogue box, menus, name plate and item
+   windows, at --pf: a whole px size whose font pixel (1/8 em) is a whole number of device pixels, so the
+   letters stay crisp (App sets it on .game: 16px on a phone, 24px on a wide screen, more with bigger text).
+   VT323 everywhere else (the notebook, sheets, cards), and in the box too when App sets
+   data-font="vt323" on .game ("Readable font", or bigger text on a phone).
+   font-size-adjust evens out VT323's size; Press Start 2P never gets it (it would land between pixels). */
+:root {
+  --font-vt: 'VT323', ui-monospace, monospace;
+  --font-body: var(--font-vt);
+  --font-pixel: var(--font-vt);
+  font-size-adjust: 0.42;
+}
+/* The paper overlay stays as 114 made it: a document to read and download, in Atkinson Hyperlegible with
+   Press Start 2P tags. */
+[data-testid='paper-sheet'] {
+  --font-body: 'Atkinson Hyperlegible', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-pixel: 'Press Start 2P', ui-monospace, monospace;
+  font-family: var(--font-body);
+  font-size-adjust: none;
+}
+/* Sizes in the box and windows. Press Start 2P: --pf. VT323: rem sizes that follow the text size. */
+.game {
+  --font-game: 'Press Start 2P', ui-monospace, monospace;
+  --pf: 16px;
+  --t-dlg: var(--pf);
+  --lh-dlg: calc(var(--pf) * 1.5);
+  --t-row: var(--pf);
+  --lh-row: calc(var(--pf) * 1.25);
+  --t-ui: var(--pf);
+  --lh-ui: calc(var(--pf) * 1.25);
+  --t-win: var(--pf);
+  --t-win-fact: var(--pf);
+  --t-small: var(--pf);
+  --adj: none;
+}
+.game[data-font='vt323'] {
+  --font-game: var(--font-vt);
+  --t-dlg: 1.375rem;
+  --lh-dlg: 1.2;
+  --t-row: 1.3125rem;
+  --lh-row: 1.05;
+  --t-ui: 1.25rem;
+  --lh-ui: 1.1;
+  --t-win: 1.1875rem;
+  --t-win-fact: 1.125rem;
+  --t-small: 1.125rem;
+  --adj: 0.42;
+}
+
+.game {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--page);
+}
+.game__stage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+.game__scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.game__corner {
+  position: absolute;
+  z-index: 6;
+  top: max(0.5rem, env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.game__corner--left {
+  left: 0.5rem;
+  /* never under the notebook icon, whatever the text size: the letter button wraps instead */
+  max-width: calc(100% - 4.75rem);
+}
+.game__corner--right {
+  right: 0.5rem;
+}
+
+/* pixel icon buttons and game buttons */
+.gicon {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  background: var(--panel);
+  border: 0.1875rem solid var(--edge);
+  box-shadow: 0 0 0 0.125rem var(--panel-deep);
+  cursor: pointer;
+}
+.gbtn {
+  display: inline-flex;
+  /* 44 px targets; they grow with the text, not with the text size setting */
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-game);
+  font-size: var(--t-ui);
+  font-size-adjust: var(--adj);
+  line-height: var(--lh-ui);
+  color: var(--text);
+  background: var(--panel);
+  border: 0.1875rem solid var(--edge);
+  box-shadow: 0 0 0 0.125rem var(--panel-deep);
+  cursor: pointer;
+}
+.gbtn--primary {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+.gbtn--small {
+  font-size: var(--t-small);
+}
+/* the corner's text button stays in VT323: the pixel font at a crisp size is too wide for a phone's top bar */
+.game__corner .gbtn {
+  font-family: var(--font-vt);
+  font-size: 1.125rem;
+  font-size-adjust: 0.42;
+  line-height: 1.1;
+}
+.gbtn:active,
+.gicon:active,
+.mrow:active {
+  transform: translateY(1px);
+}
+
+/* the HUD: the item window and the dialogue box, bottom of the screen */
+.game__hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 0.5rem max(0.5rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.game__hud > * {
+  pointer-events: auto;
+}
+
+/* the dialogue box */
+.gbox {
+  position: relative;
+  min-height: 0;
+  padding: 1.375rem 0.875rem 0.375rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 0.25rem solid var(--edge);
+  box-shadow:
+    0 0 0 0.25rem var(--panel-deep),
+    inset 0 0 0 0.25rem var(--panel-deep),
+    inset 0 0.375rem 0 0.25rem var(--accent);
+  font-family: var(--font-game);
+  font-size-adjust: var(--adj);
+}
+.gbox__plate {
+  position: absolute;
+  top: -1.25rem;
+  left: 0.875rem;
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-game);
+  font-size: var(--t-ui);
+  line-height: var(--lh-ui);
+  color: var(--accent-text);
+  background: var(--accent);
+  border: 0.1875rem solid var(--edge);
+}
+.gbox__textwrap {
+  position: relative;
+  padding-right: 1.75rem;
+  cursor: pointer;
+}
+.gbox__text {
+  margin: 0;
+  font-family: var(--font-game);
+  font-size: var(--t-dlg);
+  line-height: var(--lh-dlg);
+  overflow-wrap: break-word;
+}
+/* the measurer has the text's exact width: the box's padding plus the ▼ gutter */
+.gbox__measure {
+  position: absolute;
+  top: 0;
+  left: 0.875rem;
+  right: calc(0.875rem + 1.75rem);
+  visibility: hidden;
+  pointer-events: none;
+}
+.gbox__more {
+  position: absolute;
+  right: 0.125rem;
+  bottom: 0;
+  display: flex;
+  font-size: var(--t-ui);
+  line-height: 1;
+}
+.gbox__more--blink {
+  animation: blink 0.9s steps(1) infinite;
+}
+.gbox__more--dim {
+  opacity: 0.45;
+}
+.gbox__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.gbox__status--pending {
+  color: var(--muted);
+}
+.gbox__dots::after {
+  content: '...';
+  display: inline-block;
+  width: 1.5em;
+  animation: blink 0.9s steps(1) infinite;
+}
+.gbox__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--t-ui);
+  line-height: var(--lh-ui);
+  border: 0.1875rem solid var(--warn-edge);
+}
+.gbox__cardrow {
+  padding-top: 0.25rem;
+  /* a card, like the notebook's: VT323, not the dialogue font */
+  font-family: var(--font-vt);
+  font-size-adjust: 0.42;
+}
+.gbox__explain {
+  margin-top: 0.25rem;
+  font-family: var(--font-vt);
+  font-size: 1.125rem;
+  font-size-adjust: 0.42;
+}
+.gbox__inputs {
+  margin-top: 0.5rem;
+}
+.gbox__fine {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-vt);
+  font-size: 0.875rem;
+  font-size-adjust: 0.42;
+  line-height: 1.05;
+  color: var(--muted);
+}
+
+/* the game menu: rows with a pixel ▶ cursor */
+.gmenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.gmenu--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.125rem 0.5rem;
+}
+.mrow {
+  display: flex;
+  min-height: 44px;
+  min-width: 0;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.0625rem 0.375rem 0.0625rem 0.125rem;
+  font-family: var(--font-game);
+  font-size: var(--t-row);
+  font-size-adjust: var(--adj);
+  line-height: var(--lh-row);
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 0.1875rem solid transparent;
+  cursor: pointer;
+}
+.mrow__cursor {
+  display: flex;
+  flex: none;
+  width: 1em;
+  visibility: hidden;
+}
+.mrow[data-active],
+.mrow:hover {
+  background: var(--panel-deep);
+  border-color: var(--muted);
+}
+.mrow[data-active] .mrow__cursor,
+.mrow:hover .mrow__cursor,
+.mrow:focus-visible .mrow__cursor {
+  visibility: visible;
+}
+.mrow--quiet {
+  color: var(--muted);
+}
+.mrow .chip__icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.mrow .chip__icon svg {
+  width: 0.9375rem;
+  height: 0.9375rem;
+}
+.mrow__label {
+  min-width: 0;
+}
+/* VT323 in the box: the cursor at body size, not row size */
+.game[data-font='vt323'] .mrow__cursor {
+  font-size: 1rem;
+}
+/* Big text on a phone: the row icons are decoration, so they go and each choice keeps its words on two lines */
+@media (max-width: 37.5rem) {
+  :root[data-text-size='150'] .mrow .chip__icon,
+  :root[data-text-size='125'] .mrow .chip__icon {
+    display: none;
+  }
+}
+
+/* the text field in the box */
+.gfield {
+  min-height: 2.75rem;
+  min-width: 0;
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-game);
+  /* 16px+ so iOS Safari does not zoom in on focus */
+  font-size: max(var(--t-dlg), 16px);
+  font-size-adjust: var(--adj);
+  color: var(--text);
+  background: var(--panel-deep);
+  border: 0.1875rem solid var(--edge);
+}
+.gfield::placeholder {
+  color: var(--muted);
+}
+
+/* the item window above the box */
+.gwin {
+  /* floats above the box, over the right of the desk (not Cap, the monitor or the tray); never takes the box's room */
+  position: absolute;
+  right: 0.5rem;
+  bottom: calc(100% + 0.25rem);
+  /* about 18 letters a line in the pixel font, never more than 60% of the box */
+  width: min(18em, 60%);
+  padding: 0.25rem 0.5rem 0.375rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0.1875rem solid var(--ink);
+  box-shadow:
+    0 0 0 0.1875rem var(--edge),
+    0.1875rem 0.1875rem 0 0.1875rem var(--panel-deep);
+  font-family: var(--font-game);
+  font-size-adjust: var(--adj);
+  animation: gwin-pop 0.18s steps(3);
+}
+@keyframes gwin-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+.gwin__tag {
+  margin: 0;
+  font-family: var(--font-vt);
+  font-size: 1.0625rem;
+  font-size-adjust: 0.42;
+  line-height: 1;
+  color: var(--ink-muted);
+}
+.gwin__title {
+  margin: 0.0625rem 0 0;
+  font-size: var(--t-win);
+  line-height: var(--lh-row);
+}
+.gwin__fact {
+  margin: 0.125rem 0 0;
+  font-size: var(--t-win-fact);
+  line-height: var(--lh-row);
+}
+.gwin__health {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+.gwin__word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.3125rem;
+  font-size: var(--t-win-fact);
+  line-height: var(--lh-row);
+  border: 0.125rem solid;
+}
+.gwin__bar {
+  display: inline-flex;
+  gap: 0.125rem;
+}
+.gwin__bar i {
+  width: 0.5625rem;
+  height: 0.6875rem;
+  background: var(--paper-line);
+  border: 0.125rem solid var(--ink);
+}
+.gwin__bar i.on.tone-bad {
+  background: var(--bad-edge);
+}
+.gwin__bar i.on.tone-warn {
+  background: var(--warn-edge);
+}
+.gwin__bar i.on.tone-good {
+  background: var(--good-edge);
+}
+.gwin__chart {
+  display: block;
+  width: 100%;
+  height: 1.75rem;
+  margin-top: 0.25rem;
+  fill: var(--chart-a);
+}
+.gwin__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+.gwin .gbtn {
+  min-height: 44px;
+  padding: 0 0.5rem;
+  font-size: var(--t-small);
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--ink);
+  box-shadow: none;
+}
+
+/* On a phone the window takes the box's width, so it stays short enough to sit on the floor between the
+   desk and the box; with big text it also drops its tag line (the tag is in the window's name) */
+@media (max-width: 37.5rem) {
+  .gwin {
+    left: 0.5rem;
+    width: auto;
+  }
+  :root[data-text-size='150'] .gwin__tag,
+  :root[data-text-size='125'] .gwin__tag {
+    display: none;
+  }
+}
+
+/* the notebook side panel */
+.panel {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  background: var(--panel-deep);
+  border-left: 0.25rem solid var(--edge);
+  box-shadow: -0.25rem 0 0 0.1875rem var(--panel-deep);
+  transform: translateX(105%);
+  transition: transform 0.24s steps(6);
+  font-family: var(--font-vt);
+}
+.panel[data-open] {
+  transform: none;
+}
+.panel--side {
+  width: 40%;
+}
+.panel--sheet {
+  left: 0;
+  width: 100%;
+  border-left: 0;
+}
+.panel__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem 0;
+  background: var(--panel);
+  border-bottom: 0.25rem solid var(--edge);
+}
+.panel__tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+.panel__tab {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.875rem;
+  font-family: var(--font-vt);
+  font-size: 1.375rem;
+  color: var(--muted);
+  background: var(--panel-deep);
+  border: 0.1875rem solid var(--edge);
+  border-bottom: 0;
+  cursor: pointer;
+}
+.panel__tab[aria-selected='true'] {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+.panel__head .gicon {
+  margin-bottom: 0.375rem;
+}
+.panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 0.75rem calc(2rem + env(safe-area-inset-bottom));
+}
+.panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.panel__empty {
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: none;
+  }
+  .gwin {
+    animation: none;
+  }
+}
+
+/* 116: on a wide screen the scene is big, so the words can be too */
+@media (min-width: 64rem) {
+  /* wide enough that most choices sit on one line in the pixel font */
+  .game__hud {
+    max-width: 56rem;
+  }
+  .game[data-font='vt323'] {
+    --t-dlg: 1.75rem;
+    --t-row: 1.5rem;
+    --t-win: 1.375rem;
+    --t-win-fact: 1.25rem;
+  }
+  .panel__body {
+    font-size: 1.25rem;
+  }
+}

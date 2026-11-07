@@ -72,6 +72,16 @@ async function toReport(page) {
   await settle(page)
   await drain(page)
 }
+/** 116: tap a menu row, paging with More until it shows (menus page when they do not fit). */
+async function menuPick(page, selector) {
+  for (let i = 0; i < 6; i++) {
+    if (await page.locator(selector).first().isVisible().catch(() => false)) return page.locator(selector).first().click()
+    const more = page.locator('[data-action="menu-more"]')
+    if (!(await more.count())) break
+    await more.click()
+  }
+  return page.locator(selector).first().click()
+}
 const shot = async (page, name) => {
   await page.waitForTimeout(400)
   await page.screenshot({ path: `${out}check-${name}.png` })
@@ -122,7 +132,7 @@ const shot = async (page, name) => {
   const fc = await chooser
   await fc.setFiles({ name: 'holiday-photo.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('not a report') })
   await settle(page)
-  await page.locator('[data-entry="notice"]').waitFor({ timeout: 5000 })
+  await page.locator('.gbox [data-entry="notice"]').waitFor({ timeout: 5000 })
   await shot(page, 'upload-failed')
   ok('a failed upload shows a friendly notice and keeps Upload / Use a sample', (await mode(page)) === 'input' && (await page.locator('[data-action="sample"]').count()) === 1)
   await ctx.close()
@@ -145,13 +155,13 @@ const shot = async (page, name) => {
   ok('tray upload: the agent reads it, then the chat moves on', reading?.includes('reading experian-report.pdf') && you?.includes('Handed over experian-report.pdf'), `${reading} / ${you}`)
   await drain(page)
   // a letter at ask_bank, from the always-there button
-  const stepBefore = await page.locator('.app').getAttribute('data-step')
+  const stepBefore = await page.locator('.game').getAttribute('data-step')
   await page.locator('[data-action="letter"]').click()
   await page.getByTestId('letter-sheet').waitFor({ state: 'visible' })
   await shot(page, 'letter-sheet')
   await page.locator('[data-action="letter-sample"]').click()
   await settle(page)
-  const stepAfter = await page.locator('.app').getAttribute('data-step')
+  const stepAfter = await page.locator('.game').getAttribute('data-step')
   const text = await page.locator('[data-current] [data-testid="dialogue-text"]').textContent()
   ok('a letter at any step: one acknowledgement, step unchanged', stepBefore === stepAfter && /letter/i.test(text ?? ''), `${stepBefore} -> ${stepAfter}: ${text?.slice(0, 50)}`)
   ok('the letter button goes once a letter is in', (await page.locator('[data-action="letter"]').count()) === 0)
@@ -185,7 +195,8 @@ const shot = async (page, name) => {
     if (await page.locator('[data-action="sample"]').isVisible().catch(() => false)) {
       await page.locator('[data-action="sample"]').click()
       if (await page.locator('[data-persona="priya"]').isVisible().catch(() => false)) await page.locator('[data-persona="priya"]').click()
-    } else if (!(await page.locator('#reply-box').isVisible().catch(() => false))) await page.locator('[data-chip]').first().click()
+    } else if (await page.locator('[data-action="type-own"]').isVisible().catch(() => false)) await page.locator('[data-action="type-own"]').click()
+    else if (!(await page.locator('#reply-box').isVisible().catch(() => false))) await page.locator('[data-chip]').first().click()
     await settle(page)
   }
   await drain(page)
@@ -264,7 +275,7 @@ if (liveBase) {
   const notice = await page.locator('[data-entry="notice"]').last().textContent().catch(() => '')
   ok('a refused upload (413) says why and keeps Upload / Use a sample', (await mode(page)) === 'input' && notice?.includes('too big') && (await page.locator('[data-action="sample"]').count()) === 1, notice ?? '')
   // on to the coach with samples, then a slider what-if that meets a lost session
-  for (let i = 0; i < 80 && (await page.locator('.app').getAttribute('data-step')) !== 'coach'; i++) {
+  for (let i = 0; i < 80 && (await page.locator('.game').getAttribute('data-step')) !== 'coach'; i++) {
     const m = await mode(page)
     if (m === 'next' || m === 'continue') await page.locator(`[data-action="${m}"]`).click()
     else if (m === 'input') {
@@ -279,7 +290,7 @@ if (liveBase) {
     await settle(page)
     await drain(page)
   }
-  await page.locator('[data-action="whatif-sheet"]').click()
+  await menuPick(page, '[data-action="whatif-sheet"]')
   await page.getByTestId('paydown').focus()
   for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowRight')
   await page.locator('[data-action="whatif-run"]').click()
@@ -288,7 +299,7 @@ if (liveBase) {
   ok('a lost session on /api/whatif offers Start again', (await page.locator('[data-action="restart-chat"]').count()) === 1 && (await page.locator('[data-action="retry"]').count()) === 0)
   await page.locator('[data-action="restart-chat"]').click()
   await settle(page)
-  ok('Start again begins a new conversation', (await page.locator('.app').getAttribute('data-step')) === 'intro')
+  ok('Start again begins a new conversation', (await page.locator('.game').getAttribute('data-step')) === 'intro')
   await ctx.close()
 }
 

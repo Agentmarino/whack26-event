@@ -158,7 +158,7 @@ function CurrentLine(props: { msg: AgentMessage; printed: number; typed: boolean
   )
 }
 
-function Explain(props: { terms: Term[]; open: string | null; setOpen: (f: (o: string | null) => string | null) => void }) {
+export function Explain(props: { terms: Term[]; open: string | null; setOpen: (f: (o: string | null) => string | null) => void }) {
   const { terms, open, setOpen } = props
   return (
     <div className="px-1" data-testid="explain">
@@ -190,7 +190,7 @@ function Explain(props: { terms: Term[]; open: string | null; setOpen: (f: (o: s
 }
 
 /** Card text the glossary should look at (so "hard search" in a decline reason gets explained too). */
-function cardTexts(msg: AgentMessage, ctx: ReturnType<typeof useCards>): string[] {
+export function cardTexts(msg: AgentMessage, ctx: ReturnType<typeof useCards>): string[] {
   try {
     return cardTextsUnsafe(msg, ctx)
   } catch {
@@ -214,7 +214,7 @@ function cardTextsUnsafe(msg: AgentMessage, ctx: ReturnType<typeof useCards>): s
   }
 }
 
-function HistoryEntry({ entry }: { entry: Entry }) {
+export function HistoryEntry({ entry }: { entry: Entry }) {
   if (entry.type === 'you')
     return (
       <div className="ml-auto flex max-w-[85%] flex-col items-end gap-1" data-entry="you">

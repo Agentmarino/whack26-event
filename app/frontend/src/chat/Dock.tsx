@@ -1,8 +1,9 @@
 // The input area, pinned at the bottom and always on screen. What it shows follows the conversation:
 // Next while the agent is talking, then the inputs his last message `expects`.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Expects, FileKind } from 'shared'
 import { ChipIcon } from './chipIcons'
+import { PixelArrow } from '../game/PixelArrow'
 import { MicButton } from './Mic'
 
 export type DockMode =
@@ -43,9 +44,10 @@ export function Dock(props: {
   onSliders?: () => void
   /** 115: big friendly chips with an icon each: one per row ('list', the opening) or a grid ('grid', goals). */
   big?: 'list' | 'grid'
+  /** 116: how many menu rows fit under the question; more rows page. */
+  pageSize?: number
 }) {
   const { mode, big } = props
-  const chipClass = big ? 'chip chip--big' : 'chip'
   const ref = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState('')
@@ -82,36 +84,60 @@ export function Dock(props: {
 
   const fileKind: FileKind = mode.kind === 'input' ? (mode.expects.fileKinds?.[0] ?? 'credit_report') : 'credit_report'
 
+  const chips = mode.kind === 'input' ? (mode.expects.chips ?? []) : []
+  const chipRows: MenuRow[] = chips.map((c) => ({
+    id: `chip:${c}`,
+    label: c,
+    icon: big ? <ChipIcon chip={c} /> : undefined,
+    onSelect: () => props.onChip(c, 'choice'),
+    attrs: { 'data-chip': c },
+  }))
+  const skipRow: MenuRow[] =
+    mode.kind === 'input' && mode.expects.optional ? [{ id: 'skip', label: 'Skip', onSelect: props.onSkip, attrs: { 'data-action': 'skip' }, quiet: true }] : []
+  // goals in two columns while there is room; at 150% text one column that pages
+  // 116: with choices on screen, typing is a menu row that opens the field (keyed to these choices)
+  const hasChoices = chipRows.length > 0 || !!props.onSliders
+  const rowsKeyNow = mode.kind === 'input' ? `${mode.expects.kind}:${chips.join('|')}` : ''
+  const [typingFor, setTyping] = useState<string | null>(null)
+  const typing = typingFor !== null && typingFor === rowsKeyNow
+  useEffect(() => {
+    if (typing) document.getElementById('reply-box')?.focus()
+  }, [typing])
+  // 116: the field can unmount with focus (after Send, or a new turn) and no blur fires, so a pin left
+  // over from it would hold the dock at a stale fixed spot below the box: pin only while the field is open.
+  const fieldOpen = mode.kind === 'input' && mode.expects.kind === 'text' && (!hasChoices || typing)
+  useEffect(() => {
+    if (!fieldOpen) setPin(null)
+  }, [fieldOpen])
+  const shownPin = fieldOpen ? pin : null
+  const cols = big === 'grid' && (props.pageSize ?? 99) >= 3 && document.documentElement.dataset.textSize !== '150' && window.innerWidth >= 600 ? 2 : 1
+
   return (
-    <div style={pin ? { minHeight: pin.h } : undefined} className="flex-none">
+    <div style={shownPin ? { minHeight: shownPin.h } : undefined} className="flex-none">
       <div
         ref={ref}
-        className="border-t-[0.25rem] border-panel-deep bg-page px-3 pt-2.5 pb-2"
-        style={pin ? { position: 'fixed', left: 0, right: 0, top: pin.top, zIndex: 20 } : undefined}
+        className="dock"
+        style={shownPin ? { position: 'fixed', left: 0, right: 0, top: shownPin.top, zIndex: 20 } : undefined}
         data-testid="dock"
         data-mode={mode.kind}
         role="group"
         aria-label="Your reply"
       >
-        {mode.kind === 'busy' && (
-          <p className="flex min-h-11 items-center font-pixel text-[0.625rem] leading-relaxed text-muted" aria-hidden="true">
-            {mode.label}…
-          </p>
-        )}
+        {mode.kind === 'busy' && <p className="sr-only">{mode.label}…</p>}
 
         {mode.kind === 'error' && (
           <div className="flex flex-wrap gap-2">
             {mode.sessionGone ? (
-              <button type="button" className="btn btn--primary flex-1" onClick={props.onRestart} data-action="restart-chat">
+              <button type="button" className="gbtn gbtn--primary flex-1" onClick={props.onRestart} data-action="restart-chat">
                 Start again
               </button>
             ) : (
-              <button type="button" className="btn btn--primary flex-1" onClick={props.onRetry} data-action="retry">
+              <button type="button" className="gbtn gbtn--primary flex-1" onClick={props.onRetry} data-action="retry">
                 Try again
               </button>
             )}
             {mode.canGoOffline && (
-              <button type="button" className="btn btn--quiet" onClick={props.onOffline} data-action="offline">
+              <button type="button" className="gbtn" onClick={props.onOffline} data-action="offline">
                 Use the offline demo
               </button>
             )}
@@ -120,70 +146,51 @@ export function Dock(props: {
 
         {mode.kind === 'next' && (
           <div className="flex gap-2">
-            <button type="button" className="btn btn--primary min-w-0 flex-[2]" onClick={props.onNext} data-action="next">
-              <span>{mode.typing ? 'Show all of it' : mode.more > 0 ? `Next (${mode.more} more)` : 'Next'}</span>
-              <span className="next-arrow flex-none -rotate-90" aria-hidden="true" />
+            {/* 116: short labels so they stay on one line in the pixel font; the count is in the name */}
+            <button
+              type="button"
+              className="gbtn gbtn--primary min-w-0 flex-1"
+              onClick={props.onNext}
+              data-action="next"
+              aria-label={mode.typing ? 'Show all of it' : mode.more > 0 ? `Next (${mode.more} more)` : 'Next'}
+            >
+              <span>{mode.typing ? 'Show all' : 'Next'}</span>
+              <PixelArrow dir="down" />
             </button>
             {mode.more > 1 && (
-              <button type="button" className="btn btn--quiet min-w-0 flex-1" onClick={props.onShowAll} data-action="show-all">
-                Skip to end
+              <button type="button" className="gbtn flex-none" onClick={props.onShowAll} data-action="show-all" aria-label="Skip to the end">
+                Skip all
               </button>
             )}
           </div>
         )}
 
         {mode.kind === 'continue' && (
-          <button type="button" className="btn btn--primary w-full" onClick={props.onContinue} data-action="continue">
-            Continue <span className="next-arrow -rotate-90" aria-hidden="true" />
-          </button>
+          <Menu rows={[{ id: 'continue', label: 'Continue', onSelect: props.onContinue, attrs: { 'data-action': 'continue' } }]} label="Continue" pageSize={props.pageSize} />
         )}
 
         {mode.kind === 'input' && mode.expects.kind === 'choice' && (
-          <div
-            className={big === 'list' ? 'chips--list' : big === 'grid' ? 'chips--grid' : 'flex flex-wrap gap-2'}
-            role="group"
-            aria-label="Choose an answer"
-            data-chips={big ?? 'normal'}
-          >
-            {(mode.expects.chips ?? []).map((c) => (
-              <button key={c} type="button" className={chipClass} onClick={() => props.onChip(c, 'choice')} data-chip={c}>
-                {big && <ChipIcon chip={c} />}
-                {big ? <span>{c}</span> : c}
-              </button>
-            ))}
-            {mode.expects.optional && (
-              <button type="button" className="btn btn--quiet" onClick={props.onSkip} data-action="skip">
-                Skip
-              </button>
-            )}
-          </div>
+          <Menu rows={[...chipRows, ...skipRow]} label="Choose an answer" big={big} cols={cols} pageSize={props.pageSize} />
         )}
 
-        {mode.kind === 'input' && mode.expects.kind === 'text' && (
+        {mode.kind === 'input' && mode.expects.kind === 'text' && hasChoices && !typing && (
+          // 116: the choices as a menu; typing is one more choice, so the field never crowds the question
+          <Menu
+            rows={[
+              ...chipRows,
+              ...(props.onSliders ? [{ id: 'sliders', label: 'Sliders', onSelect: props.onSliders, attrs: { 'data-action': 'whatif-sheet' } } satisfies MenuRow] : []),
+              { id: 'type', label: mode.expects.allowVoice !== false ? 'Type or say my own' : 'Type my own', onSelect: () => setTyping(rowsKeyNow), attrs: { 'data-action': 'type-own' }, quiet: true },
+              ...skipRow,
+            ]}
+            label="Quick replies"
+            big={big}
+            cols={cols}
+            pageSize={props.pageSize}
+          />
+        )}
+
+        {mode.kind === 'input' && mode.expects.kind === 'text' && (!hasChoices || typing) && (
           <div className="flex flex-col gap-2">
-            {((mode.expects.chips && mode.expects.chips.length > 0) || props.onSliders) && (
-              <div
-                className={big ? 'chips--grid' : 'hscroll -mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5'}
-                role="group"
-                aria-label="Quick replies"
-                data-chips={big ?? 'normal'}
-              >
-                {props.onSliders && (
-                  <button type="button" className="btn flex-none" onClick={props.onSliders} data-action="whatif-sheet">
-                    <svg width="14" height="14" viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" fill="currentColor">
-                      <path d="M0 1h9v1H0zM1 0h3v3H1zM0 4h9v1H0zM5 3h3v3H5zM0 7h9v1H0zM2 6h3v3H2z" />
-                    </svg>
-                    Sliders
-                  </button>
-                )}
-                {(mode.expects.chips ?? []).map((c) => (
-                  <button key={c} type="button" className={chipClass} onClick={() => props.onChip(c, 'choice')} data-chip={c}>
-                    {big && <ChipIcon chip={c} />}
-                    {big ? <span>{c}</span> : c}
-                  </button>
-                ))}
-              </div>
-            )}
             <form
               className="flex flex-wrap gap-2"
               onSubmit={(e) => {
@@ -199,7 +206,7 @@ export function Dock(props: {
               </label>
               <input
                 id="reply-box"
-                className="field min-w-0 flex-1 basis-0"
+                className="gfield min-w-0 flex-1 basis-0"
                 value={draft}
                 placeholder={mode.expects.placeholder ?? 'Type your answer'}
                 autoComplete="off"
@@ -215,36 +222,36 @@ export function Dock(props: {
                 onBlur={() => setPin(null)}
               />
               {mode.expects.allowVoice !== false && <MicButton onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />}
-              <button
-                type="submit"
-                className="btn btn--primary"
-                onPointerDown={(e) => pinned && e.preventDefault()}
-                data-action="send"
-              >
+              <button type="submit" className="gbtn gbtn--primary" onPointerDown={(e) => pinned && e.preventDefault()} data-action="send">
                 Send
               </button>
             </form>
-            {mode.expects.optional && (
-              <button type="button" className="btn btn--quiet self-start" onClick={props.onSkip} data-action="skip">
-                Skip
-              </button>
-            )}
+            <div className="flex gap-2">
+              {hasChoices && (
+                <button type="button" className="gbtn" onClick={() => setTyping(null)} data-action="type-back">
+                  <PixelArrow dir="left" /> Back
+                </button>
+              )}
+              {mode.expects.optional && (
+                <button type="button" className="gbtn" onClick={props.onSkip} data-action="skip">
+                  Skip
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         {mode.kind === 'input' && mode.expects.kind === 'file' && (
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn btn--primary flex-1" onClick={() => fileRef.current?.click()} data-action="upload">
-              Upload
-            </button>
-            <button type="button" className="btn flex-1" onClick={() => props.onSample(fileKind)} data-action="sample">
-              Use a sample
-            </button>
-            {mode.expects.optional && (
-              <button type="button" className="btn btn--quiet" onClick={props.onSkip} data-action="skip">
-                Skip
-              </button>
-            )}
+          <>
+            <Menu
+              rows={[
+                { id: 'upload', label: 'Upload', onSelect: () => fileRef.current?.click(), attrs: { 'data-action': 'upload' } },
+                { id: 'sample', label: 'Use a sample', onSelect: () => props.onSample(fileKind), attrs: { 'data-action': 'sample' } },
+                ...skipRow,
+              ]}
+              label="Hand over a file"
+              pageSize={props.pageSize}
+            />
             {/* Visually hidden, not display:none, so iOS Safari opens the picker from the tap. */}
             <input
               ref={fileRef}
@@ -260,15 +267,99 @@ export function Dock(props: {
                 e.target.value = ''
               }}
             />
-          </div>
+          </>
         )}
 
         {mode.kind === 'input' && mode.expects.kind === 'none' && (
-          <button type="button" className="btn btn--primary w-full" onClick={props.onContinue} data-action="continue">
-            Continue
-          </button>
+          <Menu rows={[{ id: 'continue', label: 'Continue', onSelect: props.onContinue, attrs: { 'data-action': 'continue' } }]} label="Continue" pageSize={props.pageSize} />
         )}
       </div>
+    </div>
+  )
+}
+
+// ---------- 116: the game menu ----------
+
+export type MenuRow = { id: string; label: string; onSelect: () => void; attrs: Record<string, string>; icon?: ReactNode; trail?: ReactNode; quiet?: boolean }
+
+/**
+ * A game menu: one row per choice with a pixel ▶ cursor on the active row; up and down (and left and
+ * right in two columns) move it, Enter or a tap picks. Every row stays a Tab stop. When the rows do not
+ * fit (`pageSize`, from the space left under the question), they page: a "More ▶" row shows the next
+ * page and the last page has "◀ Back", so the menu never covers the question.
+ */
+function Menu(props: { rows: MenuRow[]; label: string; big?: 'list' | 'grid'; cols?: 1 | 2; pageSize?: number }) {
+  const { rows } = props
+  const cols = props.cols ?? 1
+  // pageSize counts rows; a two-column grid holds two choices a row
+  const capacity = props.pageSize ? props.pageSize * cols : Infinity
+  const size = rows.length > capacity ? Math.max(1, capacity - 1) : rows.length
+  const pages = Math.max(1, Math.ceil(rows.length / Math.max(1, size)))
+  const rowsKey = rows.map((r) => r.id).join('|')
+  const [st, setSt] = useState({ key: rowsKey, page: 0, active: 0 })
+  const cur = st.key === rowsKey ? st : { key: rowsKey, page: 0, active: 0 }
+  const page = Math.min(cur.page, pages - 1)
+  const shown = rows.slice(page * size, page * size + size)
+  const nav: MenuRow | null =
+    pages > 1
+      ? page < pages - 1
+        ? { id: 'more', label: `More (${page + 1}/${pages})`, trail: <PixelArrow dir="right" />, onSelect: () => setSt({ key: rowsKey, page: page + 1, active: 0 }), attrs: { 'data-action': 'menu-more' }, quiet: true }
+        : { id: 'back', label: `Back (${page + 1}/${pages})`, icon: <PixelArrow dir="left" />, onSelect: () => setSt({ key: rowsKey, page: 0, active: 0 }), attrs: { 'data-action': 'menu-back' }, quiet: true }
+      : null
+  const all = nav ? [...shown, nav] : shown
+  const box = useRef<HTMLDivElement>(null)
+  const focusRow = (i: number) => box.current?.querySelectorAll<HTMLButtonElement>('[data-row]')[i]?.focus()
+  const onKey = (e: React.KeyboardEvent) => {
+    const n = all.length
+    const i = Math.max(0, all.findIndex((r) => r.id === (document.activeElement as HTMLElement | null)?.dataset.rowId))
+    const step = e.key === 'ArrowDown' ? cols : e.key === 'ArrowUp' ? -cols : e.key === 'ArrowRight' && cols > 1 ? 1 : e.key === 'ArrowLeft' && cols > 1 ? -1 : 0
+    if (step) {
+      e.preventDefault()
+      const next = (i + step + n) % n
+      setSt({ key: rowsKey, page, active: next })
+      focusRow(next)
+    } else if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault()
+      const next = e.key === 'Home' ? 0 : n - 1
+      setSt({ key: rowsKey, page, active: next })
+      focusRow(next)
+    }
+  }
+  // after "More" / "Back", keep the cursor (and keyboard focus) in the menu
+  useLayoutEffect(() => {
+    if (box.current?.contains(document.activeElement)) focusRow(0)
+  }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div
+      ref={box}
+      className={`gmenu ${cols === 2 ? 'gmenu--grid' : ''} ${props.big ? 'gmenu--big' : ''}`}
+      role="group"
+      aria-label={props.label}
+      data-chips={props.big ?? 'normal'}
+      data-menu-page={pages > 1 ? `${page + 1}/${pages}` : undefined}
+      onKeyDown={onKey}
+    >
+      {all.map((r, i) => (
+        <button
+          key={r.id}
+          type="button"
+          className={`mrow ${r.quiet ? 'mrow--quiet' : ''}`}
+          data-row=""
+          data-row-id={r.id}
+          data-active={i === Math.min(cur.active, all.length - 1) ? '' : undefined}
+          onFocus={() => setSt({ key: rowsKey, page, active: i })}
+          onMouseEnter={() => setSt({ key: rowsKey, page, active: i })}
+          onClick={r.onSelect}
+          {...r.attrs}
+        >
+          <span className="mrow__cursor" aria-hidden="true">
+            <PixelArrow dir="right" />
+          </span>
+          {r.icon}
+          <span className="mrow__label">{r.label}</span>
+          {r.trail}
+        </button>
+      ))}
     </div>
   )
 }

@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react'
 import { speakNow, speechAvailable } from '../chat/useSpeech'
 import type { Speed } from '../npc'
+import { primeBlip } from '../game/blip'
 import { useSettings, type ColourMode, type TextSize, type VoiceRate } from '../settings'
 import { Sheet } from '../ui/Sheet'
 
@@ -101,6 +102,23 @@ export function SettingsSheet(props: { open: boolean; onClose: () => void; onRes
           ]}
         />
         <div className="flex flex-col gap-3">
+          <Toggle
+            label="Readable font"
+            hint="A taller, simpler pixel font (VT323) in Cap's box, menus and windows. More words fit on a line."
+            checked={settings.readable}
+            onChange={(v) => set('readable', v)}
+            testId="toggle-readable"
+          />
+          <Toggle
+            label="Letter sound"
+            hint="A soft blip as each letter appears. Quiet while replies are read aloud."
+            checked={settings.blip}
+            onChange={(v) => {
+              set('blip', v)
+              if (v) primeBlip()
+            }}
+            testId="toggle-blip"
+          />
           <Toggle
             label="Plain English"
             hint="Shorter words, and every credit term explained."

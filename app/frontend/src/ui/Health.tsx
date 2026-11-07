@@ -4,7 +4,7 @@ import type { Rag } from 'shared'
 export type Tone = 'bad' | 'warn' | 'good' | 'neutral'
 
 export const RAG_TONE: Record<Rag, Tone> = { red: 'bad', amber: 'warn', green: 'good' }
-export const RAG_WORD: Record<Rag, string> = { red: 'Needs work', amber: 'Fair', green: 'Good' }
+export const RAG_WORD: Record<Rag, string> = { red: 'Problem', amber: 'Watch', green: 'Good' } // 116: the game's words
 
 /** 7x7 pixel symbols: cross (bad), exclamation in a triangle (warn), tick (good), dot (neutral). */
 export function ToneIcon({ tone, size = 14 }: { tone: Tone; size?: number }) {

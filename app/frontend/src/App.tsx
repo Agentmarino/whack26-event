@@ -5,13 +5,17 @@ import { BusinessCardOverlay, CARD_TEXT, type Rect } from './cards/BusinessCard'
 import { CardContext, type CardCtx, type WhyTrail } from './cards/context'
 import { lineDone, presentError, presentMessage, presentWaiting } from './chat/agent'
 import { Dock, type DockMode } from './chat/Dock'
-import { AGENT_NAME, Transcript } from './chat/Transcript'
+import { AGENT_NAME } from './chat/Transcript'
 import { useConversation } from './chat/useConversation'
 import { useSpeech } from './chat/useSpeech'
 import {
-  NATIVE_H, NATIVE_W, NpcScene, useIntegerScale, usePrefersReducedMotion, useTypewriter, type FacialHair, type NpcHandle,
+  ExtendedScene, extendedLayout, NATIVE_H, usePrefersReducedMotion, useTypewriter, type FacialHair, type NpcHandle,
   type NpcSnapshot,
 } from './npc'
+import { blip } from './game/blip'
+import { DataWindow } from './game/DataWindow'
+import { GameBox } from './game/GameBox'
+import { GearIcon, NotebookIcon, SidePanel, type PanelTab } from './game/SidePanel'
 import { useSettings } from './settings'
 import { PaperSheet } from './sheets/PaperSheet'
 import { LetterSheet, PersonaSheet, WhySheet } from './sheets/PickSheets'
@@ -22,7 +26,23 @@ const LOGO = '/brand/capital-one-logo.png'
 const FACIAL_HAIR: FacialHair = 'moustache-stubble'
 /** 115: the card rests on the desk this long after it lands, then grows into the full card. */
 const CARD_REST_MS = 220
-const DISCLAIMER = 'Estimates for a demo. Not financial advice and not a lending decision.'
+/** 116: kinds that get a small game window above the dialogue box. */
+const WINDOW_KINDS = new Set(['reason', 'decline', 'step', 'projection', 'ladder', 'whatif', 'paper'])
+
+/** 116: the window size, kept current (the scene and the box size from it). */
+function useViewport() {
+  const [v, setV] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
+  useEffect(() => {
+    const on = () => setV({ w: window.innerWidth, h: window.innerHeight })
+    window.addEventListener('resize', on)
+    window.visualViewport?.addEventListener('resize', on)
+    return () => {
+      window.removeEventListener('resize', on)
+      window.visualViewport?.removeEventListener('resize', on)
+    }
+  }, [])
+  return v
+}
 
 function useMedia(query: string) {
   const [v, setV] = useState(() => window.matchMedia(query).matches)
@@ -35,6 +55,18 @@ function useMedia(query: string) {
   return v
 }
 
+/**
+ * 116: the dialogue font size nearest `target` that is a whole CSS px and puts each Press Start 2P pixel
+ * (1/8 em) on a whole number of device pixels, so the letters stay crisp: on a 3x phone 8, 16, 24...; on a
+ * 2x screen every 4 px; on a 1x screen every 8 px. A tie goes up (bigger text was asked for).
+ */
+function crispPx(target: number, dpr: number) {
+  const d = Math.max(1, Math.round(dpr))
+  const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a)
+  const step = 8 / gcd(8, d)
+  return Math.max(step, Math.round(target / step) * step)
+}
+
 const isControl = (t: EventTarget | null) =>
   t instanceof HTMLElement && !!t.closest('input, textarea, select, button, a, label, summary, [contenteditable="true"], dialog')
 
@@ -45,8 +77,25 @@ export default function App() {
   const systemReduced = usePrefersReducedMotion()
   const reduced = systemReduced
   const wide = useMedia('(min-width: 64rem)')
-  const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-  const { scale } = useIntegerScale(wide ? 2.5 : 22, wide ? 32 * rootPx + 72 : 0)
+  const vp = useViewport()
+  // 116: the dialogue box may use up to this much of the screen; the scene keeps Cap and the desk above it.
+  const [panel, setPanel] = useState<{ open: boolean; tab: PanelTab; focus: string | null }>({ open: false, tab: 'chat', focus: null })
+  const stageW = wide && panel.open ? Math.round(vp.w * 0.6) : vp.w
+  // The scene takes the biggest whole-number scale that leaves the box at least this share of the
+  // screen (more with bigger text), then the box gets all the height the scene does not need. The
+  // corner icons sit over the ceiling, so nothing else is reserved.
+  // Same rule as ExtendedScene (extendedLayout): a whole number of device pixels per scene pixel.
+  const dpr = window.devicePixelRatio || 1
+  const minBox = vp.h * (wide ? 0.45 : settings.textSize === 150 ? 0.7 : settings.textSize === 125 ? 0.48 : 0.4)
+  const { scale } = extendedLayout(stageW, vp.h, 0, minBox, dpr)
+  const boxMax = Math.floor(vp.h - NATIVE_H * scale - 4)
+  // The dialogue font: Press Start 2P at a crisp size (16 px on a phone, 24 px wide). VT323 with Readable
+  // font, and with bigger text on a phone: Press Start 2P's next crisp size there (24 px) fits 13 letters
+  // a line and one menu choice a page.
+  const pf = crispPx((wide ? 24 : 16) * (settings.textSize / 100), dpr)
+  const boxVt = settings.readable || (settings.textSize > 100 && stageW < 600)
+  // 116: 2 to 4 lines a page (at most 4 on a phone): fewer when the text is big.
+  const lines = boxVt ? (settings.textSize === 150 ? 3 : 4) : wide ? 3 : pf > 16 ? 3 : 4
 
   // ---------- samples ----------
   const [personas, setPersonas] = useState<Persona[] | null>(null)
@@ -72,16 +121,33 @@ export default function App() {
     conv.start()
   }, [api, conv])
 
-  // ---------- typewriter for the current line ----------
-  // The business card is not typed out (and does not move his mouth): it is a card, not a line.
+  // ---------- 116: the current line, page by page ----------
+  // GameBox measures the line into pages (2 to 4 lines each); each page types on its own. The business
+  // card is not typed out (and does not move his mouth): it is a card, not a line.
+  const curKey = current?.key ?? 'none'
+  const [paged, setPaged] = useState<{ key: string; pages: string[] }>({ key: '', pages: [] })
+  const [pageAt, setPageAt] = useState<{ key: string; page: number }>({ key: '', page: 0 })
+  const pages = current?.msg.kind === 'card' ? [''] : paged.key === curKey && paged.pages.length ? paged.pages : [current?.msg.text ?? '']
+  const page = pageAt.key === curKey ? Math.min(pageAt.page, pages.length - 1) : 0
+  const lastPage = page >= pages.length - 1
+  const onPages = useCallback((key: string, next: string[]) => {
+    setPaged((p) => (p.key === key && p.pages.join('\u0000') === next.join('\u0000') ? p : { key, pages: next }))
+  }, [])
   const instant = reduced || settings.demo || settings.speed === 'instant' || current?.msg.kind === 'card'
-  const tw = useTypewriter(current?.msg.text ?? '', current?.key ?? 'none', {
+  const blipOn = settings.blip && !settings.readAloud && !reduced
+  const tw = useTypewriter(pages[page] ?? '', `${curKey}:${page}`, {
     speed: settings.speed,
     instant,
-    onChar: (c) => npc.current?.talk(c),
-    onDone: () => lineDone(npc.current, current?.msg ?? null),
+    onChar: (c) => {
+      npc.current?.talk(c)
+      if (blipOn) blip(c)
+    },
+    onDone: () => {
+      if (lastPage) lineDone(npc.current, current?.msg ?? null)
+      else npc.current?.stopTalking()
+    },
   })
-  const typed = !!current && tw.done
+  const typed = !!current && tw.done && lastPage
 
   useSpeech(current?.msg.text ?? null, current?.key ?? null, settings.readAloud, settings.voiceRate)
 
@@ -104,9 +170,14 @@ export default function App() {
       npc.current?.stopTalking()
       return
     }
+    // 116: the next page of a long line
+    if (current && !lastPage) {
+      setPageAt({ key: curKey, page: page + 1 })
+      return
+    }
     if (state.queue.length) return conv.advance()
     if (current && state.expects?.kind === 'none') conv.skip()
-  }, [state.pending, state.queue.length, state.expects, current, tw, conv])
+  }, [state.pending, state.queue.length, state.expects, current, tw, conv, lastPage, curKey, page])
 
   // Space or Enter anywhere outside a control (and with no sheet open) is "next".
   const advanceRef = useRef(advance)
@@ -247,7 +318,7 @@ export default function App() {
     : state.error
       ? { kind: 'error', canGoOffline: api.mode === 'live', sessionGone: state.sessionGone }
       : current && !typed
-        ? { kind: 'next', typing: true, more: state.queue.length }
+        ? { kind: 'next', typing: !tw.done, more: state.queue.length + (pages.length - 1 - page) }
         : state.queue.length
           ? { kind: 'next', typing: false, more: state.queue.length }
           : !state.expects
@@ -274,75 +345,117 @@ export default function App() {
           ? `${AGENT_NAME} says: ${lastEntry.text}`
           : ''
 
-  // Short phone screens (iPhone with Safari's bars): hide the desk's front panel (13 of 96 rows) so the
-  // chat gets the room. The desk top, tray and the summary sheet stay in view.
-  const short = !wide && window.innerHeight < 760
-  const cropPx = short ? Math.floor(13 * scale) : 0
-  const sceneH = Math.ceil(NATIVE_H * scale - 1e-6)
-  const width = NATIVE_W * scale
+  // 116: what the text area shows when no line is on screen (or a notice after it).
+  const status: { kind: 'pending' | 'error' | 'notice'; text: string } | null = state.pending
+    ? { kind: 'pending', text: state.pending.label }
+    : state.error
+      ? { kind: 'error', text: state.error }
+      : lastEntry?.type === 'notice'
+        ? { kind: 'notice', text: lastEntry.text }
+        : null
+  const windowMsg = current && WINDOW_KINDS.has(current.msg.kind) && (current.msg.ref || current.msg.kind === 'paper') ? current.msg : null
+  const openDetails = useCallback((msgId: string) => setPanel({ open: true, tab: 'plan', focus: msgId }), [])
+
   return (
     <CardContext.Provider value={cardCtx}>
-      <div className="app" data-api={api.mode} data-step={state.step ?? 'none'}>
-        <div
-          className="app__stage"
-          style={{ ...(wide ? { width } : {}), ...(cropPx ? { height: sceneH - cropPx, overflow: 'clip' } : {}) }}
-          data-crop={cropPx || undefined}
-        >
-          <NpcScene
-            ref={npc}
-            scale={scale}
-            reducedMotion={reduced}
-            wordmarkSrc={LOGO}
-            facialHair={FACIAL_HAIR}
-            background="day"
-            onFileDrop={onTrayFile}
-            onPaperClick={() => setSheet('paper')}
-            onChange={onNpcChange}
-          />
-          {showLetter && (
-            <button type="button" className="scene-btn left-2" onClick={() => setSheet('letter')} data-action="letter">
-              Have a decline letter?
+      <div
+        className="game"
+        style={{ '--pf': `${pf}px` } as React.CSSProperties}
+        data-font={boxVt ? 'vt323' : 'press-start'}
+        data-api={api.mode}
+        data-step={state.step ?? 'none'}
+        data-panel={panel.open ? (wide ? 'side' : 'sheet') : undefined}
+      >
+        <div className="game__stage" style={{ width: stageW }}>
+          {/* 116: the scene fills the stage; Cap's desk ends just above the box's room */}
+          <div className="game__scene">
+            <ExtendedScene
+              ref={npc}
+              reserveBottom={boxMax + 4}
+              reducedMotion={reduced}
+              wordmarkSrc={LOGO}
+              facialHair={FACIAL_HAIR}
+              background="day"
+              onFileDrop={onTrayFile}
+              onPaperClick={() => setSheet('paper')}
+              onChange={onNpcChange}
+            />
+          </div>
+
+          <div className="game__corner game__corner--left">
+            <button type="button" className="gicon" onClick={() => setSheet('settings')} aria-label="Settings: text speed, size, font, voice, colours" data-action="settings">
+              <GearIcon />
             </button>
-          )}
-          <button
-            type="button"
-            className="scene-btn right-2"
-            onClick={() => setSheet('settings')}
-            aria-label="Settings: text speed, text size, voice, colours"
-            data-action="settings"
-          >
-            <svg width="18" height="18" viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" fill="currentColor">
-              <path d="M0 1h9v1H0zM1 0h3v3H1zM0 4h9v1H0zM5 3h3v3H5zM0 7h9v1H0zM2 6h3v3H2z" />
-            </svg>
-            <span className="ml-1.5 hidden sm:inline">Settings</span>
-          </button>
+            {showLetter && (
+              <button type="button" className="gbtn gbtn--small" onClick={() => setSheet('letter')} data-action="letter">
+                Have a decline letter?
+              </button>
+            )}
+          </div>
+          <div className="game__corner game__corner--right">
+            <button
+              type="button"
+              className="gicon"
+              onClick={() => setPanel((p) => ({ ...p, open: !p.open, focus: null }))}
+              aria-label={panel.open ? 'Close the notebook' : 'Open the notebook: the chat so far and your plan'}
+              aria-expanded={panel.open}
+              data-action="panel"
+            >
+              <NotebookIcon />
+            </button>
+          </div>
+
+          <main className="game__hud" style={{ maxHeight: boxMax }} aria-label="Conversation with Cap, the credit coach">
+            <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live">
+              {announce}
+            </p>
+            {windowMsg && <DataWindow key={current!.key} msg={windowMsg} onDetails={openDetails} />}
+            <GameBox
+              current={current ? { key: current.key, msg: current.msg } : null}
+              page={page}
+              printed={current ? tw.printed : 0}
+              pageDone={tw.done}
+              more={!lastPage || state.queue.length > 0}
+              lines={lines}
+              pages={pages}
+              onPages={onPages}
+              onAdvance={advance}
+              status={status}
+              layoutKey={`${settings.textSize}:${boxVt}:${pf}:${stageW}`}
+              maxPx={boxMax}
+            >
+              {(rowsFit) => (
+                <Dock
+                  mode={mode}
+                  onNext={advance}
+                  onShowAll={conv.showAll}
+                  onContinue={() => conv.skip()}
+                  onChip={(v, how) => conv.choose(v, how)}
+                  onText={(v) => conv.choose(v, 'text')}
+                  onFile={onFile}
+                  onSample={onSample}
+                  onSkip={() => conv.skip('Skip')}
+                  onRetry={conv.retry}
+                  onRestart={restart}
+                  onOffline={() => setApi(createMockApi())}
+                  onSliders={inCoach ? () => setSheet('whatif') : undefined}
+                  big={state.step === 'opening' ? 'list' : state.step === 'goals' ? 'grid' : undefined}
+                  pageSize={rowsFit}
+                />
+              )}
+            </GameBox>
+          </main>
         </div>
 
-        <main className="app__chat" aria-label="Conversation with Cap, the credit coach">
-          <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live">
-            {announce}
-          </p>
-          <Transcript conv={state} printed={current ? tw.printed : 0} typed={typed} onAdvance={advance} />
-          <Dock
-            mode={mode}
-            onNext={advance}
-            onShowAll={conv.showAll}
-            onContinue={() => conv.skip()}
-            onChip={(v, how) => conv.choose(v, how)}
-            onText={(v) => conv.choose(v, 'text')}
-            onFile={onFile}
-            onSample={onSample}
-            onSkip={() => conv.skip('Skip')}
-            onRetry={conv.retry}
-            onRestart={restart}
-            onOffline={() => setApi(createMockApi())}
-            onSliders={inCoach ? () => setSheet('whatif') : undefined}
-            big={state.step === 'opening' ? 'list' : state.step === 'goals' ? 'grid' : undefined}
-          />
-          <footer className="flex-none px-3 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-[0.6875rem] leading-tight text-muted" data-testid="disclaimer">
-            {DISCLAIMER}
-          </footer>
-        </main>
+        <SidePanel
+          open={panel.open}
+          tab={panel.tab}
+          focusItem={panel.focus}
+          wide={wide}
+          conv={state}
+          onTab={(tab) => setPanel((p) => ({ ...p, tab, focus: null }))}
+          onClose={() => setPanel((p) => ({ ...p, open: false, focus: null }))}
+        />
 
         <PersonaSheet
           open={sheet === 'persona'}
