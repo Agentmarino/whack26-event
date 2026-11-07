@@ -10,6 +10,7 @@ import { toMessage, type Wording } from './messages.ts'
 import { claudeWording } from './wording.ts'
 import { HttpError } from './errors.ts'
 import { ingest } from './ingest.ts'
+import { paperModel, renderPaper } from './paper.ts'
 import { personas } from './personas.ts'
 import { getSession } from './session.ts'
 import { whatIfFromChanges, whatIfFromText } from './whatif.ts'
@@ -79,11 +80,16 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     return ingest(kind.data, { fileName: file?.fileName ?? 'pasted text', mime: file?.mime ?? 'text/plain', data: file?.data.length ? file.data : null, text })
   })
 
-  app.get<{ Params: { file: string } }>('/api/paper/:file', async req => {
-    const id = req.params.file.replace(/\.pdf$/, '')
+  app.get<{ Params: { file: string } }>('/api/paper/:file', async (req, reply) => {
+    const id = decodeURIComponent(req.params.file).replace(/\.pdf$/, '')
     const s = getSession(id)
-    if (!s || !s.paperReady) throw new HttpError(404, 'Summary not ready yet')
-    throw new HttpError(404, 'Summary not ready yet')
+    if (!s || !s.paperReady || !s.result) throw new HttpError(404, 'Summary not ready yet')
+    const pdf = await renderPaper(paperModel(s.result, s.plan ?? s.horizon))
+    return reply
+      .type('application/pdf')
+      .header('content-disposition', 'inline; filename="credit-check-summary.pdf"')
+      .header('cache-control', 'no-store')
+      .send(pdf)
   })
 
   return app
