@@ -19,3 +19,4 @@ Owner: `mihael` or `partner`. Only take your own. Pull before you start.
 | 112 | Phase A, shared contract, engine import, examples and mock conversation | mihael | done | 2026-11-07 |
 | 113 | Phase B backend, Fastify, conversation, ingest, Claude with checker, what-if, paper PDF | mihael | done | 2026-11-07 |
 | 114 | Phase B frontend, NPC chat on iPhone, every message type, accessibility | mihael | done | 2026-11-07 |
+| 115 | Cap, business card intro, opening question and branching flow | mihael | ready | 2026-11-07 |
