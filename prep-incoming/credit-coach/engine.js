@@ -195,6 +195,8 @@
       });
       const monthPays = [];
       cards.forEach(k => { if (k.balance > 0) { k.balance += k.balance * k.apr / 100 / 12; const mn = Math.min(k.balance, cardMin(k)); k.balance -= mn; } });
+      // What-if: one-off payment this month (clearCard), on top of the plan's extra
+      if (m === 1) (p.oneOffPayments || []).forEach(o => cards.forEach(k => { if ((!o.card || k.name === o.card) && k.balance > 0) { const pay = o.card ? k.balance : Math.min(k.balance, o.amount || k.balance); k.balance -= pay; monthPays.push({ card: k.name, amount: Math.round(pay) }); } }));
       for (const k of order) {
         if (extra <= 0) break;
         const pay = Math.min(extra, k.balance);
@@ -439,7 +441,9 @@
     const contributions = effects.map(e => { const [a, b] = e.fn(6); return { label: e.label, low: Math.round(a * k), high: Math.round(b * k), plan: e.plan, because: e.because }; }).filter(x => x.low || x.high);
 
     const top = d.ranked.filter(x => x.rag !== 'green').slice(0, 2).map(x => x.label.toLowerCase());
-    const headline = build ? `You don't have bad credit, you have very little of it. This plan builds it from zero.` : top.length ? `Your ${top.join(' and ')} ${top.length > 1 ? 'are' : 'is'} holding you back most.` : 'Your file is in good shape. The plan below keeps it there.';
+    // Thin-file headline only when there is truly little history. Someone with a card and a problem on it (Priya) gets the 'holding you back' line.
+    const thinHeadline = creditAccounts === 0 || p.oldestAccountYears < 1 || p.newToUK;
+    const headline = thinHeadline ? `You don't have bad credit, you have very little of it. This plan builds it from zero.` : top.length ? `Your ${top.join(' and ')} ${top.length > 1 ? 'are' : 'is'} holding you back most.` : 'Your file is in good shape. The plan below keeps it there.';
     return {
       profile: p, start, scaleMax, bureau: BUREAU_NAME[p.bureau], headline, diagnosis: d, cash: c, sim, build,
       plans: { '3m': { steps: steps3, projection: p3 }, '6m': { steps: steps6, projection: p6 } },
@@ -593,7 +597,7 @@
         case 'stop': if (['bnpl', 'gambling', 'payday'].includes(ch.what)) { applied.push(`Stop ${ch.what} (${gbp(p.bank[ch.what] || 0)}/month)`); p.bank[ch.what] = 0; } break;
         case 'electoralRoll': p.electoralRoll = ch.value !== false; applied.push(p.electoralRoll ? 'Registered on the electoral roll' : 'Not on the electoral roll'); break;
         case 'removeAssociates': applied.push('Financial links removed'); p.staleAssociates = []; break;
-        case 'clearCard': (p.cards || []).forEach(c => { if (!ch.card || c.name === ch.card) { applied.push(`Clear ${c.name} (${gbp(c.balance)})`); c.balance = 0; } }); break;
+        case 'clearCard': (p.cards || []).forEach(c => { if ((!ch.card || c.name === ch.card) && c.balance > 0) { applied.push(`Clear ${c.name} (${gbp(c.balance)}) this month`); p.oneOffPayments = (p.oneOffPayments || []).concat([{ card: c.name }]); } }); break;
         case 'rentReporting': p.bank.rentByTransfer = ch.value !== false; applied.push(ch.value === false ? 'No rent reporting' : 'Rent reporting on'); break;
         case 'set': { const keys = String(ch.path || '').split('.'); let o = p; keys.slice(0, -1).forEach(k2 => { o[k2] = o[k2] || {}; o = o[k2]; }); if (keys[0]) { o[keys.at(-1)] = ch.value; applied.push(`${ch.path} = ${JSON.stringify(ch.value)}`); } break; }
       }
@@ -606,9 +610,51 @@
       under30: r.sim.crossings[30] != null ? fmtMonth(addMonths(r.start, r.sim.crossings[30])) : null,
       paydown: [r.sim.extraM1, r.sim.extraLater], nextCard: r.ladder && r.ladder.graduateWhen || null, steps6: r.plans['6m'].steps.length };
   }
+  // Levers are extra action ON TOP OF the plan. Anything the plan already does (register to vote, break a
+  // financial link, stop BNPL/gambling/payday, pay the plan's amount) is a no-op that says so, so a lever
+  // never lowers the estimate by "undoing" a plan step. Gains come from doing more, or sooner.
+  function planLevers(before, changes) {
+    const p = before.profile, keep = [], already = [];
+    (changes || []).forEach(ch => {
+      switch (ch.lever) {
+        case 'electoralRoll':
+          if (ch.value === false) { already.push('Staying off the electoral roll isn\'t an extra step, so nothing changes'); break; }
+          if (p.electoralRoll) already.push('You\'re already on the electoral roll');
+          else already.push('Registering to vote is already in your plan');
+          break;
+        case 'removeAssociates':
+          already.push(p.staleAssociates.length ? 'Breaking financial links is already in your plan' : 'You have no financial links to break');
+          break;
+        case 'stop':
+          if (['bnpl', 'gambling', 'payday'].includes(ch.what)) already.push(p.bank[ch.what] ? `Stopping ${ch.what === 'bnpl' ? 'buy now, pay later' : ch.what} is already in your plan (its ${gbp(p.bank[ch.what])}/month already goes to your card)` : `You have no ${ch.what === 'bnpl' ? 'buy now, pay later' : ch.what} payments to stop`);
+          break;
+        case 'rentReporting':
+          if (ch.value === false) { already.push('Skipping rent reporting isn\'t an extra step, so nothing changes'); break; }
+          if (p.housing === 'rent' && p.bank.rent && p.bank.rentByTransfer) already.push('Rent reporting is already in your plan');
+          else keep.push(ch);
+          break;
+        case 'paydown': {
+          const v = Math.max(0, +ch.value || 0), planMax = Math.max(before.sim.extraM1, before.sim.extraLater);
+          if (v <= planMax) already.push(`Your plan already pays ${gbp(before.sim.extraM1)} then ${gbp(before.sim.extraLater)} a month extra, so ${gbp(v)} adds nothing`);
+          else keep.push(ch);
+          break;
+        }
+        case 'clearCard': {
+          const owing = (p.cards || []).filter(c => (!ch.card || c.name === ch.card) && c.balance > 0);
+          if (!owing.length) already.push('There\'s no card balance to clear');
+          else keep.push(ch);
+          break;
+        }
+        default: keep.push(ch);
+      }
+    });
+    return { keep, already };
+  }
   function whatIf(profile, changes, opts) {
     const before = run(profile, opts);
-    const { profile: changed, applied } = applyChanges(before.profile, changes);
+    const { keep, already } = planLevers(before, changes);
+    const { profile: changed, applied: done } = applyChanges(before.profile, keep);
+    const applied = done.concat(already);
     const after = run(changed, opts);
     const B = headlineNumbers(before), A = headlineNumbers(after);
     const keyOf = c => c.label;

@@ -11,6 +11,7 @@ Jag's credit engine from the Credit Coach prototype, built 2026-11-07 during the
 | `mock-report-mei.json` | Mock Experian report, `credit-coach-report/v1`: **Mei Lin**, 455/999, international student 4 months in the UK, no credit accounts, a phone contract decline |
 | `personas/priya.json`, `personas/sam.json`, `personas/dan.json` | `Profile` objects exported verbatim from `PERSONAS` in `engine.js` (added for this handoff so the check runs; `engine.js` stays the source) |
 | `check.js` | Smoke check: every persona and both reports through the engine |
+| `test-fixes.js` | Tests for the what-if and headline fixes |
 
 ### No `rules.json` or `cards.json`
 The build plan names `rules.json`, `cards.json` and `personas/*.json`. Rules and cards were never split out; they live inside `engine.js`:
@@ -83,11 +84,14 @@ ALL OK
 ```
 
 ## Known gaps
-- **Priya's headline is wrong for her.** She gets "you have very little of it ... builds it from zero" because the thin-file test (`engine.js` line ~359: oldest account under 1 year OR fewer than 2 credit accounts) fires on her single card. Her real story is utilisation + late payment + decline. Likely fix: only use the build headline when there are no credit accounts or the oldest is under 1 year. Not changed here (engine copied unchanged)
+- ~~Priya's headline~~ fixed on `partner/engine-fixes`: the thin-file headline now needs no credit accounts, an oldest account under 1 year, or new to the UK. The `build` plan track itself is unchanged, so Priya's steps are the same
 - Rules, cards and personas are inside `engine.js`, not separate JSON files (see above)
 - No Priya mock report file; she exists only as a persona
 - PDF report extraction via Claude (build plan section 2) is not in the engine; it only takes `credit-coach-report/v1` JSON or a Profile
 - Points are on a 0-999 reference scale, rescaled to the bureau (`SCALE`); many impacts are our assumptions (labelled in `engine.js`)
+
+## What-if levers (changed on `partner/engine-fixes`)
+`whatIf` levers mean **extra action on top of the plan**. A lever the plan already does (register to vote, break financial links, stop BNPL/gambling/payday, rent reporting, a paydown at or below the plan's amount) changes nothing and adds a line to `applied` saying it's already in the plan. Doing more or sooner gives a gain: a paydown above the plan, or `clearCard` (now a one-off payment this month, not a silent balance reset). A lever never lowers the estimate. Tests: `node prep-incoming/credit-coach/test-fixes.js`.
 
 ## Changes after `credit-engine-build-plan.md`
 Not checked line by line. The plan's later sections (10: decline decoder, build-from-zero, accessibility; 11: explainability and what-if API) are implemented (`decodeDecline`, `build`, `because` on every step, `whatIf`/`applyChanges`). Jag to add anything else he changed.
