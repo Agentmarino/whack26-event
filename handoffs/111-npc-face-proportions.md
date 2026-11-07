@@ -1,7 +1,7 @@
 ---
 id: 111
 title: NPC face proportions and small fixes, set defaults (stubble, day)
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
