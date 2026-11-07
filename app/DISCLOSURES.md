@@ -39,6 +39,13 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | tsx (MIT) | 4.23.15 | 112 runs the TypeScript scripts (`make-examples.ts`, `mock-walk.ts`); 113 dev server |
 | esbuild (MIT) | 0.28.2 | 112 installed by tsx (its build script allowed in `pnpm-workspace.yaml`), not used directly |
 | @types/node (MIT) | 26.6.6 | 112 Node type definitions for `app/shared/` and `app/backend/` |
+| react, react-dom (MIT) | 19.3.1 | 114 frontend (`app/frontend/`) |
+| vite (MIT), @vitejs/plugin-react (MIT) | 8.3.6, 6.2.1 | 114 frontend dev server, `/api` proxy and build (config written by hand, same versions as 108) |
+| tailwindcss, @tailwindcss/vite (MIT) | 4.3.5 | 114 frontend styling (Tailwind v4 via the Vite plugin) |
+| typescript (Apache-2.0), @types/react, @types/react-dom, @types/node (MIT) | 7.0.2, 19.3.0, 19.3.0, 26.6.6 | 114 frontend type checking |
+| @fontsource/press-start-2p (package MIT, font OFL-1.1) | 5.3.0 | 114 pixel font for the name tag, buttons and headings |
+| @fontsource/atkinson-hyperlegible (package MIT, font OFL-1.1) | 5.3.0 | 114 readable font for every message and card (Braille Institute's legibility font) |
+| playwright (Apache-2.0) | 1.56.1 | 114 dev only: `app/frontend/scripts/walk.mjs` walks the chat in WebKit (`iPhone 15` profile) and Chromium 1440x900 and saves the screenshots in `app/frontend/screens/`. Not in the app |
 | Transitive packages of the workspace | see `pnpm-lock.yaml` at the repo root | Installed by pnpm, not used directly |
 
 ## APIs and data
@@ -49,6 +56,9 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | Item | Used for | Source / licence |
 |---|---|---|
 | Press Start 2P font by CodeMan38 | 108 dialogue box and page heading | https://fonts.google.com/specimen/Press+Start+2P via https://fontsource.org/fonts/press-start-2p, SIL Open Font License 1.1 |
+| Atkinson Hyperlegible font by the Braille Institute | 114 message and card text | https://www.brailleinstitute.org/freefont/ via https://fontsource.org/fonts/atkinson-hyperlegible, SIL Open Font License 1.1 |
+| Web Speech API (SpeechRecognition) and speechSynthesis, built into the browser | 114 voice in (en-GB dictation) and "read replies aloud"; nothing is sent by our code, the browser's own service handles it | Browser built-ins, no key or account |
+| NPC kit (`app/npc-concept/src/npc/`) and the Capital One logo file | 114 copied unchanged into `app/frontend/src/npc/` and `app/frontend/public/brand/` | Our own code from 108 to 111; logo as in the rows above |
 | Pixel art: credit agent, stand, hall, props, pixel font for the wordmark | 108 NPC concept | Drawn by us in code during the event (`app/npc-concept/src/npc/`). No outside art assets |
 | Pixel art redraw: chunky businessman agent, close-up stand, counter props | 109 NPC art pass | Drawn by us in code during the event (`app/npc-concept/src/npc/`). Original character; the style brief named a generic "pixel detective" sprite look only. No outside art assets |
 | Pixel art redraw: friendly businessman at a desk, glass wall office with colleagues (day and evening), desk, monitor, keyboard, mug, plant, in-tray, facial hair layer | 110 NPC art direction pass | Drawn by us in code during the event (`app/npc-concept/src/npc/`). Original character. The user's reference images (two avatar style refs, a composition frame, two detail frames) were used for style and framing only; they are gitignored in `app/npc-concept/refs/`, never shown in the app, and nothing was traced or copied from them |
