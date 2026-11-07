@@ -3,6 +3,7 @@
   "private": true,
   "description": "WHACK 26 build: pnpm workspace root (app/backend, app/frontend, app/shared)",
   "scripts": {
+    "dev": "VITE_USE_MOCK=false pnpm --parallel --filter backend --filter frontend dev",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "examples": "pnpm --filter shared exec tsx scripts/make-examples.ts"
   }

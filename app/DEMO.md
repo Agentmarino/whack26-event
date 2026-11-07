@@ -3,11 +3,11 @@
 Read by `/demo-check`. Keep this current from the first working screen.
 
 ## Start command
-Two terminals from the repo root (`pnpm install` once):
-1. Backend: `pnpm --filter backend dev` (port 8000, see "Backend (handoff 113)" below)
-2. Frontend: `cd app/frontend && VITE_USE_MOCK=false pnpm dev --host` (port 5173; the phone opens the `Network:` URL)
+From the repo root (`pnpm install` once): `pnpm dev`. It starts the backend (port 8000, see "Backend (handoff 113)" below) and the frontend on the real backend (port 5173, `--host`; the phone opens the frontend's `Network:` URL). Ctrl+C stops both.
 
-No backend? `cd app/frontend && pnpm dev --host` runs the whole chat on the mock conversation (Priya), which is the default.
+Separately, two terminals: `pnpm --filter backend dev`, and `cd app/frontend && VITE_USE_MOCK=false pnpm dev`.
+
+No backend? `cd app/frontend && pnpm dev` runs the whole chat on the mock conversation (Priya), which is the default.
 
 ## Steps (the 2 minute live demo)
 1. Phone, portrait, `http://<Mac LAN IP>:5173/`. The agent waves: tap **Next**, then **Let's start**

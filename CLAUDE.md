@@ -31,11 +31,12 @@ Hackathon build for WHACK 26 (Warwick, 7 to 8 Nov 2026). Team of 2, each running
 - Log every library, API, product and AI use in `app/DISCLOSURES.md` as you go (what, where, why)
 - Hacking stops at 11:00 Sun 8 Nov
 
-## Stack (decided 2026-11-06, change only together)
-- Backend (Mihael): Python + FastAPI in `app/backend/`, uv
-- Frontend (partner): Vite + React + TypeScript + Tailwind in `app/frontend/`, pnpm. Design with Impeccable, check with Playwright MCP
-- LLM: Claude API via the anthropic SDK, model name in one config line
-- Contract between them: `app/CONTRACT.md` (written by handoff 101)
+## Stack (decided 2026-11-06, moved to Node 2026-11-07; change only together)
+- One pnpm workspace, Node 24. `pnpm dev` at the repo root starts backend and frontend together (frontend with `--host` on the real backend, so the phone can open it)
+- Backend: Node + Fastify + TypeScript in `app/backend/` (tsx, vitest). Jag's credit engine in `app/backend/engine/engine.js`, a byte-identical copy of `prep-incoming/credit-coach/engine.js`
+- Frontend: Vite + React + TypeScript + Tailwind in `app/frontend/`. Design with Impeccable, check with Playwright MCP
+- Shared contract: zod schemas in `app/shared/contract.ts`, with examples (`pnpm examples`) and the mock conversation. `app/CONTRACT.md` explains it
+- LLM: Claude API via `@anthropic-ai/sdk`, model name in one config line (`LLM_MODEL` in `.env`)
 
 ## Demo rule
 IMPORTANT: from 07:00 on day 2, the demo path must never be broken. Only fixes and polish, each one checked with `/demo-check` before commit.
