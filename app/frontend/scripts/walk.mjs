@@ -49,6 +49,7 @@ const page = await context.newPage()
 const problems = []
 page.on('console', (m) => {
   if (m.type() === 'error') problems.push(`console error: ${m.text()}`)
+  if (m.type() === 'warning' && m.text().includes('[api]')) problems.push(`contract mismatch: ${m.text()}`)
 })
 page.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
 
@@ -223,6 +224,16 @@ try {
     if (await sliders.count()) {
       await press(sliders, 'sliders')
       await page.getByTestId('whatif-sheet').waitFor({ state: 'visible', timeout: 3000 })
+      // slider by keyboard (works for touch and keys alike): 12 steps of £25 = £300, then stop BNPL
+      await page.getByTestId('paydown').focus()
+      for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowRight')
+      const bnpl = page.locator('[data-lever="bnpl"]')
+      if (await bnpl.count()) {
+        if (keyboard) {
+          await bnpl.focus()
+          await page.keyboard.press('Space')
+        } else await bnpl.check()
+      }
       await shot('whatif-sheet')
       await press(action('whatif-run'), 'run what-if')
       await settle()

@@ -196,7 +196,7 @@ export default function App() {
       <div className="app" data-api={api.mode} data-step={state.step ?? 'none'}>
         <div
           className="app__stage"
-          style={{ ...(wide ? { width } : {}), ...(cropPx ? { height: sceneH - cropPx, overflow: 'hidden' } : {}) }}
+          style={{ ...(wide ? { width } : {}), ...(cropPx ? { height: sceneH - cropPx, overflow: 'clip' } : {}) }}
           data-crop={cropPx || undefined}
         >
           <NpcScene
@@ -232,14 +232,7 @@ export default function App() {
           <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live">
             {announce}
           </p>
-          <Transcript conv={state} printed={current ? tw.printed : 0} typed={typed} reducedMotion={reduced} onAdvance={advance} />
-          {inCoach && mode.kind === 'input' && (
-            <div className="flex-none px-3 pb-1.5">
-              <button type="button" className="btn btn--quiet w-full" onClick={() => setSheet('whatif')} data-action="whatif-sheet">
-                Try changes with sliders
-              </button>
-            </div>
-          )}
+          <Transcript conv={state} printed={current ? tw.printed : 0} typed={typed} onAdvance={advance} />
           <Dock
             mode={mode}
             onNext={advance}
@@ -252,6 +245,7 @@ export default function App() {
             onSkip={() => conv.skip('Skip')}
             onRetry={conv.retry}
             onOffline={() => setApi(createMockApi())}
+            onSliders={inCoach ? () => setSheet('whatif') : undefined}
           />
           <footer className="flex-none px-3 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-[0.6875rem] leading-tight text-muted" data-testid="disclaimer">
             {DISCLAIMER}

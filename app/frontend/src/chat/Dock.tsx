@@ -30,6 +30,8 @@ export function Dock(props: {
   onSkip: () => void
   onRetry: () => void
   onOffline: () => void
+  /** Coach mode: opens the what-if sliders, shown first in the quick replies. */
+  onSliders?: () => void
 }) {
   const { mode } = props
   const ref = useRef<HTMLDivElement>(null)
@@ -148,9 +150,17 @@ export function Dock(props: {
 
         {mode.kind === 'input' && mode.expects.kind === 'text' && (
           <div className="flex flex-col gap-2">
-            {mode.expects.chips && mode.expects.chips.length > 0 && (
+            {((mode.expects.chips && mode.expects.chips.length > 0) || props.onSliders) && (
               <div className="hscroll -mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5" role="group" aria-label="Quick replies">
-                {mode.expects.chips.map((c) => (
+                {props.onSliders && (
+                  <button type="button" className="btn flex-none" onClick={props.onSliders} data-action="whatif-sheet">
+                    <svg width="14" height="14" viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" fill="currentColor">
+                      <path d="M0 1h9v1H0zM1 0h3v3H1zM0 4h9v1H0zM5 3h3v3H5zM0 7h9v1H0zM2 6h3v3H2z" />
+                    </svg>
+                    Sliders
+                  </button>
+                )}
+                {(mode.expects.chips ?? []).map((c) => (
                   <button key={c} type="button" className="chip" onClick={() => props.onChip(c, 'choice')} data-chip={c}>
                     {c}
                   </button>

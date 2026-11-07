@@ -4,7 +4,11 @@ import { resolveRef, type AgentMessage } from 'shared'
 import { ToneIcon } from '../ui/Health'
 import { useCards } from './context'
 import { DeclineCard } from './DeclineCard'
+import { LadderCard } from './LadderCard'
+import { ProjectionCard } from './ProjectionCard'
 import { ReasonCard } from './ReasonCard'
+import { StepCard } from './StepCard'
+import { WhatIfCard } from './WhatIfCard'
 
 export function Card({ msg }: { msg: AgentMessage }) {
   const ctx = useCards()
@@ -23,7 +27,15 @@ export function Card({ msg }: { msg: AgentMessage }) {
       return r.flags.length ? <FlagsCard flags={r.flags} /> : null
     case 'paper':
       return <PaperCard />
-    default:
+    case 'step':
+      return <StepCard step={r.step} plan={r.plan} stepIndex={r.stepIndex} total={r.total} />
+    case 'projection':
+      return <ProjectionCard plan={r.plan} plans={r.plans} riskLine={r.riskLine} scaleMax={r.scaleMax} bureau={r.bureau} />
+    case 'ladder':
+      return <LadderCard ladder={r.ladder} />
+    case 'whatif':
+      return <WhatIfCard run={r.whatIf} plan={ctx.plan} />
+    case 'headline':
       return null
   }
 }

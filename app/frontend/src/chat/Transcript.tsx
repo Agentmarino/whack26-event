@@ -16,7 +16,6 @@ export function Transcript(props: {
   conv: ConvState
   printed: number
   typed: boolean
-  reducedMotion: boolean
   onAdvance: () => void
 }) {
   const { conv } = props
@@ -24,16 +23,16 @@ export function Transcript(props: {
   const tail = conv.currentKey ?? `${conv.entries.length}:${conv.pending ? 'p' : ''}:${conv.error ? 'e' : ''}`
 
   // Keep the newest thing in view: the whole of it if it fits (history peeks above), else its top.
+  // Instant, not smooth: the previous card folds into a one-line step as the new one lands, and a
+  // smooth scroll would race that.
   useLayoutEffect(() => {
     const box = scroller.current
-    if (!box) return
-    const el = box.querySelector<HTMLElement>('[data-latest]')
-    const behavior: ScrollBehavior = props.reducedMotion ? 'auto' : 'smooth'
-    if (!el) return
-    const top = el.offsetTop - box.offsetTop
+    const el = box?.querySelector<HTMLElement>('[data-latest]')
+    if (!box || !el) return
+    const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
     const fits = el.offsetHeight <= box.clientHeight - 8
-    box.scrollTo({ top: fits ? box.scrollHeight : Math.max(0, top - 8), behavior })
-  }, [tail, props.reducedMotion])
+    box.scrollTop = fits ? box.scrollHeight - box.clientHeight : Math.max(0, top - 12)
+  }, [tail])
 
   const last = conv.entries[conv.entries.length - 1]
   return (
@@ -202,10 +201,16 @@ function HistoryEntry({ entry }: { entry: Entry }) {
         <span>{entry.text}</span>
       </p>
     )
-  const { msg } = entry
+  return <AgentHistory msg={entry.msg} />
+}
+
+function AgentHistory({ msg }: { msg: AgentMessage }) {
+  const ctx = useCards()
+  // A step folds into its one-line card; if its ref does not resolve, the text stands on its own.
+  const stepLine = msg.kind === 'step' && resolveRef(msg.ref, ctx.result)?.on === 'step'
   return (
     <div className="flex flex-col gap-2" data-entry="agent" data-kind={msg.kind}>
-      {msg.kind !== 'step' && (
+      {!stepLine && (
         <p className="border-l-[0.25rem] border-muted/60 pl-3 text-[1.0625rem] leading-snug text-muted">
           <span className="sr-only">{AGENT_NAME}: </span>
           {msg.text}
