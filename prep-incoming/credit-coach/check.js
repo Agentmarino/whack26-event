@@ -1,4 +1,4 @@
-// Node smoke check for the credit engine. Run: node app/engine/check.js
+// Node smoke check for the credit engine. Run: node prep-incoming/credit-coach/check.js
 const fs = require('fs');
 const path = require('path');
 const E = require('./engine.js');

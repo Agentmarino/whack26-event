@@ -20,7 +20,7 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | Sprite design script (Python + Pillow, written by Claude Code during the event, kept outside the repo) | 110: builds the agent's sprite rows from simple shapes (fills, outside outline, mirrored collar) and writes `app/npc-concept/src/npc/sprites/art.ts`; the TS file is the source of truth | mihael |
 | Sprite design script, Playwright library and Pillow (same as above) | 111: the head parts redrawn with longer proportions (a second design script reusing the 110 one, outside the repo), contact sheets, `default.png`, `options.png`, `backgrounds.png`, iPhone/desktop checks; `screens/compare-face.png` is local only (shows the reference image) | mihael |
 | claude-pxl (crsolver/claude-pxl, MIT) and pixel-mcp (willibrandon/pixel-mcp, MIT) | 110: checked as pixel-art tools, licences read on GitHub. Not used: pxl is a second sprite format with a PNG build step (our rig composes palette-indexed layers at runtime); pixel-mcp needs Aseprite, which is not installed. The idea of authoring sprites as code with an automatic outside outline is common to pxl and our design script | mihael |
-| Claude (claude.ai) and Claude Code | Credit engine (`app/engine/engine.js`), its prototype page and mock reports, written during the event on 7 Nov; copied into the repo on branch `partner/engine` | partner |
+| Claude (Cowork) | Credit engine (`engine.js`, rules, cards, personas) written 2026-11-07 during the event by Jag with Claude (Cowork). Point figures from Experian via Which?, card data from capitalone.co.uk and ClearScore (Aug 2026); assumptions labelled in rules.json | partner |
 | Claude Code web search | 108: looked for a pixel-art Claude Code skill. Candidates found (all MIT): sprite-forge (tdimino/claude-code-minoan), pixel-art (wanshuiyin/Auto-claude-code-research-in-sleep), pixel-art-sprites (AbsolutelySkilled). None used, see handoff 108 RESULT | mihael |
 
 ## Libraries
@@ -38,13 +38,10 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 ## APIs and data
 | API / dataset | Used for | Terms checked |
 |---|---|---|
-| Mock credit reports and personas (Alex, Mei, Priya, Sam, Dan) | `app/engine/` test inputs | Made up by us; not real people or real bureau data |
-| Public figures from Experian, Which?, Capital One UK, MoneyHelper, Financial Ombudsman, legislation.gov.uk, myFICO | Rule impacts and card criteria cited in `engine.js` (`SRC`, `CARDS`) | Public web pages, cited by URL in the engine |
 
 ## Products and assets
 | Item | Used for | Source / licence |
 |---|---|---|
-| Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono (Google Fonts, OFL-1.1) | `app/engine/index.html` prototype page | https://fonts.google.com |
 | Press Start 2P font by CodeMan38 | 108 dialogue box and page heading | https://fonts.google.com/specimen/Press+Start+2P via https://fontsource.org/fonts/press-start-2p, SIL Open Font License 1.1 |
 | Pixel art: credit agent, stand, hall, props, pixel font for the wordmark | 108 NPC concept | Drawn by us in code during the event (`app/npc-concept/src/npc/`). No outside art assets |
 | Pixel art redraw: chunky businessman agent, close-up stand, counter props | 109 NPC art pass | Drawn by us in code during the event (`app/npc-concept/src/npc/`). Original character; the style brief named a generic "pixel detective" sprite look only. No outside art assets |
