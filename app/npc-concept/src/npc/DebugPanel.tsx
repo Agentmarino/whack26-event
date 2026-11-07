@@ -13,7 +13,7 @@ export interface DebugPanelProps {
 /** Buttons for every state, emote and gesture. Extra sections go in children. */
 export function DebugPanel({ snapshot, onState, onEmote, onGesture, info, children }: DebugPanelProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
-  useEffect(() => headingRef.current?.focus(), [])
+  useEffect(() => headingRef.current?.focus({ preventScroll: true }), [])
   return (
     <aside className="npc-debug" id="npc-debug-panel" aria-labelledby="npc-debug-title">
       <h2 id="npc-debug-title" ref={headingRef} tabIndex={-1}>Debug panel <kbd>D</kbd></h2>

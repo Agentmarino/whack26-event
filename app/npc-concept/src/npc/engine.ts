@@ -213,7 +213,7 @@ export class NpcEngine {
    * never rescales it (WebKit at dpr 3 otherwise paints 7x as 1119 px and drops a column).
    */
   setOutput(deviceScale: number, backingW: number, backingH: number) {
-    this.deviceScale = Math.max(1, Math.round(deviceScale))
+    this.deviceScale = Math.max(1, Math.floor(deviceScale + 1e-6))
     if (this.canvas.width !== backingW) this.canvas.width = backingW
     if (this.canvas.height !== backingH) this.canvas.height = backingH
     this.render()

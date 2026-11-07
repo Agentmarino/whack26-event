@@ -39,6 +39,9 @@ export function useIntegerScale(reserveRem: number, reserveWidthPx = 0) {
   })
   useEffect(() => {
     const on = () => {
+      // Phone: typing can shrink the window (on-screen keyboard). Keep the scale until the text box closes.
+      const typing = document.activeElement?.matches('input:not([type=radio]):not([type=file]), textarea')
+      if (typing && window.matchMedia('(pointer: coarse)').matches) return
       const next = computeRef.current()
       setV((prev) => (prev.deviceScale === next.deviceScale && prev.scale === next.scale ? prev : next))
     }

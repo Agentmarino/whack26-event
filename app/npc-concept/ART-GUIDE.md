@@ -20,7 +20,7 @@ The phone on the same wifi opens the `Network:` URL (see `app/DEMO.md`). Tap **D
 ```tsx
 import { NpcScene, DialogueBox, NATIVE_W, useIntegerScale, usePrefersReducedMotion, type NpcHandle } from './npc'
 const npc = useRef<NpcHandle>(null)
-const { scale } = useIntegerScale(20)            // rem kept free under the scene for the dialogue box
+const { scale } = useIntegerScale(23)            // rem kept free under the scene for the dialogue box
 const reduced = usePrefersReducedMotion()
 <NpcScene ref={npc} scale={scale} reducedMotion={reduced} onFileDrop={f => ...} onPaperClick={() => ...} />
 <DialogueBox line={line} width={NATIVE_W * scale} speed={speed} onSpeedChange={setSpeed} reducedMotion={reduced}
@@ -42,7 +42,7 @@ npc.current?.setState('reading'); npc.current?.emote('concerned'); npc.current?.
 ## Native sizes
 | Thing | Size (px) | Where |
 |---|---|---|
-| Canvas | 160 x 120 (4:3) | Whole-number device scale (`useIntegerScale`); iPhone 15 portrait 7x (1120 x 840 device px), desktop 1440 x 900 4x (640 x 480) |
+| Canvas | 160 x 120 (4:3) | Whole-number device scale (`useIntegerScale`); iPhone 15 portrait 7x (1120 x 840 device px), desktop 1440 x 900 4x (640 x 480 at dpr 1, 8x device at dpr 2) |
 | Character box | 64 x 72 | Top-left at scene (48, 20). Visible figure head to counter: y 20 to 84 = 64 px, over half the canvas |
 | Head | 24 x 26 | Box (20, 0). Hair rows 0 to 6, hairline 7, forehead 8 to 11, eyes 13 to 15, nose 16 to 17, mouth 19 to 22 |
 | Eyes layer | 12 x 5 | Head (6, 12). Each eye 2 x 3 with a 1 px highlight (left eye x 1-2, right eye x 9-10) |
@@ -77,7 +77,7 @@ Dropped in 109: the hall (wall, truss, lamps, booths, floor), the passer-by, the
 `WORDMARK` stays its own layer. If an official logo file exists at `public/brand/capital-one-logo.svg` or `.png`, `vite.config.ts` finds it at start-up (restart `pnpm dev` after adding it) and `App` passes it to `NpcScene` as `wordmarkSrc`. `NpcScene` shows the image as-is over the wordmark's area of the top band, scaled to fit (`object-fit: contain`), and hides the pixel text. If the file fails to load, the pixel text comes back. Never draw or trace the Capital One logo by hand. Add a logo row to `app/DISCLOSURES.md` when the file is added. Checked with a plain grey test file on 2026-11-07, then removed: no logo file is in the repo.
 
 ## Palette
-One file: `src/npc/palette.ts`. Sprites store palette indices (one character per pixel, `.` is transparent), never colours. Recolouring is a palette change only: `npc.current.setPalette({ uniform: '#1f6b45', uniformShade: '#124a2f', uniformLight: '#3d8c63' })` turns the uniform green and leaves the stand alone (screenshot: `screens/palette-recolour.png`). The stand's navy has its own entries (`brandNavy*`, `standPanel`). `red` is shared on purpose: tie, badge bar, planner and stand bands are all the brand red. The coach glasses are `outline` (dark), not red. The Capital One hex values are approximations; swap in the official ones.
+One file: `src/npc/palette.ts`. Sprites store palette indices (one character per pixel, `.` is transparent), never colours. Recolouring is a palette change only: `npc.current.setPalette({ uniform: '#1f6b45', uniformShade: '#124a2f', uniformLight: '#3d8c63' })` turns the uniform green and leaves the stand alone (screenshot: the `palette-recolour` tile in `screens/contact-sheet.png`). The stand's navy has its own entries (`brandNavy*`, `standPanel`). `red` is shared on purpose: tie, badge bar, planner and stand bands are all the brand red. The coach glasses are `outline` (dark), not red. The Capital One hex values are approximations; swap in the official ones.
 
 | Char | Name | Hex | Group |
 |---|---|---|---|
@@ -196,10 +196,11 @@ Left and right always mean screen left and right. At 25% size the hardest pair t
 - **Scale:** `useIntegerScale` picks the largest whole device scale that fits. iPhone 15 portrait is 393 CSS px at dpr 3 = 1179 device px, so 1179 / 160 gives 7x (1120 x 840 device px). Under 640 CSS px wide there is no side gutter, so the scene runs edge to edge.
 - **No blur, no dropped columns:** 7x at dpr 3 is 373.333 CSS px, which layout cannot store exactly; WebKit then painted the canvas 1119 px wide and drew one native column 6 px wide. So the canvas box is rounded up to whole CSS px (374), its backing store matches it in device px (1122), the engine draws the frame at 7x inside it, and `NpcScene` nudges its top-left onto a whole CSS px. Checked: 0 of 19,200 7x7 blocks not flat.
 - **Layout (portrait):** header (title and Debug button) in a slim row, the scene full width under it, the dialogue box below. Safe areas: `viewport-fit=cover` and `env(safe-area-inset-*)` padding on the page; the pinned reply row also respects the side insets.
-- **Keyboard:** when the reply box is focused on a touch screen (`pointer: coarse`), the reply row is pinned just above the on-screen keyboard. It uses `visualViewport` (offsetTop + height), fixed position, and keeps its old space so nothing above it jumps. Tapping Send keeps focus (and the keyboard) in the reply box. The reply input is 16 px on phones so Safari does not zoom in.
+- **Reply row:** on an iPhone 15 the first line, the chip and the scene fit on screen; the reply row starts just below the fold (scroll, or tap it to pin it above the keyboard). A sticky reply row was tried and dropped: it covered the end of long agent lines.
+- **Keyboard:** when the reply box is focused on a touch screen (`pointer: coarse`), the reply row is pinned just above the on-screen keyboard. It uses `visualViewport` (offsetTop + height), fixed position, and keeps its old space so nothing above it jumps. Tapping Send keeps focus (and the keyboard) in the reply box. The reply input is 16 px on phones so Safari does not zoom in. While a text box has focus on a touch screen, `useIntegerScale` ignores window resizes, so a shrinking window cannot collapse the scene.
 - **Files:** drag and drop does not exist on iPhone. The tray is a button that opens the file picker (`<input type="file" accept=".pdf,.csv,image/*">`, visually hidden rather than `display: none`, so Safari opens it from the tap). Picking a file fires `onFileDrop` exactly like a drop. Desktop keeps drag and drop anywhere on the page.
 - **Touch targets** are at least 44 x 44 CSS px (Apple's 44 pt): canvas hotspots grow around their centre to 44 px, and chips, speed options, the next arrow, reply box, Send, the Debug button and (on touch screens) the debug panel buttons have a 2.75rem minimum. Nothing depends on hover: the summary sheet's hover glow is extra, and focus or tap does the same.
-- **Debug on the phone:** the Debug button in the header (there is no `D` key on a phone). The panel sits below the dialogue on narrow screens and beside the scene from 64rem.
+- **Debug on the phone:** the Debug button in the header (there is no `D` key on a phone). The panel sits below the dialogue on narrow screens and beside the scene from 64rem; opening it does not scroll the page. For the live demo use the "Start the sample conversation" chip, not the panel.
 - **Not covered by emulation:** the keyboard pinning, the file picker sheet and safe-area insets were checked in Playwright's WebKit `iPhone 15` profile, which has no on-screen keyboard and no notch. Check on the real phone before the demo.
 
 ## Accessibility
