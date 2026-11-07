@@ -1,0 +1,39 @@
+{
+  "name": "Sam",
+  "blurb": "19, student, no credit history at all (thin file)",
+  "age": 19,
+  "grossIncome": 9500,
+  "netIncome": 790,
+  "housing": "rent",
+  "goal": "build",
+  "bureau": "experian",
+  "score": 560,
+  "cards": [],
+  "searches": [],
+  "electoralRoll": true,
+  "addresses3y": 2,
+  "oldestAccountYears": 0,
+  "bank": {
+    "rent": 480,
+    "councilTax": 0,
+    "bills": [
+      {
+        "name": "giffgaff phone",
+        "amount": 10
+      }
+    ],
+    "subscriptions": [
+      {
+        "name": "Spotify Student",
+        "amount": 5.99
+      },
+      {
+        "name": "Amazon Prime Student",
+        "amount": 4.49
+      }
+    ],
+    "groceries": 160,
+    "transport": 40,
+    "billsInOwnName": false
+  }
+}

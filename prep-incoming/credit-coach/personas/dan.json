@@ -1,0 +1,69 @@
+{
+  "name": "Dan",
+  "blurb": "34, recovering from a default 2.5 years ago, still linked to an ex",
+  "age": 34,
+  "grossIncome": 32000,
+  "housing": "rent",
+  "goal": "mortgage",
+  "bureau": "equifax",
+  "score": 420,
+  "cards": [
+    {
+      "name": "Vanquis",
+      "limit": 500,
+      "balance": 120,
+      "apr": 39.9,
+      "hasDD": true,
+      "openedYears": 2
+    }
+  ],
+  "loans": [
+    {
+      "name": "Car finance",
+      "monthly": 210,
+      "openedYears": 3
+    }
+  ],
+  "defaults": [
+    {
+      "account": "Old overdraft",
+      "monthsAgo": 30
+    }
+  ],
+  "searches": [
+    8
+  ],
+  "electoralRoll": true,
+  "addresses3y": 1,
+  "staleAssociates": [
+    "an ex-partner (old joint account)"
+  ],
+  "bank": {
+    "rent": 850,
+    "councilTax": 150,
+    "bills": [
+      {
+        "name": "Vodafone",
+        "amount": 25
+      },
+      {
+        "name": "Sky broadband",
+        "amount": 35
+      }
+    ],
+    "subscriptions": [
+      {
+        "name": "Disney+",
+        "amount": 8.99
+      },
+      {
+        "name": "PureGym",
+        "amount": 24.99
+      }
+    ],
+    "groceries": 300,
+    "transport": 120,
+    "gambling": 60,
+    "savings": 50
+  }
+}

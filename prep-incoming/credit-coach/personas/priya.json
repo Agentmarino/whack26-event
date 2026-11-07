@@ -1,0 +1,68 @@
+{
+  "name": "Priya",
+  "blurb": "23, renting, one maxed-out card, late payment in July, declined by Capital One",
+  "age": 23,
+  "grossIncome": 24000,
+  "netIncome": 1680,
+  "housing": "rent",
+  "goal": "card",
+  "bureau": "experian",
+  "score": 700,
+  "cards": [
+    {
+      "name": "Barclaycard",
+      "limit": 1200,
+      "balance": 950,
+      "apr": 29.9,
+      "minOnly": true,
+      "hasDD": false,
+      "openedYears": 2
+    }
+  ],
+  "lates": [
+    {
+      "account": "Barclaycard",
+      "monthsAgo": 4
+    }
+  ],
+  "searches": [
+    1,
+    1,
+    2
+  ],
+  "electoralRoll": false,
+  "addresses3y": 2,
+  "decline": {
+    "lender": "Capital One",
+    "productId": "bt",
+    "monthsAgo": 1
+  },
+  "bank": {
+    "rent": 650,
+    "councilTax": 120,
+    "bills": [
+      {
+        "name": "EE phone",
+        "amount": 18
+      },
+      {
+        "name": "Octopus energy",
+        "amount": 60,
+        "fixed": false
+      }
+    ],
+    "subscriptions": [
+      {
+        "name": "Spotify",
+        "amount": 11.99
+      },
+      {
+        "name": "Netflix",
+        "amount": 10.99
+      }
+    ],
+    "groceries": 320,
+    "transport": 130,
+    "bnpl": 40
+  }
+}
