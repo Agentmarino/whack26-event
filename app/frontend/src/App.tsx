@@ -121,6 +121,11 @@ export default function App() {
     return () => window.clearTimeout(id)
   }, [settings.demo, typed, state.queue.length, state.pending, state.expects, conv])
 
+  const restart = useCallback(() => {
+    npc.current?.reset()
+    conv.start()
+  }, [conv])
+
   // ---------- sheets ----------
   const [sheet, setSheet] = useState<null | 'persona' | 'letter' | 'paper' | 'settings' | 'whatif'>(null)
   const [why, setWhy] = useState<WhyTrail | null>(null)
@@ -159,7 +164,7 @@ export default function App() {
   const mode: DockMode = state.pending
     ? { kind: 'busy', label: state.pending.label }
     : state.error
-      ? { kind: 'error', canGoOffline: api.mode === 'live' }
+      ? { kind: 'error', canGoOffline: api.mode === 'live', sessionGone: state.sessionGone }
       : current && !typed
         ? { kind: 'next', typing: true, more: state.queue.length }
         : state.queue.length
@@ -244,6 +249,7 @@ export default function App() {
             onSample={onSample}
             onSkip={() => conv.skip('Skip')}
             onRetry={conv.retry}
+            onRestart={restart}
             onOffline={() => setApi(createMockApi())}
             onSliders={inCoach ? () => setSheet('whatif') : undefined}
           />
@@ -270,6 +276,10 @@ export default function App() {
             setSheet(null)
             onFile(f, 'letter')
           }}
+          onText={(t) => {
+            setSheet(null)
+            void conv.pasteText(t, 'letter')
+          }}
           onSample={() => {
             setSheet(null)
             conv.sample('letter', state.personaId ?? personas?.[0]?.id)
@@ -284,11 +294,15 @@ export default function App() {
           plan={state.plan}
           planChosen={planChosen}
         />
-        <SettingsSheet open={sheet === 'settings'} onClose={() => setSheet(null)} apiMode={api.mode} onRestart={() => {
-          setSheet(null)
-          npc.current?.reset()
-          conv.start()
-        }} />
+        <SettingsSheet
+          open={sheet === 'settings'}
+          onClose={() => setSheet(null)}
+          apiMode={api.mode}
+          onRestart={() => {
+            setSheet(null)
+            restart()
+          }}
+        />
         <WhatIfSheet
           open={sheet === 'whatif'}
           onClose={() => setSheet(null)}

@@ -30,7 +30,7 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
   const months = Math.max(...all.map((p) => p.month))
   const risk = chosen.map((p) => ({ month: p.month, v: p.month === 0 ? p.low : Math.max(0, mid(p) - props.riskLine) }))
   const lo = Math.floor((Math.min(...all.map((p) => p.low), ...risk.map((r) => r.v)) - 45) / 25) * 25
-  const hi = Math.min(props.scaleMax, Math.ceil((Math.max(...all.map((p) => p.high)) + 10) / 25) * 25)
+  const hi = Math.min(props.scaleMax, Math.ceil((Math.max(...all.map((p) => p.high)) + 30) / 25) * 25)
   const x = (m: number) => pad.l + (m / months) * (W - pad.l - pad.r)
   const y = (v: number) => pad.t + (1 - (v - lo) / (hi - lo)) * (H - pad.t - pad.b)
   const band = (pts: ProjectionPoint[]) =>
@@ -44,11 +44,9 @@ export function ProjectionCard(props: { plan: PlanId; plans: RunResult['plans'];
   return (
     <article className="slip p-3" data-card="projection" aria-label="Your score estimate">
       <p className="slip__tag">Your {props.bureau} score · estimate</p>
-      <p className="mt-1.5 text-[1.0625rem] leading-snug">
-        <span className="font-bold">
-          {range(end)} by {end.date}
-        </span>{' '}
-        on your {label(props.plan)}, from {start.low} now. An estimate, not a promise.
+      {/* The agent's line says the range in words; the card adds the picture and the other plan. */}
+      <p className="sr-only">
+        {range(end)} by {end.date} on your {label(props.plan)}, from {start.low} now. An estimate, not a promise.
       </p>
       <svg
         viewBox={`0 0 ${W} ${H}`}

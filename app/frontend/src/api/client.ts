@@ -13,6 +13,8 @@ export interface Api {
   mode: 'mock' | 'live'
   turn(req: TurnRequest): Promise<TurnResponse>
   upload(file: File, fileKind: FileKind, sessionId: string | null): Promise<UploadResult>
+  /** A pasted letter: the upload route's `text` field instead of a file (113 contract note). */
+  uploadText(text: string, fileKind: FileKind, sessionId: string | null): Promise<UploadResult>
   whatIf(req: WhatIfRequest): Promise<WhatIfResponse>
   personas(): Promise<Persona[]>
   /** The summary PDF as a blob, or null when it is not ready (404 or no backend). */
@@ -22,9 +24,12 @@ export interface Api {
 /** A failure the person can read. `detail` goes to the console only. */
 export class ApiFailure extends Error {
   readonly detail?: unknown
-  constructor(message: string, detail?: unknown) {
+  /** HTTP status, when the server answered. 404 on /api/turn = the session is gone (start again). */
+  readonly status?: number
+  constructor(message: string, detail?: unknown, status?: number) {
     super(message)
     this.detail = detail
+    this.status = status
   }
 }
 
@@ -64,6 +69,11 @@ export function createMockApi(opts: { latencyMs?: number } = {}): Api {
       await wait(latency * 2)
       if (forceError) fail()
       return mockUpload(fileKind, file.name, { fail: uploadFail })
+    },
+    async uploadText(_text, fileKind) {
+      await wait(latency * 2)
+      if (forceError) fail()
+      return mockUpload(fileKind, 'pasted-letter.txt', { fail: uploadFail })
     },
     async whatIf(req) {
       await wait(latency)
@@ -111,7 +121,7 @@ async function request(path: string, init?: RequestInit): Promise<unknown> {
   }
   if (!res.ok) {
     const msg = body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : null
-    throw new ApiFailure(res.status >= 500 || !msg ? FRIENDLY : msg, { status: res.status, body: msg ?? text.slice(0, 200) })
+    throw new ApiFailure(res.status >= 500 || !msg ? FRIENDLY : msg, { status: res.status, body: msg ?? text.slice(0, 200) }, res.status)
   }
   return body
 }
@@ -133,6 +143,13 @@ export function createLiveApi(base = ''): Api {
       form.append('fileKind', fileKind)
       form.append('sessionId', sessionId ?? '')
       form.append('file', file, file.name)
+      return check(UploadResult, await request(`${base}/api/upload`, { method: 'POST', body: form }), 'POST /api/upload')
+    },
+    async uploadText(text, fileKind, sessionId) {
+      const form = new FormData()
+      form.append('fileKind', fileKind)
+      form.append('sessionId', sessionId ?? '')
+      form.append('text', text)
       return check(UploadResult, await request(`${base}/api/upload`, { method: 'POST', body: form }), 'POST /api/upload')
     },
     async whatIf(req) {

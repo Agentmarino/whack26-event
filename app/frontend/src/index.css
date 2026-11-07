@@ -319,6 +319,10 @@ body {
 .meter > i.on {
   background: currentColor;
 }
+:root[data-colour='contrast'] .meter > i:not(.on) {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #000000;
+}
 
 /* chips (quick replies) and buttons */
 .btn {

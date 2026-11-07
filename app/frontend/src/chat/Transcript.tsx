@@ -134,7 +134,7 @@ function Explain(props: { terms: Term[]; open: string | null; setOpen: (f: (o: s
           <button
             key={t.id}
             type="button"
-            className="min-h-11 px-1 text-base font-bold text-text underline decoration-dotted decoration-2 underline-offset-4"
+            className="min-h-11 min-w-11 px-1 text-base font-bold text-text underline decoration-dotted decoration-2 underline-offset-4"
             aria-expanded={open === t.id}
             data-term={t.id}
             onClick={() => setOpen((o) => (o === t.id ? null : t.id))}

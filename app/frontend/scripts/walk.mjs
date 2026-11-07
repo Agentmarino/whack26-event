@@ -1,7 +1,7 @@
 // 114 verification: walk the whole chat from greet to coach and screenshot every step and card.
 // Playwright WebKit with the iPhone 15 profile (393x659, dpr 3, touch) unless --desktop.
 //
-//   node scripts/walk.mjs [--base http://127.0.0.1:5174] [--desktop] [--keyboard] [--reduced]
+//   node scripts/walk.mjs [--base http://localhost:5173] [--desktop] [--keyboard] [--reduced]
 //                         [--text 150] [--colour okabe|contrast] [--prefix name] [--live] [--until coach]
 //
 // Screens go to app/frontend/screens/<prefix>-NN-<step>.png. Every screenshot is taken twice (the first
@@ -17,7 +17,7 @@ const opt = (n, d) => {
   return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : d
 }
 
-const base = opt('base', 'http://127.0.0.1:5174')
+const base = opt('base', 'http://localhost:5173')
 const desktop = flag('desktop')
 const keyboard = flag('keyboard')
 const reduced = flag('reduced')
@@ -55,6 +55,24 @@ page.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
 
 let n = 0
 const shots = []
+// Every visible control at least 44x44 CSS px (Apple's 44 pt). Inline links inside text are exempt.
+const small = new Set()
+async function targets(where) {
+  const bad = await page.evaluate(() =>
+    [...document.querySelectorAll('button, [role=switch], input:not([type=hidden]):not([type=file]):not(.sr-only), select, textarea, summary')]
+      .filter((el) => {
+        const r = el.getBoundingClientRect()
+        const cs = getComputedStyle(el)
+        if (!r.width || !r.height || cs.visibility === 'hidden' || el.closest('.sr-only, [aria-hidden=true]')) return false
+        // a visually hidden input is measured by its visible label
+        // an input inside a label is hit through the whole label
+        const box = el.matches('input') && el.closest('label') ? el.closest('label').getBoundingClientRect() : r
+        return box.width < 43.5 || box.height < 43.5
+      })
+      .map((el) => `${el.tagName.toLowerCase()}[${el.getAttribute('data-action') ?? el.getAttribute('aria-label') ?? el.textContent?.trim().slice(0, 24)}] ${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`),
+  )
+  for (const b of bad) small.add(`${b} (at ${where})`)
+}
 async function shot(name) {
   await page.waitForTimeout(reduced ? 150 : 450)
   const file = `${outDir}${prefix}-${String(++n).padStart(2, '0')}-${name}.png`
@@ -62,6 +80,7 @@ async function shot(name) {
   await page.waitForTimeout(250)
   await page.screenshot({ path: file })
   shots.push(file.split('/').pop())
+  await targets(name)
 }
 
 const dock = page.getByTestId('dock')
@@ -89,7 +108,9 @@ async function press(locator, what) {
       await page.keyboard.press('Enter')
       return
     }
-    await page.keyboard.press('Tab')
+    // Safari (and Playwright's WebKit) only Tab to buttons with Option held, unless the user turned on
+    // "Press Tab to highlight each item"; Option+Tab is what a keyboard user on a Mac presses.
+    await page.keyboard.press(desktop ? 'Tab' : 'Alt+Tab')
   }
   throw new Error(`keyboard: could not Tab to ${what}`)
 }
@@ -261,6 +282,7 @@ const layout = await page.evaluate(() => {
 if (layout.scrollW > layout.vw) problems.push(`horizontal scroll: ${layout.scrollW} > ${layout.vw}`)
 if (layout.dockBottom === null || layout.dockBottom > layout.vh) problems.push(`dock off screen: ${JSON.stringify(layout)}`)
 
+for (const t of small) problems.push(`touch target under 44px: ${t}`)
 console.log(JSON.stringify({ prefix, desktop, keyboard, reduced, textSize, colour, live, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
 for (const p of problems) console.log('PROBLEM', p)
 await browser.close()

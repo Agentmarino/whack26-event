@@ -1,5 +1,5 @@
 // The persona picker for "Use a sample", the "Have a decline letter?" sheet, and the because-trail drawer.
-import { useRef } from 'react'
+import { useId, useRef, useState } from 'react'
 import type { Persona } from 'shared'
 import type { WhyTrail } from '../cards/context'
 import { Sheet } from '../ui/Sheet'
@@ -51,9 +51,12 @@ export function LetterSheet(props: {
   open: boolean
   onClose: () => void
   onFile: (f: File) => void
+  onText: (text: string) => void
   onSample: () => void
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const pasteId = useId()
+  const [text, setText] = useState('')
   return (
     <Sheet open={props.open} onClose={props.onClose} tag="Turned down?" title="Have a decline letter?" testId="letter-sheet">
       <p className="text-[1.0625rem] leading-snug">
@@ -67,7 +70,32 @@ export function LetterSheet(props: {
           Use the sample letter
         </button>
       </div>
-      <p className="text-sm text-ink-muted">A photo, a PDF or the text of an email all work.</p>
+      <p className="text-sm text-ink-muted">A photo or a PDF of the letter works.</p>
+      <form
+        className="flex flex-col gap-2 border-t-2 border-dashed border-paper-line pt-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (text.trim().length < 20) return
+          props.onText(text.trim())
+          setText('')
+        }}
+      >
+        <label htmlFor={pasteId} className="slip__tag">
+          Or paste the letter or email
+        </label>
+        <textarea
+          id={pasteId}
+          rows={4}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="min-h-24 w-full border-[0.1875rem] border-ink bg-paper px-3 py-2 text-base text-ink"
+          placeholder="Thank you for applying for…"
+          data-testid="letter-text"
+        />
+        <button type="submit" className="btn btn--ink self-start" disabled={text.trim().length < 20} data-action="letter-paste">
+          Hand it over
+        </button>
+      </form>
       <input
         ref={fileRef}
         type="file"

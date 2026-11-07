@@ -6,7 +6,7 @@ import { MicButton } from './Mic'
 
 export type DockMode =
   | { kind: 'busy'; label: string }
-  | { kind: 'error'; canGoOffline: boolean }
+  | { kind: 'error'; canGoOffline: boolean; sessionGone: boolean }
   | { kind: 'next'; typing: boolean; more: number }
   | { kind: 'continue' }
   | { kind: 'input'; expects: Expects }
@@ -16,6 +16,13 @@ const ACCEPT: Record<FileKind, string> = {
   credit_report: '.pdf,.json,image/*',
   bank: '.csv,.pdf,image/*',
   letter: '.pdf,.txt,image/*',
+}
+
+// Last input modality: set on any key, cleared on any pointer. Decides whether the dock may move focus.
+let usingKeyboard = false
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', () => (usingKeyboard = true), true)
+  window.addEventListener('pointerdown', () => (usingKeyboard = false), true)
 }
 
 export function Dock(props: {
@@ -29,6 +36,7 @@ export function Dock(props: {
   onSample: (kind: FileKind) => void
   onSkip: () => void
   onRetry: () => void
+  onRestart: () => void
   onOffline: () => void
   /** Coach mode: opens the what-if sliders, shown first in the quick replies. */
   onSliders?: () => void
@@ -39,33 +47,20 @@ export function Dock(props: {
   const [draft, setDraft] = useState('')
   const [pin, setPin] = useState<{ top: number; h: number } | null>(null)
 
-  // Keyboard users: when the dock's contents change under the focus, move focus to the first control.
+  // Keyboard users: when the dock's contents change under the focus, or focus was lost (a sheet closed
+  // and the button that opened it is gone), move focus to the dock's first control. Only after a key
+  // press, so touch users never get a surprise focus (or keyboard).
   const modeKey = mode.kind === 'input' ? `input:${(mode.expects.chips ?? []).join('|')}:${mode.expects.kind}` : mode.kind
   const hadFocus = useRef(false)
   useLayoutEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el || !usingKeyboard) return
     const active = document.activeElement
-    if (hadFocus.current && (!active || active === document.body || !el.contains(active))) {
-      el.querySelector<HTMLElement>('button:not([disabled]), input:not([type=file])')?.focus()
+    const lost = !active || active === document.body
+    if ((hadFocus.current || lost) && !el.contains(active) && !document.querySelector('dialog[open]')) {
+      el.querySelector<HTMLElement>('button:not([disabled]), input:not([type=file]):not([tabindex="-1"])')?.focus()
     }
   }, [modeKey])
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const on = () => (hadFocus.current = el.contains(document.activeElement))
-    const off = (e: FocusEvent) => {
-      // focus leaving to nowhere (the control it was on vanished) still counts as "was in the dock"
-      hadFocus.current = !!e.relatedTarget ? el.contains(e.relatedTarget as Node) : hadFocus.current
-    }
-    el.addEventListener('focusin', on)
-    el.addEventListener('focusout', off)
-    return () => {
-      el.removeEventListener('focusin', on)
-      el.removeEventListener('focusout', off)
-    }
-  }, [])
-
   // Phone: while the text box has focus, pin the dock just above the on-screen keyboard.
   const pinned = pin !== null
   useEffect(() => {
@@ -102,9 +97,15 @@ export function Dock(props: {
 
         {mode.kind === 'error' && (
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn btn--primary flex-1" onClick={props.onRetry} data-action="retry">
-              Try again
-            </button>
+            {mode.sessionGone ? (
+              <button type="button" className="btn btn--primary flex-1" onClick={props.onRestart} data-action="restart-chat">
+                Start again
+              </button>
+            ) : (
+              <button type="button" className="btn btn--primary flex-1" onClick={props.onRetry} data-action="retry">
+                Try again
+              </button>
+            )}
             {mode.canGoOffline && (
               <button type="button" className="btn btn--quiet" onClick={props.onOffline} data-action="offline">
                 Use the offline demo

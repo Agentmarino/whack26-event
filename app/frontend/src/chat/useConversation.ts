@@ -28,6 +28,8 @@ export interface ConvState {
   currentKey: string | null
   pending: Pending | null
   error: string | null
+  /** The server no longer knows the session (it restarted): offer "Start again", not "Try again". */
+  sessionGone: boolean
   personaId: string | null
   hasLetter: boolean
   plan: PlanId
@@ -47,6 +49,7 @@ const initial: ConvState = {
   currentKey: null,
   pending: null,
   error: null,
+  sessionGone: false,
   personaId: null,
   hasLetter: false,
   plan: '3m',
@@ -58,7 +61,7 @@ type Action =
   | { type: 'you'; text: string; findings?: Finding[] }
   | { type: 'notice'; text: string }
   | { type: 'pending'; pending: Pending }
-  | { type: 'error'; message: string }
+  | { type: 'error'; message: string; sessionGone?: boolean }
   | { type: 'turn'; response: TurnResponse; letter?: boolean; personaId?: string }
   | { type: 'whatif'; response: WhatIfResponse }
   | { type: 'advance' }
@@ -92,7 +95,7 @@ function reducer(s: ConvState, a: Action): ConvState {
     case 'pending':
       return { ...s, pending: a.pending, error: null, currentKey: null }
     case 'error':
-      return { ...s, pending: null, error: a.message }
+      return { ...s, pending: null, error: a.message, sessionGone: !!a.sessionGone }
     case 'release':
       return { ...s, pending: null }
     case 'turn': {
@@ -162,6 +165,10 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
           retryRef.current = run
           if (!(e instanceof ApiFailure)) console.error(e)
           else if (e.detail) console.info('[api]', e.detail)
+          if (e instanceof ApiFailure && e.status === 404 && input.type !== 'start') {
+            dispatch({ type: 'error', message: 'The desk lost our conversation (it restarted). Shall we start again?', sessionGone: true })
+            return
+          }
           dispatch({ type: 'error', message: e instanceof ApiFailure ? e.message : "Something went wrong on my side. Let's try that again." })
         }
       }
@@ -203,24 +210,26 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
     [turn],
   )
 
-  const upload = useCallback(
-    async (file: File, fileKind: FileKind) => {
-      const run = async () => {
-        dispatch({ type: 'pending', pending: { kind: 'upload', label: `The agent is reading ${file.name}` } })
+  const handOver = useCallback(
+    async (what: { file: File } | { text: string }, fileKind: FileKind) => {
+      const name = 'file' in what ? what.file.name : 'your pasted letter'
+      const run = async (): Promise<boolean> => {
+        dispatch({ type: 'pending', pending: { kind: 'upload', label: `The agent is reading ${name}` } })
         try {
-          const up = await api.upload(file, fileKind, stateRef.current.sessionId)
+          const sessionId = stateRef.current.sessionId
+          const up = 'file' in what ? await api.upload(what.file, fileKind, sessionId) : await api.uploadText(what.text, fileKind, sessionId)
           if (!up.ok || !up.fileId) {
             dispatch({ type: 'release' })
             dispatch({ type: 'notice', text: up.error ?? "I couldn't read that one. You can try the sample instead." })
             retryRef.current = null
             return false
           }
-          dispatch({ type: 'you', text: `Handed over ${file.name} (${KIND_WORD[fileKind]})`, findings: up.findings })
+          dispatch({ type: 'you', text: 'file' in what ? `Handed over ${name} (${KIND_WORD[fileKind]})` : `Pasted the ${KIND_WORD[fileKind]}`, findings: up.findings })
           await turn({ type: 'file', fileKind, fileId: up.fileId }, { letter: fileKind === 'letter' })
           return true
         } catch (e) {
           retryRef.current = async () => void (await run())
-          dispatch({ type: 'error', message: e instanceof ApiFailure ? e.message : "I couldn't take that file just now. Try again?" })
+          dispatch({ type: 'error', message: e instanceof ApiFailure ? e.message : "I couldn't take that just now. Try again?" })
           return false
         }
       }
@@ -228,6 +237,8 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
     },
     [api, turn],
   )
+  const upload = useCallback((file: File, fileKind: FileKind) => handOver({ file }, fileKind), [handOver])
+  const pasteText = useCallback((text: string, fileKind: FileKind) => handOver({ text }, fileKind), [handOver])
 
   const whatIf = useCallback(
     async (req: Omit<WhatIfRequest, 'sessionId'>, label: string) => {
@@ -241,6 +252,13 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
           retryRef.current = null
           dispatch({ type: 'whatif', response })
         } catch (e) {
+          // 409 (not checked yet) and 422 (no lever in those words) carry a friendly sentence: say it, carry on.
+          if (e instanceof ApiFailure && (e.status === 409 || e.status === 422)) {
+            retryRef.current = null
+            dispatch({ type: 'release' })
+            dispatch({ type: 'notice', text: e.message })
+            return
+          }
           retryRef.current = run
           dispatch({ type: 'error', message: e instanceof ApiFailure ? e.message : "I couldn't work that one out. Try again?" })
         }
@@ -272,7 +290,7 @@ export function useConversation(api: Api, opts: { plainEnglish: boolean; persona
     return e && e.type === 'agent' ? e : null
   }, [state.entries, state.currentKey])
 
-  return { state, current, start, choose, skip, sample, upload, whatIf, retry, advance, showAll }
+  return { state, current, start, choose, skip, sample, upload, pasteText, whatIf, retry, advance, showAll }
 }
 
 export type Conversation = ReturnType<typeof useConversation>
