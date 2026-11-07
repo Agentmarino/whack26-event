@@ -3,15 +3,26 @@
 Read by `/demo-check`. Keep this current from the first working screen.
 
 ## Start command
-`<command that starts the app>`
+Two terminals from the repo root (`pnpm install` once):
+1. Backend: `pnpm --filter backend dev` (port 8000, see "Backend (handoff 113)" below)
+2. Frontend: `cd app/frontend && VITE_USE_MOCK=false pnpm dev --host` (port 5173; the phone opens the `Network:` URL)
+
+No backend? `cd app/frontend && pnpm dev --host` runs the whole chat on the mock conversation (Priya), which is the default.
 
 ## Steps (the 2 minute live demo)
-1. 
-2. 
-3. 
+1. Phone, portrait, `http://<Mac LAN IP>:5173/`. The agent waves: tap **Next**, then **Let's start**
+2. **Use a sample** → **Priya** (report), then **Use a sample** twice more (bank statement, decline letter)
+3. Questions: **A credit card**, **3 months**, **Yes, I can**, **No**. Tap **Continue** while he thinks
+4. Diagnosis: the headline, then three reason cards. Tap **Why?** on one to show the because-trail, then **Tell me about the letter**
+5. Decline: why they likely said no, the one fix, when to reapply, your rights. **Got it**
+6. The agent slides the summary across the desk: tap the sheet on the desk, then **Download** (the PDF from the backend)
+7. **Make me a plan** → **3 months**: steps week by week (**Skip to end** if short of time), the projection chart, the card ladder
+8. What-if: tap **What if I pay £300 a month?**, or **Sliders** for the paydown slider and switches
+9. Accessibility in 20 seconds: the settings button (top right): 150% text, red-green safe colours, read aloud
 
 ## Fallbacks
-- If the live API is down: 
+- If the live API is down: the app says so and offers **Use the offline demo** (the mock conversation, no backend). Or open `http://<Mac LAN IP>:5173/?mock=on`
+- Backend without network: `DEMO_OFFLINE=true` (see below)
 - Recorded backup: 
 
 ## NPC concept on the iPhone (handoff 109)
@@ -30,3 +41,10 @@ Read by `/demo-check`. Keep this current from the first working screen.
 - Tests: `pnpm --filter backend test`
 - Files for a live upload (all made up, in `app/backend/data/samples/`): `sample-credit-report.pdf` (Alex's report as a PDF; Claude reads it, about 8 s live, instant from the cache), `priya-bank.csv` (3 months, matches Priya's bank data), `capital-one-letter.txt` (Priya's decline letter). `app/backend/data/personas/mock-credit-report.json` uploads as a JSON report
 - Before going offline, walk the demo path once with Claude on (and once with Plain English on) so `data/ai-cache.json` holds the wording; commit the cache
+
+## Frontend (handoff 114)
+- Start: `cd app/frontend && pnpm dev --host` (mock, the default) or `VITE_USE_MOCK=false pnpm dev --host` (the backend on `API_TARGET`, default `http://localhost:8000`, through the Vite proxy). Settings in `app/frontend/.env` (see `.env.example`)
+- URL switches for the phone (no restart): `?mock=off` real backend, `?mock=on` mock, `?mock=error` the error state, `?mock=uploadfail` a failed upload, `?demo=1` demo mode (instant text, Priya picked for you, the agent moves on by himself)
+- Port 5173 must be free: on 2026-11-07 the old `app/npc-concept` dev server from the main checkout was still on it. Stop it (Ctrl+C in its terminal) before starting the frontend
+- Checks: `node scripts/walk.mjs` (whole flow, WebKit iPhone 15, screenshots in `app/frontend/screens/`; flags `--keyboard`, `--reduced`, `--text 150`, `--colour okabe|contrast`, `--desktop`, `--live`, `--base <url>`), `node scripts/checks.mjs` (live region, error and upload-failure states, letter at any step, read aloud, mic, settings), `node scripts/contrast.mjs` (WCAG AA for every colour pair in each colour mode)
+- On the phone: the text box pins above the keyboard; the mic uses the browser's speech recognition where it exists, else it points at the keyboard's dictation key

@@ -1,0 +1,148 @@
+// The summary sheet the agent slides across the desk: a paper-styled overlay with the same data the
+// cards use, and a Download button for the backend's PDF (paperUrl). No PDF yet: "Summary not ready yet".
+import { useCallback, useEffect, useState } from 'react'
+import type { EngineResult, PlanId } from 'shared'
+import type { Api } from '../api/client'
+import { dayLabel, range } from '../format'
+import { HealthPill } from '../ui/Health'
+import { Sheet } from '../ui/Sheet'
+
+export function PaperSheet(props: {
+  open: boolean
+  onClose: () => void
+  api: Api
+  result: EngineResult | null
+  paperUrl: string | null
+  plan: PlanId
+  planChosen: boolean
+}) {
+  // Checked when the sheet opens, so Download is a real link the person taps (iOS Safari ignores a
+  // scripted click that comes after an await). 'missing' = 404 or no backend: "Summary not ready yet".
+  const [status, setStatus] = useState<'checking' | 'ready' | 'missing'>('checking')
+  const [tried, setTried] = useState(false)
+  const r = props.result?.result
+  const decline = props.result?.decline
+  const plan = r?.plans[props.plan]
+  const end = plan?.projection[plan.projection.length - 1]
+  const { api, paperUrl, open } = props
+
+  const check = useCallback(async () => {
+    if (!paperUrl) return setStatus('missing')
+    setStatus('checking')
+    setStatus((await api.paper(paperUrl)) ? 'ready' : 'missing')
+  }, [api, paperUrl])
+  useEffect(() => {
+    if (!open) return
+    setTried(false)
+    void check()
+  }, [open, check])
+
+  return (
+    <Sheet
+      open={props.open}
+      onClose={props.onClose}
+      title="Your credit, on one sheet"
+      testId="paper-sheet"
+      footer={
+        <div className="flex flex-col gap-2 border-t-2 border-dashed border-paper-line pt-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {status === 'ready' && paperUrl ? (
+              <a className="btn btn--ink" href={paperUrl} download="credit-summary.pdf" target="_blank" rel="noopener" data-action="download">
+                Download
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="btn btn--ink"
+                disabled={status === 'checking'}
+                onClick={() => {
+                  setTried(true)
+                  void check()
+                }}
+                data-action="download"
+              >
+                {status === 'checking' ? 'Getting it…' : 'Download'}
+              </button>
+            )}
+            <p role="status" className="text-[0.9375rem] font-bold" data-testid="paper-status">
+              {status === 'missing' && tried ? 'Summary not ready yet' : ''}
+            </p>
+          </div>
+          <p className="text-sm text-ink-muted">Estimates for a demo. Not financial advice and not a lending decision.</p>
+        </div>
+      }
+    >
+      {!r ? (
+        <p className="text-[1.0625rem]">Your summary appears here once the agent has looked at your file.</p>
+      ) : (
+        <div className="flex flex-col gap-4 text-[1.0625rem] leading-snug">
+          <section>
+            <p className="text-[1.1875rem] font-bold">{r.headline}</p>
+            <p className="mt-1 text-[0.9375rem] text-ink-muted">
+              Your {r.bureau} score today: {r.profile.score ?? '–'} out of {r.scaleMax}
+            </p>
+          </section>
+          <section>
+            <h3 className="slip__tag">What holds it back</h3>
+            <ol className="mt-2 flex flex-col gap-2">
+              {r.diagnosis.ranked.slice(0, 3).map((f, i) => (
+                <li key={f.id} className="flex flex-col gap-1">
+                  <p className="flex flex-wrap items-center gap-2 font-bold">
+                    {i + 1}. {f.label} <HealthPill rag={f.rag} />
+                  </p>
+                  <p>{f.reason}</p>
+                  <p className="text-sm text-ink-muted">From your data: {f.because.dataPoint}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+          {decline && (
+            <section>
+              <h3 className="slip__tag">Your {decline.lender} decline</h3>
+              <p className="mt-1">
+                Most likely: {decline.reasons.filter((x) => x.likelihood === 'Most likely').map((x) => x.title.toLowerCase()).join(', ') || decline.reasons[0]?.title}.
+              </p>
+              <p className="mt-1">
+                <span className="font-bold">The one fix:</span> {decline.fix.title}. Don't apply again before {decline.reapply.when}.
+              </p>
+            </section>
+          )}
+          {props.planChosen && plan && end && (
+            <section>
+              <h3 className="slip__tag">Your {props.plan === '3m' ? '3-month' : '6-month'} plan</h3>
+              <ol className="mt-2 flex flex-col gap-1">
+                {plan.steps.map((s, i) => (
+                  <li key={`${s.title}-${i}`} className="grid grid-cols-[5.5rem_1fr] gap-2">
+                    <span className="text-ink-muted">{dayLabel(s.date)}</span>
+                    <span>{s.title}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-2 font-bold">
+                By {end.date}: {range(end)} (estimate)
+              </p>
+            </section>
+          )}
+          {r.ladder?.entry && (
+            <section>
+              <h3 className="slip__tag">Next card</h3>
+              <p className="mt-1">
+                {r.ladder.entry.name}. Check with QuickCheck first.
+              </p>
+            </section>
+          )}
+          {decline && (
+            <section>
+              <h3 className="slip__tag">Your rights</h3>
+              <ul className="mt-1 flex list-disc flex-col gap-1 pl-5">
+                {decline.rights.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+      )}
+    </Sheet>
+  )
+}
