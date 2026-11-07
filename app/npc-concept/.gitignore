@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 111: the face comparison embeds style-ref-1 (refs are never committed): local only
+screens/compare-face.png
