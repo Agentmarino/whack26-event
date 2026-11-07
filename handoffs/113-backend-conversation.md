@@ -1,7 +1,7 @@
 ---
 id: 113
 title: Phase B backend, Fastify, conversation, ingest, Claude with checker, what-if, paper PDF
-status: ready
+status: in-progress
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07

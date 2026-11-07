@@ -1,0 +1,112 @@
+{
+ "whatif:c4463212990edb120d9b2e994af4a6c0": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
+  "at": "2026-11-07T17:31:14.737Z"
+ },
+ "whatif:19f004a95c0b5ae27432e02545656942": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"clearCard\",\"card\":\"Barclaycard\"},{\"lever\":\"stop\",\"what\":\"bnpl\"}]}",
+  "at": "2026-11-07T17:31:16.186Z"
+ },
+ "whatif:cdbd6fd70d3103c2b1887d08d199391e": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":200}]}",
+  "at": "2026-11-07T17:31:50.743Z"
+ },
+ "wording:0fa8b047d3651cc1e2e7920786f48034": {
+  "purpose": "wording",
+  "text": "You don't have bad credit, you simply have very little of it. Don't worry, this plan helps you build it up from zero, one step at a time.",
+  "at": "2026-11-07T17:35:43.907Z"
+ },
+ "wording:39f33503e82c6e1d4221a7c6a509f514": {
+  "purpose": "wording",
+  "text": "You're using 79% of your £1,200 total limit, which is £950. Getting that under 30% would show lenders you're keeping things in control.",
+  "at": "2026-11-07T17:35:43.911Z"
+ },
+ "wording:95dc4924b2615ae08a8aba135fbb49f1": {
+  "purpose": "wording",
+  "text": "You're not on the electoral roll at your current address yet. Lenders use it to confirm who you are, so it's worth sorting out.",
+  "at": "2026-11-07T17:35:43.911Z"
+ },
+ "wording:ae3377da672e0c4b9f9d2e389a6980ed": {
+  "purpose": "wording",
+  "text": "You've had 3 hard searches in the last year, and all 3 were in the last 3 months. Lots of applications close together can look credit-hungry.",
+  "at": "2026-11-07T17:35:43.912Z"
+ },
+ "wording:47709c3b6496e121890d2d82528639bd": {
+  "purpose": "wording",
+  "text": "On 8 Mar 2027, pay £215 extra off your Barclaycard, on top of the minimum. That should bring your card balance to about £91. You'll know it worked when your statement shows £91 or less.",
+  "at": "2026-11-07T17:35:46.549Z"
+ },
+ "wording:e6f6c4076161ee0e3f7bef6f7098da89": {
+  "purpose": "wording",
+  "text": "On 8 Apr 2027, pay £68 extra off your Barclaycard, on top of the minimum. That should clear your balance to about £0. You'll know it worked when your statement shows £0.",
+  "at": "2026-11-07T17:35:46.550Z"
+ },
+ "wording:c3da64c911ddc62c24334b9435c2330d": {
+  "purpose": "wording",
+  "text": "On 9 May 2027, you can look ahead to your next card. Check Balance Transfer in Jul 2027. The app will remind you to run QuickCheck then, so you can see where you stand.",
+  "at": "2026-11-07T17:35:46.550Z"
+ },
+ "wording:84587102d9b989735a147c55bfa65a2f": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, steer clear of the thin-file traps. Apply for one thing at a time, only after a soft-search check, and avoid buy now, pay later and payday loans.",
+  "at": "2026-11-07T17:35:48.809Z"
+ },
+ "wording:4b7ac52646a07556e30a026e19767ea7": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, register to vote at your current address at gov.uk/register-to-vote. It takes 5 minutes, and you'll need your National Insurance number.",
+  "at": "2026-11-07T17:35:48.810Z"
+ },
+ "wording:c4883fc9c570f57cf7cc928bc9e18d0a": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, pause all credit applications until 9 Jan 2027. If you're curious about a card, a soft-search checker like Capital One QuickCheck won't affect your score.",
+  "at": "2026-11-07T17:35:48.810Z"
+ },
+ "wording:9bc6bd887d1d09342329905bc59b2805": {
+  "purpose": "wording",
+  "text": "On 9 Nov 2026, connect Experian Boost by linking your current account in the Experian app. It can count Council Tax, Spotify and Netflix as on-time payments, and it can't lower your score.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:9689195a278d92ecd30f6fca26b15fa3": {
+  "purpose": "wording",
+  "text": "From 9 Nov 2026, finish your current buy now, pay later plans but don't start new ones. That frees up £40/month for your card from month 2.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:5c2a034b427b0a0d43a8e619d5400ffc": {
+  "purpose": "wording",
+  "text": "On 16 Nov 2026, sign up to a rent-reporting service such as CreditLadder for your £650 rent. It takes about 8 weeks to show on your report.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:5296468a1412716cd68cd1b58173bc95": {
+  "purpose": "wording",
+  "text": "On 8 Dec 2026, pay £175 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £770.",
+  "at": "2026-11-07T17:35:48.811Z"
+ },
+ "wording:36a18496d8b7f45437188ca1d2c776d4": {
+  "purpose": "wording",
+  "text": "On 8 Jan 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £549.",
+  "at": "2026-11-07T17:35:48.812Z"
+ },
+ "wording:19dbea75b11e2750ea24df46d8ea1ef0": {
+  "purpose": "wording",
+  "text": "On 9 Jan 2027, run Capital One Classic through QuickCheck first, as it's a soft search. If it says no, wait 3 months and check again rather than applying anyway.",
+  "at": "2026-11-07T17:35:48.812Z"
+ },
+ "wording:38690e6230bf6101793afb0e15eb7721": {
+  "purpose": "wording",
+  "text": "On 23 Jan 2027, move Netflix £10.99 and Spotify £11.99 onto your Classic card. Set a Direct Debit for the full balance so you pay £0 interest.",
+  "at": "2026-11-07T17:35:48.812Z"
+ },
+ "wording:cd29f99867ce91bec51b4ac6a476ad04": {
+  "purpose": "wording",
+  "text": "On 8 Feb 2027, pay £215 extra off your Barclaycard, on top of the minimum. That brings your total card balance to about £323, under 30% of your limit.",
+  "at": "2026-11-07T17:35:48.813Z"
+ },
+ "whatif:7675a0e06107c21ae368550da9ff7f26": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
+  "at": "2026-11-07T17:35:50.780Z"
+ }
+}

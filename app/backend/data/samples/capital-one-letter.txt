@@ -1,0 +1,20 @@
+Capital One
+(Sample letter made up for the WHACK 26 demo. Not a real letter.)
+
+Ms Priya Sample
+12 Sample Street
+Coventry
+
+6 October 2026
+
+Your application for a Capital One Balance Transfer credit card
+
+Dear Ms Sample,
+
+Thank you for applying for a Capital One Balance Transfer credit card. We have carefully considered your application and we're sorry to tell you that we are unable to offer you a card at this time.
+
+Our decision was based on information from Experian, the credit reference agency, together with our own lending criteria. You can ask Experian for a copy of your credit file.
+
+Yours sincerely,
+Customer Lending Team
+Capital One
