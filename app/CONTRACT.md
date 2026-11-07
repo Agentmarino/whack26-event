@@ -1,0 +1,39 @@
+# Contract: backend (113) and frontend (114)
+
+Written by handoff 112 on 2026-11-07. Jag's credit engine is the brain; the pixel agent at the Capital One desk is the face.
+
+**The source of truth is code, not this page:**
+- `app/shared/contract.ts`: zod schemas and TypeScript types for everything that crosses the wire, plus `resolveRef()` and the route list
+- `app/shared/conversation.md`: the step order and what the agent says and asks at each step
+- `app/shared/examples/`: real responses for Priya, made from the engine by `scripts/make-examples.ts` (`walk.json` lists the request behind each turn)
+- `app/shared/mock-conversation.ts`: `mockTurn(state, request)`, `mockWhatIf`, `mockUpload`, `mockPersonas` so 114 runs the whole chat with no backend
+
+**113 owns `app/shared/`.** Changes go in a commit starting `CONTRACT:` plus a dated line under "Contract changes" in `handoffs/113-backend-conversation.md`. Never break a field 114 uses without adding the new one first.
+
+## Ports and routes
+Backend `http://localhost:8000`, frontend `http://localhost:5173` (Vite proxies `/api`). CORS for `http://localhost:5173` and the phone's LAN origin (`http://<Mac LAN IP>:5173`). Every error body is `{error: string}`.
+
+| Route | Body | Returns |
+|---|---|---|
+| `GET /api/health` | | `{ok: true}` |
+| `GET /api/personas` | | `Persona[]` (`{id, name, blurb}`: priya, mei, alex) |
+| `POST /api/turn` | `TurnRequest {sessionId \| null, input, settings?: {plainEnglish}}` | `TurnResponse {sessionId, step, messages, expects, result, paperUrl, whatIf?}` |
+| `POST /api/upload` | multipart: `file`, `fileKind` (`credit_report \| bank \| letter`), `sessionId` | `UploadResult {ok, fileId, fileKind, fileName, findings, error}`; then send `{type: 'file', fileKind, fileId}` to `/api/turn` |
+| `POST /api/whatif` | `WhatIfRequest {sessionId, text?, changes?}` | `WhatIfResponse {sessionId, messages, whatIf}` |
+| `GET /api/paper/:sessionId.pdf` | | the summary PDF (404 `{error}` until the `paper` step) |
+
+## The ideas in one screen
+- **Steps**: `greet, ask_report, ask_bank, ask_letter, questions..., assessing, diagnosis, decline, paper, coach...`. A `letter` is accepted at any step (one acknowledgement, step unchanged)
+- **Messages** (`AgentMessage`): `{id, kind, text, emote, gesture, ref?, writtenBy?}`. `kind` is `text | reason | decline | step | projection | ladder | whatif | paper`. Cards render from `ref` into `result` (`resolveRef(ref, result, {whatIfs, paperUrl})`), never from numbers in the text
+- **Expects**: `{kind: file | choice | text | none, fileKinds?, chips?, optional?, placeholder?, allowVoice?}`. `none` = send `{type: 'skip'}` after the messages
+- **`result`** is the engine's `analyse()` output exactly: `{profile, findings, result, decline}`. Note the nesting: the factors are at `result.result.diagnosis.ranked`, the plans at `result.result.plans['3m' | '6m']`, the card ladder at `result.result.ladder`, the decoded decline at `result.decline`
+- **Claude never computes a number.** The engine computes; Claude reads documents into the engine's input, writes wording (checked), and turns free-text what-ifs into the engine's `Change[]` levers
+
+## Additions beyond the 112 spec
+- `TurnResponse.whatIf` (optional): the `WhatIfRun` behind a `whatif` message on a coach turn
+- `Ref` is a tagged union on `on` (`{on: 'factor', factorId}`, `{on: 'step', plan, stepIndex}`, ...) instead of loose keys
+- `AgentMessage.writtenBy` (optional): `template` or `claude`, for 113's debug panel
+- `UploadResult` shape: `{ok, fileId, fileKind, fileName, findings, error}`
+
+## Replaced
+The Lender's Eyes contract from handoff 101 (Jordan's sample files, `POST /api/assess`, `POST /api/plan`, the Python/FastAPI backend) is **replaced** by this one. Handoffs 101 to 107 are superseded by 113 and 114.

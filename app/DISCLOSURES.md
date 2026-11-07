@@ -20,7 +20,7 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | Sprite design script (Python + Pillow, written by Claude Code during the event, kept outside the repo) | 110: builds the agent's sprite rows from simple shapes (fills, outside outline, mirrored collar) and writes `app/npc-concept/src/npc/sprites/art.ts`; the TS file is the source of truth | mihael |
 | Sprite design script, Playwright library and Pillow (same as above) | 111: the head parts redrawn with longer proportions (a second design script reusing the 110 one, outside the repo), contact sheets, `default.png`, `options.png`, `backgrounds.png`, iPhone/desktop checks; `screens/compare-face.png` is local only (shows the reference image) | mihael |
 | claude-pxl (crsolver/claude-pxl, MIT) and pixel-mcp (willibrandon/pixel-mcp, MIT) | 110: checked as pixel-art tools, licences read on GitHub. Not used: pxl is a second sprite format with a PNG build step (our rig composes palette-indexed layers at runtime); pixel-mcp needs Aseprite, which is not installed. The idea of authoring sprites as code with an automatic outside outline is common to pxl and our design script | mihael |
-| Claude (Cowork) | Credit engine (`engine.js`, rules, cards, personas) written 2026-11-07 during the event by Jag with Claude (Cowork). Point figures from Experian via Which?, card data from capitalone.co.uk and ClearScore (Aug 2026); assumptions labelled in rules.json | partner |
+| Claude (Cowork) | Credit engine (`engine.js`, rules, cards, personas) written 2026-11-07 during the event by Jag with Claude (Cowork). Point figures from Experian via Which?, card data from capitalone.co.uk and ClearScore (Aug 2026); assumptions labelled in rules.json (correction from 112: there is no rules.json; rules, cards and assumptions are labelled inside `engine.js`). Copied unchanged into `app/backend/engine/engine.js` by handoff 112 | partner |
 | Claude Code web search | 108: looked for a pixel-art Claude Code skill. Candidates found (all MIT): sprite-forge (tdimino/claude-code-minoan), pixel-art (wanshuiyin/Auto-claude-code-research-in-sleep), pixel-art-sprites (AbsolutelySkilled). None used, see handoff 108 RESULT | mihael |
 
 ## Libraries
@@ -34,6 +34,12 @@ Required by the WHACK Code of Conduct. Missing a disclosure means disqualificati
 | @types/react, @types/react-dom, @types/node (MIT) | 19.3.0, 19.3.0, 24.19.2 | 108 type definitions (scaffold defaults) |
 | @fontsource/press-start-2p (package MIT, font OFL-1.1) | 5.3.0 | 108 self-hosted Press Start 2P font for the dialogue box |
 | Transitive packages of the above | see `app/npc-concept/pnpm-lock.yaml` | Installed by pnpm, not used directly |
+| zod (MIT) | 4.6.7 | 112 shared contract: schemas and validation used by backend and frontend (`app/shared/`, `app/backend/`) |
+| typescript (Apache-2.0) | 7.0.2 | 112 type checking of `app/shared/` and `app/backend/` |
+| tsx (MIT) | 4.23.15 | 112 runs the TypeScript scripts (`make-examples.ts`, `mock-walk.ts`); 113 dev server |
+| esbuild (MIT) | 0.28.2 | 112 installed by tsx (its build script allowed in `pnpm-workspace.yaml`), not used directly |
+| @types/node (MIT) | 26.6.6 | 112 Node type definitions for `app/shared/` and `app/backend/` |
+| Transitive packages of the workspace | see `pnpm-lock.yaml` at the repo root | Installed by pnpm, not used directly |
 
 ## APIs and data
 | API / dataset | Used for | Terms checked |
