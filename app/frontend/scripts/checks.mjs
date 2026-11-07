@@ -44,7 +44,8 @@ async function settle(page) {
   }
 }
 async function drain(page) {
-  for (let i = 0; i < 30; i++) {
+  // 116: long lines page, so a plan takes more taps than it has lines
+  for (let i = 0; i < 100; i++) {
     await settle(page)
     if ((await mode(page)) !== 'next') return
     await page.locator('[data-action="next"]').click()
@@ -81,6 +82,19 @@ async function menuPick(page, selector) {
     await more.click()
   }
   return page.locator(selector).first().click()
+}
+/** 116: page the menu with More until `selector` shows; if it never does, back to page 1. True if shown. */
+async function reveal(page, selector) {
+  await page.waitForTimeout(100)
+  for (let i = 0; i < 6; i++) {
+    if (await page.locator(selector).first().isVisible().catch(() => false)) return true
+    const more = page.locator('[data-action="menu-more"]')
+    if (!(await more.isVisible().catch(() => false))) break
+    await more.click()
+  }
+  const back = page.locator('[data-action="menu-back"]')
+  if (await back.isVisible().catch(() => false)) await back.click()
+  return false
 }
 const shot = async (page, name) => {
   await page.waitForTimeout(400)
@@ -192,11 +206,11 @@ const shot = async (page, name) => {
   await toReport(page)
   for (let i = 0; i < 10 && !(await page.locator('#reply-box').isVisible().catch(() => false)); i++) {
     await drain(page)
-    if (await page.locator('[data-action="sample"]').isVisible().catch(() => false)) {
+    if (await reveal(page, '[data-action="sample"]')) {
       await page.locator('[data-action="sample"]').click()
       if (await page.locator('[data-persona="priya"]').isVisible().catch(() => false)) await page.locator('[data-persona="priya"]').click()
-    } else if (await page.locator('[data-action="type-own"]').isVisible().catch(() => false)) await page.locator('[data-action="type-own"]').click()
-    else if (!(await page.locator('#reply-box').isVisible().catch(() => false))) await page.locator('[data-chip]').first().click()
+    } else if (await reveal(page, '[data-action="type-own"]')) await page.locator('[data-action="type-own"]').click()
+    else if (!(await page.locator('#reply-box').isVisible().catch(() => false))) await menuPick(page, '[data-chip]')
     await settle(page)
   }
   await drain(page)
@@ -243,9 +257,8 @@ const shot = async (page, name) => {
     const m = await mode(page)
     if (m === 'next' || m === 'continue') await page.locator(`[data-action="${m}"]`).click()
     else if (m === 'input') {
-      const chip = page.locator('[data-chip]').first()
-      if (await page.locator('[data-action="sample"]').count()) await page.locator('[data-action="sample"]').click()
-      else await chip.click()
+      if (await reveal(page, '[data-action="sample"]')) await page.locator('[data-action="sample"]').click()
+      else await menuPick(page, '[data-chip]')
     }
     await settle(page)
   }
@@ -273,19 +286,24 @@ if (liveBase) {
   await (await chooser).setFiles({ name: 'huge.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })
   await settle(page)
   const notice = await page.locator('[data-entry="notice"]').last().textContent().catch(() => '')
-  ok('a refused upload (413) says why and keeps Upload / Use a sample', (await mode(page)) === 'input' && notice?.includes('too big') && (await page.locator('[data-action="sample"]').count()) === 1, notice ?? '')
+  ok('a refused upload (413) says why and keeps Upload / Use a sample', (await mode(page)) === 'input' && notice?.includes('too big') && (await reveal(page, '[data-action="sample"]')), notice ?? '')
   // on to the coach with samples, then a slider what-if that meets a lost session
   for (let i = 0; i < 80 && (await page.locator('.game').getAttribute('data-step')) !== 'coach'; i++) {
     const m = await mode(page)
     if (m === 'next' || m === 'continue') await page.locator(`[data-action="${m}"]`).click()
     else if (m === 'input') {
-      if (await page.locator('[data-action="sample"]').count()) await page.locator('[data-action="sample"]').click()
-      else await page.locator('[data-chip]').first().click()
+      if (await reveal(page, '[data-action="sample"]')) await page.locator('[data-action="sample"]').click()
+      else await menuPick(page, '[data-chip]')
     }
     await settle(page)
   }
   await drain(page)
-  if (await page.locator('[data-chip="3 months"]').count()) {
+  if (await reveal(page, '[data-chip="Make me a plan"]')) {
+    await page.locator('[data-chip="Make me a plan"]').click()
+    await settle(page)
+    await drain(page)
+  }
+  if (await reveal(page, '[data-chip="3 months"]')) {
     await page.locator('[data-chip="3 months"]').click()
     await settle(page)
     await drain(page)

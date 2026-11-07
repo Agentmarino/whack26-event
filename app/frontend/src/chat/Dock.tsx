@@ -51,7 +51,8 @@ export function Dock(props: {
   const ref = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [draft, setDraft] = useState('')
-  const [pin, setPin] = useState<{ top: number; h: number } | null>(null)
+  // top is null while no on-screen keyboard has shrunk the view: then the dock stays where it is in the box
+  const [pin, setPin] = useState<{ top: number | null; h: number } | null>(null)
 
   // Keyboard users: when the dock's contents change under the focus, or focus was lost (a sheet closed
   // and the button that opened it is gone), move focus to the dock's first control. Only after a key
@@ -72,7 +73,7 @@ export function Dock(props: {
   useEffect(() => {
     const vv = window.visualViewport
     if (!pinned || !vv) return
-    const on = () => setPin((p) => p && { ...p, top: vv.offsetTop + vv.height - p.h })
+    const on = () => setPin((p) => p && { ...p, top: keyboardTop(p.h) })
     on()
     vv.addEventListener('resize', on)
     vv.addEventListener('scroll', on)
@@ -109,7 +110,7 @@ export function Dock(props: {
   useEffect(() => {
     if (!fieldOpen) setPin(null)
   }, [fieldOpen])
-  const shownPin = fieldOpen ? pin : null
+  const shownPin = fieldOpen && pin && pin.top !== null ? { top: pin.top, h: pin.h } : null
   const cols = big === 'grid' && (props.pageSize ?? 99) >= 3 && document.documentElement.dataset.textSize !== '150' && window.innerWidth >= 600 ? 2 : 1
 
   return (
@@ -213,15 +214,19 @@ export function Dock(props: {
                 enterKeyHint="send"
                 onChange={(e) => setDraft(e.target.value)}
                 onFocus={() => {
-                  const vv = window.visualViewport
-                  if (vv && window.matchMedia('(pointer: coarse)').matches) {
+                  if (window.visualViewport && window.matchMedia('(pointer: coarse)').matches) {
                     const h = ref.current?.offsetHeight ?? 0
-                    setPin({ top: vv.offsetTop + vv.height - h, h })
+                    setPin({ top: keyboardTop(h), h })
                   }
                 }}
                 onBlur={() => setPin(null)}
               />
-              {mode.expects.allowVoice !== false && <MicButton onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />}
+              {mode.expects.allowVoice !== false && (
+                // like Send: a tap keeps the field's focus, so the pinned dock does not jump under the finger
+                <span className="contents" onPointerDown={(e) => pinned && e.preventDefault()}>
+                  <MicButton onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
+                </span>
+              )}
               <button type="submit" className="gbtn gbtn--primary" onPointerDown={(e) => pinned && e.preventDefault()} data-action="send">
                 Send
               </button>
@@ -276,6 +281,16 @@ export function Dock(props: {
       </div>
     </div>
   )
+}
+
+/**
+ * 116: where the pinned dock's top goes: just above the on-screen keyboard, or null when there is none
+ * (the visual viewport is the whole window), so a focus alone never moves the dock out of the box.
+ */
+function keyboardTop(h: number): number | null {
+  const vv = window.visualViewport
+  if (!vv || vv.height >= window.innerHeight - 60) return null
+  return vv.offsetTop + vv.height - h
 }
 
 // ---------- 116: the game menu ----------
