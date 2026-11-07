@@ -2,7 +2,7 @@
 // template comes straight from the engine result. Claude may reword some of these later (block 3);
 // these are always the fallback. At most 40 words a message, "you", British spelling.
 
-import type { Change, DeclineDecoded, EngineResult, EngineWhatIf, Emote, Expects, Gesture, MessageKind, PlanId, Ref, Rag, WhatIfRun } from 'shared'
+import type { Branch, Change, DeclineDecoded, EngineResult, EngineWhatIf, Emote, Expects, Gesture, MessageKind, PlanId, PlanStep, Ref, Rag, WhatIfRun } from 'shared'
 import * as E from '../engine/index.ts'
 
 /** A message before it gets its id. `base` is the id stem; `item` marks text Claude may reword. */
@@ -139,8 +139,9 @@ export const nudgeFile = (what: 'report' | 'bank' | 'letter'): Draft =>
 export const sampleMissing = (): Draft =>
   d('sample-missing', 'text', "I don't have that sample. Try Priya, Mei Lin or Alex Morgan.", 'neutral', 'asking')
 
-export const assessing = (): Draft =>
-  d('assess-1', 'text', "Thanks, that's everything I need. Give me a moment to go through it all.", 'neutral', 'thinking')
+/** `goal` (115): what the plan works towards, from the goals step ("the Balance Transfer card", "a score of 800"). */
+export const assessing = (goal?: string | null): Draft =>
+  d('assess-1', 'text', goal ? `Thanks! Give me a moment to build your plan towards ${goal}.` : "Thanks, that's everything I need. Give me a moment to go through it all.", 'neutral', 'thinking')
 
 // ---------------------------------------------------------------------------------------------
 // Diagnosis and decline
@@ -164,17 +165,21 @@ export function diagnosis(res: EngineResult): Draft[] {
   }
   return out
 }
-export const diagnosisExpects = (res: EngineResult): Expects => ({
+/** `declineShown` (115): the declined branch already explained the decline before the goals step. */
+export const diagnosisExpects = (res: EngineResult, declineShown = false): Expects => ({
   kind: 'choice',
-  chips: res.decline ? ['Tell me about the letter'] : ['What can I do?'],
+  chips: declineShown ? ['Sum it up for me'] : res.decline ? ['Tell me about the letter'] : ['What can I do?'],
 })
 
-export function decline(dd: DeclineDecoded): Draft[] {
+/** `hadLetter` false (115): the declined branch without the letter, from the "who and what for" chips. */
+export function decline(dd: DeclineDecoded, hadLetter = true): Draft[] {
   return [
     d(
       'decline-reasons',
       'decline',
-      dd.stated === 'No specific reason given'
+      !hadLetter
+        ? `About your application to ${dd.lender}${dd.product ? ` for the ${dd.product}` : ''}. Without the letter, here's what most likely sat behind the no.`
+        : dd.stated === 'No specific reason given'
         ? `About your ${dd.lender} letter. It didn't give a reason, so I've worked out the most likely ones from your report.`
         : `About your ${dd.lender} letter. It said: "${dd.stated}". Here's what most likely sat behind it.`,
       'concerned',
@@ -353,3 +358,125 @@ export const whatIfUnknown = (): Draft =>
 
 export const whatIfFailed = (): Draft =>
   d('whatif-failed', 'text', "I couldn't work that one out. Try a different amount, or one change at a time.", 'neutral', 'coach')
+
+// ---------------------------------------------------------------------------------------------
+// 115: Cap's intro, the opening question, the branches' early reads and the goals step
+// ---------------------------------------------------------------------------------------------
+
+export const CAP = { name: 'Cap', title: 'Credit Coach', tagline: 'Here to make your credit make sense' }
+
+export const intro = (): Draft[] => [
+  d('intro-hello', 'text', "Hi, nice to meet you. My name's Cap, here's my card.", 'warm', 'slide-card'),
+  d('intro-card', 'card', `${CAP.name}, ${CAP.title}. ${CAP.tagline}.`, 'warm', 'none'),
+]
+export const introExpects: Expects = { kind: 'choice', chips: ['Nice to meet you, Cap!'] }
+
+/** The opening chips, exactly; the chip picks the branch. */
+export const OPENING: Record<Branch, string> = {
+  declined: "I've been declined already",
+  report: "I've got a credit report I want help with",
+  prepare: 'I want to get ready before I apply',
+  new: "I'm new to credit or new to the UK",
+}
+
+export const opening = (): Draft[] => [
+  d('opening-safe', 'text', "Nothing we do here is a credit search, so it can't harm your score.", 'warm', 'none'),
+  d('opening', 'text', "I understand you're here to make your credit better. Where should we start?", 'pleased', 'asking'),
+]
+export const openingAgain = (): Draft => d('opening-again', 'text', "Sorry, I didn't quite catch that. Which of these is closest?", 'neutral', 'asking')
+export const openingExpects: Expects = { kind: 'choice', chips: Object.values(OPENING) }
+
+export function branchAck(b: Branch): Draft {
+  switch (b) {
+    case 'declined':
+      return d('branch-ack', 'text', "Oh, I'm sorry. That's frustrating, and the letter rarely says why. Let's work it out together.", 'concerned', 'none')
+    case 'report':
+      return d('branch-ack', 'text', "Lovely, let's go through it together.", 'pleased', 'none')
+    case 'prepare':
+      return d('branch-ack', 'text', 'Great idea. Checking first means no surprises, and nothing goes on your file.', 'pleased', 'none')
+    case 'new':
+      return d('branch-ack', 'text', "Welcome! Everyone starts somewhere. I'll show you how to build your credit from zero.", 'pleased', 'none')
+  }
+}
+
+export const askLetterDeclined = (): Draft =>
+  d('ask-letter', 'text', "Have you got the letter they sent? Hand it over and I'll tell you what most likely happened. No letter? Tap Skip.", 'neutral', 'asking')
+
+/** The report request, worded for the branch. */
+export function askReportFor(b: Branch | null): Draft {
+  switch (b) {
+    case 'declined':
+      return d('ask-report', 'text', 'Next, your credit report, so I can see what the lender saw. Upload it from Experian, Equifax or TransUnion, or use a sample.', 'neutral', 'asking')
+    case 'prepare':
+      return d('ask-report', 'text', 'Now your credit report, so I can check you against it. Upload it, or use a sample. No report yet? Tap Skip.', 'neutral', 'asking')
+    case 'new':
+      return d('ask-report', 'text', 'Have you got a credit report yet? Even a short one helps. Upload it, use a sample, or tap Skip.', 'neutral', 'asking')
+    default:
+      return d('ask-report', 'text', 'Hand it over: upload it from Experian, Equifax or TransUnion, or use one of our samples.', 'neutral', 'asking')
+  }
+}
+
+/** A plan step as a plain line Claude may reword (same cache key as the plan's step message), with no card. */
+const stepLine = (stem: string, plan: PlanId, i: number, s: PlanStep): Draft =>
+  d(`${stem}-${i}`, 'text', `${E.fmtDate(s.date)}: ${s.title}.`, 'neutral', 'explaining', undefined, { what: 'step', plan, stepIndex: i })
+
+/**
+ * The declined branch, after the explanation: the first 3-month plan step for each likely reason, in
+ * the reasons' order, at most three. Plain lines, not step cards: the plan is run again after the goals
+ * step, and a card would show the new plan's step under the old words.
+ */
+export function improve(res: EngineResult): Draft[] {
+  const steps = res.result.plans['3m'].steps
+  const picked: number[] = []
+  for (const reason of res.decline?.reasons ?? []) {
+    const why = reason.id === 'identity2' ? 'identity' : reason.id
+    const i = steps.findIndex((s, j) => s.why === why && !picked.includes(j))
+    if (i >= 0) picked.push(i)
+    if (picked.length === 3) break
+  }
+  if (!picked.length) picked.push(...steps.slice(0, 3).map((_, i) => i))
+  picked.sort((a, b) => a - b) // the plan is in date order
+  return [
+    d('improve-intro', 'text', `Here's where to start. ${count(picked.length)} ${picked.length === 1 ? 'step works' : 'steps work'} on those reasons:`, 'warm', 'explaining'),
+    ...picked.map(i => stepLine('improve', '3m', i, steps[i]!)),
+  ]
+}
+
+/** The new branch: the first three steps of the build-from-zero plan. */
+export function buildStart(res: EngineResult): Draft[] {
+  const steps = res.result.plans['3m'].steps.slice(0, 3)
+  return [
+    d('build-intro', 'text', `Here's how you start from zero. The first ${count(steps.length).toLowerCase()} ${steps.length === 1 ? 'step' : 'steps'}:`, 'warm', 'explaining'),
+    ...steps.map((s, i) => stepLine('build', '3m', i, s)),
+  ]
+}
+
+export const CARD_NAME: Record<'classic' | 'bt' | 'purchase', string> = {
+  classic: 'Capital One Classic',
+  bt: 'Capital One Balance Transfer',
+  purchase: 'Capital One 0% Purchase',
+}
+export const CARD_SHORT: Record<'classic' | 'bt' | 'purchase', string> = { classic: 'Classic card', bt: 'Balance Transfer card', purchase: '0% Purchase card' }
+
+/** The prepare branch: how they stand against the product they want first (the card ladder's criteria). */
+export function readiness(res: EngineResult, product: { id: string; label: string }): Draft[] {
+  const l = res.result.ladder
+  if (product.id === 'classic' && l?.entry && l.applyFrom)
+    return [
+      d('ready-card', 'ladder', `The Classic is a credit-builder card. You could check it on QuickCheck from ${E.fmtMonth(l.applyFrom)}. It's a soft search, so it won't leave a mark.`, 'pleased', 'explaining', { on: 'ladder' }),
+    ]
+  if ((product.id === 'bt' || product.id === 'purchase') && l && l.graduation.length) {
+    const met = l.graduation.filter(g => g.ok).length
+    const total = l.graduation.length
+    const when = l.graduateWhen ? ` All of them should be green by ${l.graduateWhen}.` : ''
+    const name = product.id === 'bt' ? 'Balance Transfer' : '0% Purchase'
+    const text =
+      product.id === 'bt'
+        ? `Against the Balance Transfer card's published criteria, you meet ${met} of ${total} today.${when}`
+        : `The 0% Purchase card asks for a record like the Balance Transfer card's. Against those criteria you meet ${met} of ${total} today.${when}`
+    return [d('ready-card', 'ladder', text, met === total ? 'pleased' : 'warm', 'explaining', { on: 'ladder' }), d('ready-note', 'text', `Each line shows the month it should turn green for the ${name} card.`, 'neutral', 'none')]
+  }
+  return [
+    d('ready-other', 'text', `For ${product.label.toLowerCase()}, lenders look at your payment history, how much of your limits you use and how settled you are. I'll check all of that for you.`, 'warm', 'explaining'),
+  ]
+}

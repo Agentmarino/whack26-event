@@ -50,11 +50,12 @@ describe('GET /api/paper/:sessionId.pdf', () => {
 
   it('404 {error} until the paper step, then a PDF', async () => {
     let s = await turn(null, { type: 'start' })
-    s = await turn(s.sessionId, { type: 'choice', value: "Let's start" })
+    s = await turn(s.sessionId, { type: 'choice', value: 'Nice to meet you, Cap!' })
+    s = await turn(s.sessionId, { type: 'choice', value: "I've got a credit report I want help with" })
     s = await turn(s.sessionId, { type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
     s = await turn(s.sessionId, { type: 'sample', fileKind: 'bank' })
     s = await turn(s.sessionId, { type: 'sample', fileKind: 'letter' })
-    while (s.step === 'questions') s = await turn(s.sessionId, { type: 'choice', value: s.expects.chips?.[0] ?? 'A credit card' })
+    while (s.step === 'questions' || s.step === 'goals') s = await turn(s.sessionId, { type: 'choice', value: s.expects.chips?.[0] ?? 'A credit card' })
     const early = await app.inject(`/api/paper/${s.sessionId}.pdf`)
     expect(early.statusCode).toBe(404)
     expect(early.json()).toEqual({ error: 'Summary not ready yet' })

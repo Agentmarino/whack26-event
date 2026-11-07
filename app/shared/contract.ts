@@ -410,9 +410,16 @@ export type CreditReport = z.infer<typeof CreditReport>
 // 2. Conversation
 // ============================================================================================
 
-/** Step order: see conversation.md. `questions` and `coach` span several turns. */
+/**
+ * Step order: see conversation.md. `questions`, `goals` and `coach` span several turns.
+ * 115: a conversation starts at `intro` (Cap's business card), then `opening` picks a Branch; `greet` is
+ * no longer sent but stays in the enum (additions only).
+ */
 export const Step = z.enum([
   'greet',
+  'intro',
+  'opening',
+  'goals',
   'ask_report',
   'ask_bank',
   'ask_letter',
@@ -424,6 +431,10 @@ export const Step = z.enum([
   'coach',
 ])
 export type Step = z.infer<typeof Step>
+
+/** 115: where the person starts, picked at `opening` (a letter dropped at `opening` picks `declined`). */
+export const Branch = z.enum(['declined', 'report', 'prepare', 'new'])
+export type Branch = z.infer<typeof Branch>
 
 export const Emote = z.enum(['neutral', 'warm', 'concerned', 'pleased'])
 export type Emote = z.infer<typeof Emote>
@@ -442,11 +453,16 @@ export const Gesture = z.enum([
   'explaining',
   'slide-paper',
   'coach',
+  /** 115: Cap slides his business card across the desk; a `card` message follows. */
+  'slide-card',
 ])
 export type Gesture = z.infer<typeof Gesture>
 
-/** How the frontend draws the message. Every kind except `text` has a card built from `ref`. */
-export const MessageKind = z.enum(['text', 'reason', 'decline', 'step', 'projection', 'ladder', 'whatif', 'paper'])
+/**
+ * How the frontend draws the message. Every kind except `text` and `card` has a card built from `ref`.
+ * `card` (115) is Cap's business card: no ref; `text` is what a screen reader hears for it.
+ */
+export const MessageKind = z.enum(['text', 'reason', 'decline', 'step', 'projection', 'ladder', 'whatif', 'paper', 'card'])
 export type MessageKind = z.infer<typeof MessageKind>
 
 /**
@@ -562,6 +578,8 @@ export const TurnResponse = z.object({
   paperUrl: z.string().nullable(),
   /** Addition to the 112 spec: set on a coach turn that answered a free-text what-if; messages ref it by id. */
   whatIf: WhatIfRun.nullable().optional(),
+  /** 115: the branch picked at `opening`; null before that. Optional so older examples still parse. */
+  branch: Branch.nullable().optional(),
 })
 export type TurnResponse = z.infer<typeof TurnResponse>
 

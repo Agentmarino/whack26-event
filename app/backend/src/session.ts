@@ -1,10 +1,24 @@
 // In-memory sessions. One per conversation; a restart (`start`) makes a new one.
 
 import { randomUUID } from 'node:crypto'
-import type { EngineResult, Expects, PlanId, Profile, Step, WhatIfRun } from 'shared'
+import type { Branch, EngineResult, Expects, PlanId, Profile, Step, WhatIfRun } from 'shared'
 import type { Findings } from './personas.ts'
 
-export type QuestionKey = 'age' | 'income' | 'housing' | 'goal' | 'horizon' | 'bureau' | 'roll' | 'dd'
+export type QuestionKey =
+  | 'age' | 'income' | 'housing' | 'goal' | 'horizon' | 'bureau' | 'roll' | 'dd'
+  // 115: the branches' own questions, and the goals step's follow-ups
+  | 'declinedBy' | 'declinedFor' | 'product' | 'newWhy' | 'ukTime' | 'bankAge' | 'goalCard' | 'goalScore' | 'goalOwn'
+
+/**
+ * 115: what a branch does, in order (conversation.md, "Branches"). Each stage either asks something
+ * or moves straight on: `form` = the engine's form fields the data has not answered; `early` = the
+ * branch's first read on a first engine run (decline explanation, readiness, build-from-zero steps);
+ * `data` = the questions built from the data (roll, Direct Debit); `assess` = the final engine run.
+ */
+export type Stage = 'letter' | 'whoWhat' | 'product' | 'newqs' | 'report' | 'bank' | 'form' | 'early' | 'goals' | 'data' | 'assess'
+
+/** What they were declined for, or want first (prepare). Card ids are the engine's: classic, bt, purchase. */
+export type Product = { id: 'classic' | 'bt' | 'purchase' | 'card' | 'loan' | 'car' | 'phone' | 'mortgage' | 'other'; label: string }
 
 export type Session = {
   id: string
@@ -38,6 +52,18 @@ export type Session = {
   plainEnglish: boolean
   /** Message ids used in this session (ids are unique within a session). */
   ids: Set<string>
+  /** 115: the branch picked at `opening`, the stages still to come, and the one in progress. */
+  branch: Branch | null
+  stages: Stage[]
+  stage: Stage | null
+  /** Answers given before the report arrives (they would be lost when the report replaces the profile). */
+  answers: Partial<Profile>
+  product: Product | null
+  /** The decline was explained in the declined branch's early read, so the diagnosis does not repeat it. */
+  declineShown: boolean
+  /** From the goals step. */
+  targetCard: string | null
+  targetScore: number | null
 }
 
 const sessions = new Map<string, Session>()
@@ -46,7 +72,7 @@ export function newSession(): Session {
   const s: Session = {
     id: randomUUID(),
     createdAt: Date.now(),
-    step: 'greet',
+    step: 'intro',
     personaId: null,
     profile: {},
     findings: null,
@@ -65,6 +91,14 @@ export function newSession(): Session {
     lastExpects: { kind: 'none' },
     plainEnglish: false,
     ids: new Set(),
+    branch: null,
+    stages: [],
+    stage: null,
+    answers: {},
+    product: null,
+    declineShown: false,
+    targetCard: null,
+    targetScore: null,
   }
   sessions.set(s.id, s)
   return s

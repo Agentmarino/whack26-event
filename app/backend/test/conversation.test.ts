@@ -60,176 +60,189 @@ describe('routes', () => {
   })
 })
 
-describe('Priya, start to coach', () => {
-  it('walks every step with valid messages', async () => {
+const OPEN = {
+  declined: "I've been declined already",
+  report: "I've got a credit report I want help with",
+  prepare: 'I want to get ready before I apply',
+  new: "I'm new to credit or new to the UK",
+} as const
+
+/** 115: Cap's card, then the opening chip for a branch. Returns the branch's first response. */
+async function begin(c: ReturnType<typeof chat>, branch: keyof typeof OPEN) {
+  const intro = await c.send({ type: 'start' })
+  expect(intro.step).toBe('intro')
+  const opening = await c.send({ type: 'choice', value: 'Nice to meet you, Cap!' })
+  expect(opening.step).toBe('opening')
+  expect(opening.expects.chips).toEqual(Object.values(OPEN))
+  const first = await c.send({ type: 'choice', value: OPEN[branch] })
+  expect(first.branch).toBe(branch)
+  return first
+}
+
+/** Answer every question and goals turn with its first chip (or typed text). */
+async function answerAll(c: ReturnType<typeof chat>, r: TurnResponse, typed = ['31', 'about 28k']) {
+  while (r.step === 'questions' || r.step === 'goals')
+    r = await c.send(r.expects.chips?.length ? { type: 'choice', value: r.expects.chips[0]! } : { type: 'text', value: typed.shift() ?? 'yes' })
+  return r
+}
+
+/** From `assessing` to the plan, through whatever the branch shows on the way. */
+async function toPlan(c: ReturnType<typeof chat>, r: TurnResponse) {
+  expect(r.step).toBe('assessing')
+  r = await c.send({ type: 'skip' })
+  expect(r.step).toBe('diagnosis')
+  expect(r.messages.filter(m => m.kind === 'reason')).toHaveLength(3)
+  for (let i = 0; r.step !== 'coach' && i < 5; i++) r = await c.send({ type: 'choice', value: r.expects.chips![0]! })
+  expect(r.step).toBe('coach')
+  r = await c.send({ type: 'choice', value: '3 months' })
+  expect(r.messages.some(m => m.kind === 'projection')).toBe(true)
+  return r
+}
+
+describe('115: intro and opening', () => {
+  it("Cap slides his card, then asks where to start", async () => {
     const c = chat()
-    const greet = await c.send({ type: 'start' })
-    expect(greet.step).toBe('greet')
-    expect(greet.expects.chips).toEqual(["Let's start"])
-
-    const askReport = await c.send({ type: 'choice', value: "Let's start" })
-    expect(askReport.expects).toMatchObject({ kind: 'file', fileKinds: ['credit_report'], optional: true })
-
-    const askBank = await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
-    expect(askBank.messages[0]!.text).toBe("Thanks, Priya. I've got your Experian report. Your score there is 700 out of 999.")
-
-    const askLetter = await c.send({ type: 'sample', fileKind: 'bank' })
-    expect(askLetter.messages[0]!.text).toMatch(/about £\d+ a month left over/)
-
-    const goal = await c.send({ type: 'sample', fileKind: 'letter' })
-    expect(goal.step).toBe('questions')
-    expect(goal.messages.map(m => m.text)).toEqual([
-      "Thanks, that's your Capital One letter. I'll go through it once I've seen everything.",
-      'What are you hoping to get? Pick one, or tell me in your own words.',
+    const intro = await c.send({ type: 'start' })
+    expect(intro.step).toBe('intro')
+    expect(intro.branch).toBeNull()
+    expect(intro.messages.map(m => [m.kind, m.gesture, m.text])).toEqual([
+      ['text', 'slide-card', "Hi, nice to meet you. My name's Cap, here's my card."],
+      ['card', 'none', 'Cap, Credit Coach. Here to make your credit make sense.'],
     ])
-    expect(goal.expects.kind).toBe('text')
+    expect(intro.messages[1]!.ref).toBeUndefined()
+    expect(intro.expects).toEqual({ kind: 'choice', chips: ['Nice to meet you, Cap!'] })
+    const opening = await c.send({ type: 'choice', value: 'Nice to meet you, Cap!' })
+    expect(opening.messages.at(-1)!.text).toBe("I understand you're here to make your credit better. Where should we start?")
+    const again = await c.send({ type: 'text', value: 'banana' })
+    expect(again.step).toBe('opening')
+    expect(again.messages[0]!.text).toMatch(/Which of these is closest/)
+    const words = await c.send({ type: 'text', value: 'I got turned down for a card' })
+    expect(words.branch).toBe('declined')
+  })
 
-    const horizon = await c.send({ type: 'choice', value: 'A credit card' })
-    expect(horizon.expects.chips).toEqual(['3 months', '6 months'])
-    const roll = await c.send({ type: 'choice', value: '3 months' })
-    expect(roll.messages[0]!.text).toMatch(/electoral roll/)
-    const dd = await c.send({ type: 'choice', value: 'Yes, I can' })
-    expect(dd.messages[0]!.text).toMatch(/Barclaycard.*Direct Debit/)
+  it('a letter dropped at the opening picks the declined branch', async () => {
+    const c = chat()
+    await c.send({ type: 'start' })
+    await c.send({ type: 'choice', value: 'Nice to meet you, Cap!' })
+    const r = await c.send({ type: 'sample', fileKind: 'letter', personaId: 'priya' })
+    expect(r.branch).toBe('declined')
+    expect(r.step).toBe('ask_report')
+    expect(r.messages.map(m => m.text)).toContain("Thanks, that's your Capital One letter. I'll go through it once I've seen everything.")
+  })
+})
 
-    const assessing = await c.send({ type: 'choice', value: 'No' })
-    expect(assessing.step).toBe('assessing')
-    expect(assessing.expects.kind).toBe('none')
-    expect(assessing.result).not.toBeNull()
-
-    const diagnosis = await c.send({ type: 'skip' })
-    expect(diagnosis.step).toBe('diagnosis')
-    const reasons = diagnosis.messages.filter(m => m.kind === 'reason')
-    expect(reasons).toHaveLength(3)
-    for (const m of reasons) expect(resolveRef(m.ref, diagnosis.result)?.on).toBe('factor')
-    expect(diagnosis.expects.chips).toEqual(['Tell me about the letter'])
-
-    const decline = await c.send({ type: 'choice', value: 'Tell me about the letter' })
+describe('115: each branch from intro to coach', () => {
+  it('declined, Priya with her letter: decline first, then the first steps, then goals, then the advice', async () => {
+    const c = chat()
+    const ask = await begin(c, 'declined')
+    expect(ask.step).toBe('ask_letter')
+    expect(ask.messages.map(m => m.id)).toEqual(['branch-ack', 'ask-letter'])
+    const report = await c.send({ type: 'sample', fileKind: 'letter', personaId: 'priya' })
+    expect(report.step).toBe('ask_report')
+    expect(report.messages.at(-1)!.text).toMatch(/what the lender saw/)
+    const bank = await c.send({ type: 'sample', fileKind: 'credit_report' })
+    expect(bank.step).toBe('ask_bank')
+    const decline = await c.send({ type: 'sample', fileKind: 'bank' })
     expect(decline.step).toBe('decline')
-    expect(decline.messages.map(m => m.ref)).toEqual([
+    expect(decline.result).not.toBeNull()
+    expect(decline.messages.filter(m => m.ref?.on === 'decline').map(m => m.ref)).toEqual([
       { on: 'decline', part: 'reasons' },
       { on: 'decline', part: 'fix' },
       { on: 'decline', part: 'reapply' },
       { on: 'decline', part: 'rights' },
     ])
-    expect(decline.paperUrl).toBeNull()
+    expect(decline.expects.chips).toEqual(['What can I do?'])
+    const goals = await c.send({ type: 'choice', value: 'What can I do?' })
+    expect(goals.step).toBe('goals')
+    const improve = goals.messages.filter(m => m.id.startsWith('improve-') && m.id !== 'improve-intro')
+    expect(improve.length).toBeGreaterThanOrEqual(1)
+    expect(improve.length).toBeLessThanOrEqual(3)
+    for (const m of improve) expect(m.ref).toBeUndefined() // lines, not cards: the plan is run again after goals
+    expect(goals.expects.chips?.[0]).toBe('The Balance Transfer card')
+    const horizon = await c.send({ type: 'choice', value: 'The Balance Transfer card' })
+    expect(horizon.expects.chips).toEqual(['3 months', '6 months'])
+    let r = await c.send({ type: 'choice', value: '3 months' })
+    r = await answerAll(c, r)
+    expect(r.messages.at(-1)!.text).toMatch(/towards the Balance Transfer card/)
+    expect(r.result?.profile.goal).toBe('card')
+    r = await c.send({ type: 'skip' })
+    expect(r.expects.chips).toEqual(['Sum it up for me']) // the decline was already explained
+    expect(c.steps.filter(x => x === 'decline')).toHaveLength(1)
+    r = await c.send({ type: 'choice', value: 'Sum it up for me' })
+    expect(r.step).toBe('paper')
+    expect(c.steps.slice(0, 7)).toEqual(['intro', 'opening', 'ask_letter', 'ask_report', 'ask_bank', 'decline', 'goals'])
+  })
 
-    const paper = await c.send({ type: 'choice', value: 'Got it' })
-    expect(paper.step).toBe('paper')
-    expect(paper.paperUrl).toBe(`/api/paper/${c.sessionId}.pdf`)
+  it('declined without the letter: who and what for stand in for it', async () => {
+    const c = chat()
+    await begin(c, 'declined')
+    const who = await c.send({ type: 'skip' })
+    expect(who.step).toBe('questions')
+    expect(who.expects.chips).toEqual(['Capital One', 'Another lender'])
+    const what = await c.send({ type: 'choice', value: 'Capital One' })
+    expect(what.expects.chips).toContain('A Balance Transfer card')
+    await c.send({ type: 'choice', value: 'A Balance Transfer card' })
+    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
+    const decline = await c.send({ type: 'sample', fileKind: 'bank' })
+    expect(decline.step).toBe('decline')
+    expect(decline.messages.find(m => m.id === 'decline-reasons')!.text).toBe(
+      "About your application to Capital One for the Balance Transfer card. Without the letter, here's what most likely sat behind the no.",
+    )
+    expect(decline.result?.decline?.lender).toBe('Capital One')
+  })
 
-    const choose = await c.send({ type: 'choice', value: 'Make me a plan' })
-    expect(choose.step).toBe('coach')
-    expect(choose.messages[0]!.text).toMatch(/You said 3 months/)
-
+  it('report, Priya: report, bank, the questions, then goals, then the advice; a letter at any step', async () => {
+    const c = chat()
+    const askReport = await begin(c, 'report')
+    expect(askReport.step).toBe('ask_report')
+    expect(askReport.expects).toMatchObject({ kind: 'file', fileKinds: ['credit_report'], optional: true })
+    const askBank = await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
+    expect(askBank.messages[0]!.text).toBe("Thanks, Priya. I've got your Experian report. Your score there is 700 out of 999.")
+    const roll = await c.send({ type: 'sample', fileKind: 'bank' })
+    expect(roll.messages[0]!.text).toMatch(/about £\d+ a month left over/)
+    expect(roll.messages.at(-1)!.text).toMatch(/electoral roll/)
+    const ack = await c.send({ type: 'sample', fileKind: 'letter' })
+    expect(ack.step).toBe('questions')
+    expect(ack.messages).toHaveLength(1)
+    expect(ack.messages[0]!.text).toBe("Thanks, that's a letter from Capital One. I'll go through it after your results.")
+    expect(ack.expects).toEqual(roll.expects)
+    const dd = await c.send({ type: 'choice', value: 'Yes, I can' })
+    expect(dd.messages[0]!.text).toMatch(/Barclaycard.*Direct Debit/)
+    const goal = await c.send({ type: 'choice', value: 'No' })
+    expect(goal.step).toBe('goals')
+    // Her letter (handed over mid-questions) was for the Balance Transfer card, so that chip leads.
+    expect(goal.expects.chips).toEqual(['The Balance Transfer card', 'A target score', 'A specific card', 'Car finance', 'A mortgage', 'Something else'])
+    const score = await c.send({ type: 'choice', value: 'A target score' })
+    expect(score.messages[0]!.text).toBe('What score would you like to reach? Your Experian score is 700 today.')
+    expect(score.expects.chips).toEqual(['750', '800', '850'])
+    await c.send({ type: 'choice', value: '800' })
+    const assessing = await c.send({ type: 'choice', value: '6 months' })
+    expect(assessing.messages.at(-1)!.text).toMatch(/towards a score of 800/)
+    let r = await c.send({ type: 'skip' })
+    expect(r.expects.chips).toEqual(['Tell me about the letter'])
+    r = await c.send({ type: 'choice', value: 'Tell me about the letter' })
+    expect(r.step).toBe('decline')
+    r = await c.send({ type: 'choice', value: 'Got it' })
+    expect(r.step).toBe('paper')
+    expect(r.paperUrl).toBe(`/api/paper/${c.sessionId}.pdf`)
+    r = await c.send({ type: 'choice', value: 'Make me a plan' })
+    expect(r.messages[0]!.text).toMatch(/You said 6 months/)
     const plan = await c.send({ type: 'choice', value: '3 months' })
     const kinds = plan.messages.map(m => m.kind)
     expect(kinds.filter(k => k === 'step')).toHaveLength(plan.result!.result.plans['3m'].steps.length)
     expect(kinds).toContain('projection')
     expect(kinds).toContain('ladder')
-    expect(plan.expects.kind).toBe('text')
-
     const wi = await c.send({ type: 'text', value: 'What if I pay £300 a month?' })
-    expect(wi.step).toBe('coach')
-    expect(wi.messages[0]!.kind).toBe('whatif')
     expect(wi.whatIf?.changes).toEqual([{ lever: 'paydown', value: 300 }])
-    expect(wi.messages[0]!.text).toMatch(/up from \d+ to \d+/)
-
-    const chip = await c.send({ type: 'choice', value: 'What if I stop buy now, pay later?' })
-    expect(chip.whatIf?.changes).toEqual([{ lever: 'stop', what: 'bnpl' }])
-    expect(chip.messages[0]!.text).toMatch(/stays at/)
-
-    const nonsense = await c.send({ type: 'text', value: 'What if I buy a horse?' })
-    expect(nonsense.step).toBe('coach')
-    expect(nonsense.messages[0]!.kind).toBe('text')
-    expect(nonsense.whatIf).toBeUndefined()
-
     expect(c.steps).toEqual([
-      'greet', 'ask_report', 'ask_bank', 'ask_letter',
-      'questions', 'questions', 'questions', 'questions',
-      'assessing', 'diagnosis', 'decline', 'paper',
-      'coach', 'coach', 'coach', 'coach', 'coach',
+      'intro', 'opening', 'ask_report', 'ask_bank', 'questions', 'questions', 'questions',
+      'goals', 'goals', 'goals', 'assessing', 'diagnosis', 'decline', 'paper', 'coach', 'coach', 'coach',
     ])
   })
 
-  it('a letter during the questions: one ack, step unchanged, decline after diagnosis', async () => {
+  it('report with nothing handed over: the form questions are asked and the engine still runs', async () => {
     const c = chat()
-    await c.send({ type: 'start' })
-    await c.send({ type: 'choice', value: "Let's start" })
-    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
-    await c.send({ type: 'sample', fileKind: 'bank' })
-    const q1 = await c.send({ type: 'skip' }) // no letter at ask_letter
-    expect(q1.step).toBe('questions')
-    const ack = await c.send({ type: 'sample', fileKind: 'letter' })
-    expect(ack.step).toBe('questions')
-    expect(ack.messages).toHaveLength(1)
-    expect(ack.messages[0]!.text).toBe("Thanks, that's a letter from Capital One. I'll go through it after your results.")
-    expect(ack.expects).toEqual(q1.expects)
-    // The goal question is still waiting.
-    const horizon = await c.send({ type: 'choice', value: 'A credit card' })
-    expect(horizon.messages[0]!.text).toMatch(/how soon/)
-    await c.send({ type: 'choice', value: '6 months' })
-    await c.send({ type: 'choice', value: 'Yes, I can' })
-    await c.send({ type: 'choice', value: 'Not sure' })
-    const diagnosis = await c.send({ type: 'skip' })
-    expect(diagnosis.step).toBe('diagnosis')
-    expect(diagnosis.expects.chips).toEqual(['Tell me about the letter'])
-    const decline = await c.send({ type: 'choice', value: 'Tell me about the letter' })
-    expect(decline.step).toBe('decline')
-    expect(decline.result?.decline?.lender).toBe('Capital One')
-  })
-
-  it('no letter: diagnosis goes straight to the paper', async () => {
-    const c = chat()
-    await c.send({ type: 'start' })
-    await c.send({ type: 'choice', value: "Let's start" })
-    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
-    await c.send({ type: 'skip' })
-    await c.send({ type: 'skip' })
-    let r = await c.send({ type: 'text', value: 'I want to buy a car' })
-    while (r.step === 'questions') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'skip' })
-    expect(r.step).toBe('assessing')
-    expect(r.result?.decline).toBeNull()
-    const diagnosis = await c.send({ type: 'skip' })
-    expect(diagnosis.expects.chips).toEqual(['What can I do?'])
-    const paper = await c.send({ type: 'choice', value: 'What can I do?' })
-    expect(paper.step).toBe('paper')
-  })
-})
-
-describe('other personas and no data', () => {
-  for (const personaId of ['mei', 'alex']) {
-    it(`${personaId}: report sample already holds bank data and a letter`, async () => {
-      const c = chat()
-      await c.send({ type: 'start' })
-      await c.send({ type: 'choice', value: "Let's start" })
-      const bank = await c.send({ type: 'sample', fileKind: 'credit_report', personaId })
-      expect(bank.messages[1]!.text).toMatch(/already has three months of bank data/)
-      const letter = await c.send({ type: 'skip' })
-      expect(letter.messages.map(m => m.text).join(' ')).toMatch(/already has the letter/)
-      let r = await c.send({ type: 'skip' })
-      while (r.step === 'questions') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'A credit card' })
-      expect(r.step).toBe('assessing')
-      expect(r.result?.findings).not.toBeNull()
-      const d = await c.send({ type: 'skip' })
-      expect(d.messages.filter(m => m.kind === 'reason')).toHaveLength(3)
-      const dec = await c.send({ type: 'choice', value: d.expects.chips![0]! })
-      expect(dec.step).toBe('decline')
-      await c.send({ type: 'choice', value: 'Got it' })
-      await c.send({ type: 'choice', value: 'Make me a plan' })
-      const plan = await c.send({ type: 'choice', value: '6 months' })
-      expect(plan.messages.some(m => m.kind === 'projection')).toBe(true)
-      for (const chipText of plan.expects.chips ?? []) {
-        const w = await c.send({ type: 'choice', value: chipText })
-        expect(w.messages[0]!.kind, chipText).toBe('whatif')
-      }
-    })
-  }
-
-  it('everything skipped: the form questions are asked and the engine still runs', async () => {
-    const c = chat()
-    await c.send({ type: 'start' })
-    await c.send({ type: 'choice', value: "Let's start" })
-    await c.send({ type: 'skip' })
+    await begin(c, 'report')
     await c.send({ type: 'skip' })
     const age = await c.send({ type: 'skip' })
     expect(age.messages[0]!.text).toBe('How old are you?')
@@ -240,12 +253,115 @@ describe('other personas and no data', () => {
     expect(income.messages[0]!.text).toMatch(/earn a year/)
     await c.send({ type: 'text', value: 'about 28k' })
     await c.send({ type: 'choice', value: 'With family' })
+    const goal = await c.send({ type: 'choice', value: 'Equifax' })
+    expect(goal.step).toBe('goals')
     await c.send({ type: 'choice', value: 'A mortgage' })
-    await c.send({ type: 'choice', value: '6 months' })
-    const assessing = await c.send({ type: 'choice', value: 'Equifax' })
+    const assessing = await c.send({ type: 'choice', value: '6 months' })
     expect(assessing.step).toBe('assessing')
     expect(assessing.result?.profile).toMatchObject({ age: 31, grossIncome: 28000, housing: 'family', goal: 'mortgage', bureau: 'equifax' })
-    expect(c.steps.filter(s => s === 'questions')).toHaveLength(7)
+    expect(assessing.result?.decline).toBeNull()
+    const diagnosis = await c.send({ type: 'skip' })
+    expect(diagnosis.expects.chips).toEqual(['What can I do?'])
+  })
+
+  it('prepare, Priya aiming for the Classic: readiness against it, goals to confirm, then the advice', async () => {
+    const c = chat()
+    const product = await begin(c, 'prepare')
+    expect(product.step).toBe('questions')
+    expect(product.expects.chips?.slice(0, 3)).toEqual(['Capital One Classic', 'Capital One Balance Transfer', 'Capital One 0% Purchase'])
+    const report = await c.send({ type: 'choice', value: 'Capital One Classic' })
+    expect(report.step).toBe('ask_report')
+    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
+    const goals = await c.send({ type: 'sample', fileKind: 'bank' })
+    expect(goals.step).toBe('goals')
+    const ready = goals.messages.find(m => m.id === 'ready-card')!
+    expect(ready.kind).toBe('ladder')
+    expect(ready.text).toMatch(/^The Classic is a credit-builder card\. You could check it on QuickCheck from [A-Z][a-z]{2} \d{4}\./)
+    expect(goals.messages.at(-1)!.text).toBe('You said the Classic card first. Is that still the goal, or something else?')
+    expect(goals.expects.chips?.[0]).toBe('The Classic card')
+    let r = await c.send({ type: 'choice', value: 'The Classic card' })
+    r = await c.send({ type: 'choice', value: '3 months' })
+    r = await answerAll(c, r)
+    expect(r.messages.at(-1)!.text).toMatch(/towards the Classic card/)
+    await toPlan(c, r)
+  })
+
+  it('prepare for the Balance Transfer card: the criteria met today and when they turn green', async () => {
+    const c = chat()
+    await begin(c, 'prepare')
+    await c.send({ type: 'choice', value: 'Capital One Balance Transfer' })
+    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
+    const goals = await c.send({ type: 'sample', fileKind: 'bank' })
+    const l = goals.result!.result.ladder!
+    const met = l.graduation.filter(g => g.ok).length
+    expect(goals.messages.find(m => m.id === 'ready-card')!.text).toBe(
+      `Against the Balance Transfer card's published criteria, you meet ${met} of ${l.graduation.length} today. All of them should be green by ${l.graduateWhen}.`,
+    )
+  })
+
+  it('new, Mei Lin: the build-from-zero questions, her sample, the first steps, then goals and the advice', async () => {
+    const c = chat()
+    const why = await begin(c, 'new')
+    expect(why.expects.chips).toEqual(["I'm new to the UK", "I'm a student", "I've never had credit"])
+    const uk = await c.send({ type: 'choice', value: "I'm new to the UK" })
+    expect(uk.messages[0]!.text).toBe('How long have you been in the UK?')
+    const bankAge = await c.send({ type: 'choice', value: 'Under 6 months' })
+    expect(bankAge.messages[0]!.text).toBe('How long have you had a UK bank account?')
+    const report = await c.send({ type: 'choice', value: 'Under 6 months' })
+    expect(report.step).toBe('ask_report')
+    expect(report.messages.at(-1)!.text).toMatch(/Even a short one helps/)
+    const bank = await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'mei' })
+    expect(bank.messages.map(m => m.text).join(' ')).toMatch(/already has three months of bank data/)
+    let r = await c.send({ type: 'skip' })
+    r = await answerAll(c, r.step === 'goals' ? r : r)
+    const build = c.steps.includes('goals')
+    expect(build).toBe(true)
+    expect(r.step).toBe('assessing')
+    expect(r.result?.profile).toMatchObject({ newToUK: true, ukMonths: 3 })
+    r = await c.send({ type: 'skip' })
+    for (let i = 0; r.step !== 'coach' && i < 5; i++) r = await c.send({ type: 'choice', value: r.expects.chips![0]! })
+    expect(c.steps).toContain('decline') // her sample carries a letter
+    r = await c.send({ type: 'choice', value: '3 months' })
+    expect(r.messages.some(m => m.kind === 'projection')).toBe(true)
+  })
+
+  it('new: the first steps come before the goals question', async () => {
+    const c = chat()
+    await begin(c, 'new')
+    await c.send({ type: 'choice', value: "I've never had credit" })
+    await c.send({ type: 'choice', value: '6 months or more' })
+    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'mei' })
+    let r = await c.send({ type: 'skip' })
+    while (r.step === 'questions') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'skip' })
+    expect(r.step).toBe('goals')
+    const ids = r.messages.map(m => m.id)
+    expect(ids.indexOf('build-intro')).toBeGreaterThanOrEqual(0)
+    expect(ids.filter(x => /^build-\d+$/.test(x))).toHaveLength(3)
+    expect(ids.indexOf('build-intro')).toBeLessThan(ids.indexOf('q-goal'))
+    expect(ids.at(-1)).toBe('q-goal')
+  })
+
+  it('mei and alex in the report branch: their bundled letter still gets its decline step', async () => {
+    for (const personaId of ['mei', 'alex']) {
+      const c = chat()
+      await begin(c, 'report')
+      const bank = await c.send({ type: 'sample', fileKind: 'credit_report', personaId })
+      expect(bank.messages[1]!.text).toMatch(/already has three months of bank data/)
+      let r = await c.send({ type: 'skip' })
+      r = await answerAll(c, r)
+      expect(r.result?.findings).not.toBeNull()
+      r = await c.send({ type: 'skip' })
+      expect(r.expects.chips).toEqual(['Tell me about the letter'])
+      const dec = await c.send({ type: 'choice', value: 'Tell me about the letter' })
+      expect(dec.step).toBe('decline')
+      await c.send({ type: 'choice', value: 'Got it' })
+      await c.send({ type: 'choice', value: 'Make me a plan' })
+      const plan = await c.send({ type: 'choice', value: '6 months' })
+      for (const chipText of plan.expects.chips ?? []) {
+        const w = await c.send({ type: 'choice', value: chipText })
+        expect(w.messages[0]!.kind, chipText).toBe('whatif')
+      }
+    }
   })
 })
 
@@ -253,11 +369,12 @@ describe('POST /api/whatif', () => {
   it('text and sliders', async () => {
     const c = chat()
     await c.send({ type: 'start' })
-    await c.send({ type: 'choice', value: "Let's start" })
+    await c.send({ type: 'choice', value: 'Nice to meet you, Cap!' })
+    await c.send({ type: 'choice', value: "I've got a credit report I want help with" })
     await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
     await c.send({ type: 'sample', fileKind: 'bank' })
     let r = await c.send({ type: 'sample', fileKind: 'letter' })
-    while (r.step === 'questions') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'A credit card' })
+    while (r.step === 'questions' || r.step === 'goals') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'A credit card' })
 
     const text = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, text: 'what if I pay 300 a month extra' } })
     expect(text.statusCode, text.body).toBe(200)
@@ -286,7 +403,8 @@ describe('POST /api/whatif', () => {
   async function checkedSession(personaId: string | null) {
     const c = chat()
     await c.send({ type: 'start' })
-    await c.send({ type: 'choice', value: "Let's start" })
+    await c.send({ type: 'choice', value: 'Nice to meet you, Cap!' })
+    await c.send({ type: 'choice', value: "I've got a credit report I want help with" })
     if (personaId) {
       await c.send({ type: 'sample', fileKind: 'credit_report', personaId })
       await c.send(personaId === 'priya' ? { type: 'sample', fileKind: 'bank' } : { type: 'skip' })
@@ -296,7 +414,7 @@ describe('POST /api/whatif', () => {
     }
     const typed = ['31', 'about 28k']
     let r = await c.send({ type: 'skip' })
-    while (r.step === 'questions')
+    while (r.step === 'questions' || r.step === 'goals')
       r = await c.send(r.expects.chips?.length ? { type: 'choice', value: r.expects.chips[0]! } : { type: 'text', value: typed.shift() ?? 'yes' })
     expect(r.step).toBe('assessing')
     return { c, r }
@@ -381,11 +499,12 @@ describe('POST /api/whatif', () => {
   it('unsafe or impossible slider changes are refused, worse changes say so (review 113)', async () => {
     const c = chat()
     await c.send({ type: 'start' })
-    await c.send({ type: 'choice', value: "Let's start" })
+    await c.send({ type: 'choice', value: 'Nice to meet you, Cap!' })
+    await c.send({ type: 'choice', value: "I've got a credit report I want help with" })
     await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
     await c.send({ type: 'sample', fileKind: 'bank' })
     let r = await c.send({ type: 'skip' })
-    while (r.step === 'questions') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'A credit card' })
+    while (r.step === 'questions' || r.step === 'goals') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'A credit card' })
     const proto = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, changes: [{ lever: 'set', path: '__proto__.polluted', value: 1 }] } })
     expect(proto.statusCode).toBe(422)
     expect(({} as Record<string, unknown>).polluted).toBeUndefined()

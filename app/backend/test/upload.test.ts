@@ -61,16 +61,19 @@ describe('POST /api/upload', () => {
     expect(letter.findings[0]?.value).toBe('Capital One, Balance Transfer credit card, 6 Oct 2026')
 
     let s = await turn(null, { type: 'start' })
-    s = await turn(s.sessionId, { type: 'choice', value: "Let's start" })
+    s = await turn(s.sessionId, { type: 'choice', value: 'Nice to meet you, Cap!' })
+    s = await turn(s.sessionId, { type: 'choice', value: "I've got a credit report I want help with" })
     s = await turn(s.sessionId, { type: 'file', fileKind: 'credit_report', fileId: r.fileId! })
     expect(s.step).toBe('ask_bank')
     expect(s.messages[0]!.text).toMatch(/^Thanks, Alex\. I've got your Experian report\. Your score there is 682 out of 999\./)
     s = await turn(s.sessionId, { type: 'file', fileKind: 'bank', fileId: csv.fileId! })
-    expect(s.step).toBe('ask_letter')
+    // 115, report branch: the bank statement leads to the questions (no letter step; a letter is welcome at any step).
+    expect(['questions', 'goals']).toContain(s.step)
     expect(s.messages[0]!.text).toMatch(/a month left over|short each month/)
+    const asking = s.step
     s = await turn(s.sessionId, { type: 'file', fileKind: 'letter', fileId: letter.fileId! })
-    expect(s.step).toBe('questions')
-    while (s.step === 'questions') s = await turn(s.sessionId, { type: 'choice', value: s.expects.chips?.[0] ?? 'A credit card' })
+    expect(s.step).toBe(asking)
+    while (s.step === 'questions' || s.step === 'goals') s = await turn(s.sessionId, { type: 'choice', value: s.expects.chips?.[0] ?? 'A credit card' })
     expect(s.result?.profile.bank?.rent).toBe(650) // the uploaded statement, not the report's own bank data
     expect(s.result?.decline?.lender).toBe('Capital One')
   })
@@ -109,7 +112,8 @@ describe('POST /api/upload', () => {
 
   it('an unknown fileId in a turn is a friendly message, step unchanged', async () => {
     let s = await turn(null, { type: 'start' })
-    s = await turn(s.sessionId, { type: 'choice', value: "Let's start" })
+    s = await turn(s.sessionId, { type: 'choice', value: 'Nice to meet you, Cap!' })
+    s = await turn(s.sessionId, { type: 'choice', value: "I've got a credit report I want help with" })
     const again = await turn(s.sessionId, { type: 'file', fileKind: 'credit_report', fileId: 'up-nope' })
     expect(again.step).toBe('ask_report')
     expect(again.messages[0]!.text).toMatch(/couldn't find that file/)
