@@ -56,6 +56,7 @@ A Fastify backend in `app/backend/` that runs the whole conversation on Jag's en
 ## Contract changes
 (dated lines, newest last)
 - 2026-11-07: no `contract.ts` change. `POST /api/upload` also takes a `text` field instead of `file` (a pasted letter); an unreadable file is HTTP 200 with `ok: false` and a friendly `error`. `POST /api/whatif` answers 409 `{error}` before the check and 422 `{error}` (a friendly sentence) when the text maps to no lever. `POST /api/turn` answers 404 `{error}` for an unknown session (start again). Documented in `app/CONTRACT.md`
+- 2026-11-07 (115): `contract.ts` additions only: Step `intro`, `opening`, `goals`; `Branch` (`declined | report | prepare | new`) and `TurnResponse.branch` (nullable, optional); MessageKind `card` (no ref); Gesture `slide-card`. Examples regenerated per branch from the backend (`examples/branches/`), and `mockTurn` follows the branches. Flow in `conversation.md`, "Branches"
 - 2026-11-07: `app/shared/conversation.md` gains "What the backend adds (113)": nudges at upload steps, out-of-order files, a letter after `assessing` re-runs the result, re-asks with ids `q-age-again`/`q-income-again`, Mei/Alex "your sample already has..." messages, plan switching in coach with exactly "3 months"/"6 months", `writtenBy`
 
 ---

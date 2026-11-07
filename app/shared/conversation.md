@@ -1,6 +1,6 @@
 # The conversation
 
-How the credit agent at the Capital One desk talks a person through the check, then coaches them. The types are in `contract.ts`; the real messages for Priya are in `examples/turns/` (made from the engine by `scripts/make-examples.ts`, which checks every example against the schemas, every `ref` resolves, at most 40 words, and a few American spellings; "you", "estimate" and the numbers are by hand).
+How Cap, the credit coach at the Capital One desk, talks a person through the check, then coaches them. The types are in `contract.ts`; the real messages for each branch are in `examples/branches/` (made by `scripts/make-examples.ts` from the real backend, which checks every response against the schemas, every `ref` resolves, at most 40 words, unique ids, and a few American spellings).
 
 ## Rules for every message
 - **At most 40 words**, one idea per message. Talk to "you". British spelling. Calm, warm, plain words.
@@ -9,7 +9,27 @@ How the credit agent at the Capital One desk talks a person through the check, t
 - Each message carries an `emote` and a `gesture` for the agent (mapping at the bottom).
 - One turn = one request, one response. A response can hold several messages; the person taps through them.
 
-## Step order
+## Branches (115)
+The conversation starts with Cap's card and one question, then branches by where the person is, and joins up at a shared goals step before the advice. Tone: friendly and a little bubbly, never jokey about money.
+
+1. **`intro`**: "Hi, nice to meet you. My name's Cap, here's my card." (gesture `slide-card`), then a `card` message (Cap's business card; no ref; its text is for screen readers: "Cap, Credit Coach. Here to make your credit make sense."). Expects the chip "Nice to meet you, Cap!"
+2. **`opening`**: "Nothing we do here is a credit search, so it can't harm your score." then "I understand you're here to make your credit better. Where should we start?" Chips pick the branch (`TurnResponse.branch` from here on):
+
+| Chip | Branch | What follows |
+|---|---|---|
+| "I've been declined already" | `declined` | `ask_letter` (no letter: Skip, then "Who turned you down?" and "And what were you applying for?" chips stand in for it) → `ask_report` → `ask_bank` → `decline` (the decoder first: likely reasons, the one fix, when to reapply, your rights; chip "What can I do?") → `goals` (opens with the first 3-month plan step for each likely reason, up to three, as plain lines) |
+| "I've got a credit report I want help with" | `report` | `ask_report` → `ask_bank` → `questions` (form fields, then roll and Direct Debit) → `goals` |
+| "I want to get ready before I apply" | `prepare` | "What would you like to apply for first?" → `ask_report` → `ask_bank` → `goals` (opens with readiness: the Classic's apply-from month, or the Balance Transfer criteria met today and when all turn green, as a `ladder` message; then "You said ... first. Is that still the goal?") |
+| "I'm new to credit or new to the UK" | `new` | "Which of these fits you best?" (new to the UK adds "How long have you been in the UK?") → "How long have you had a UK bank account?" → `ask_report` (optional) → `ask_bank` → `goals` (opens with the first three build-from-zero steps) |
+
+A letter dropped at `opening` picks `declined`; a report or statement picks `report`.
+
+3. **`goals`** (shared): "Now, what would you like to aim for?" Chips: the card they were declined for or want first ("The Balance Transfer card"), "A target score" (then chips for the next three round fifties above today's score), "A specific card" (then the three Capital One cards), "Car finance", "A mortgage", "Something else" (own words, read by Claude). Then "And how soon?" 3 or 6 months. Feeds the engine's `goal` and the plan horizon.
+4. Then the data questions not asked yet (`questions`: electoral roll, Direct Debit), `assessing` ("Thanks! Give me a moment to build your plan towards the Balance Transfer card."), and the advice below: `diagnosis` → `decline` (unless the declined branch already explained it; then the chip is "Sum it up for me") → `paper` → `coach`.
+
+The first engine run happens at the branch's early read (declined, prepare, new) so `result` arrives then; the final run is at `assessing`, with the goal and every answer. Answers given before the report (the product, new to the UK) are kept and put back over the report.
+
+## Step order (before 115, still the order inside the report branch)
 `greet` → `ask_report` → `ask_bank` → `ask_letter` → `questions` (several turns) → `assessing` → `diagnosis` → `decline` (only with a letter or a decline on file) → `paper` → `coach` (several turns)
 
 | Step | The agent says (Priya example) | Gesture, emote | Expects | Next |
@@ -82,6 +102,8 @@ One kind `paper` message, ref `{on: 'paper'}`, gesture `slide-paper`. `paperUrl`
 **What-ifs compare against the plan, not against doing nothing.** The baseline plan already stops BNPL and registers you to vote, so those levers move Priya's estimate by 0 (BNPL) or even lower it (electoral roll, `clearCard`); only the paydown amount moves it up. On the 6-month plan, extra paydown reaches the same end range (it only gets you under 30% sooner). Quote the plan the person chose (`m3` or `m6`). When that estimate does not go up, say "your estimate by Feb 2027 stays at X to Y. Your plan already gets you there." rather than showing a lower number. (Engine behaviour, reported in 112 RESULT.)
 
 ## Gesture → NPC kit
+115 adds `slide-card`: Cap slides his business card across the desk (the `slide-paper` motion with a small card), then the frontend shows the card full screen until it is put away.
+
 The contract's `gesture` names are partly the kit's **states**. 114 maps them like this (`src/npc/`, see `app/npc-concept/ART-GUIDE.md`); call `gesture()` after `setState()`:
 
 | Message `gesture` | Kit call |

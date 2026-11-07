@@ -5,7 +5,7 @@ Written by handoff 112 on 2026-11-07. Jag's credit engine is the brain; the pixe
 **The source of truth is code, not this page:**
 - `app/shared/contract.ts`: zod schemas and TypeScript types for everything that crosses the wire, plus `resolveRef()` and the route list
 - `app/shared/conversation.md`: the step order and what the agent says and asks at each step
-- `app/shared/examples/`: real responses for Priya, made from the engine by `scripts/make-examples.ts` (`walk.json` lists the request behind each turn)
+- `app/shared/examples/`: real backend responses for each 115 branch (`branches/<branch>.json`: requests and responses in order; declined, report and prepare on Priya, new on Mei Lin), made by `scripts/make-examples.ts`
 - `app/shared/mock-conversation.ts`: `mockTurn(state, request)`, `mockWhatIf`, `mockUpload`, `mockPersonas` so 114 runs the whole chat with no backend
 
 **Using it:** add `"shared": "workspace:*"` to your `package.json` dependencies (`pnpm add 'shared@workspace:*'`), then `import { TurnResponse, resolveRef } from 'shared'` and `import { mockTurn } from 'shared/mock-conversation'`. The package exports `.ts` source; Vite and tsx compile it.
@@ -27,7 +27,8 @@ Backend `http://localhost:8000`, frontend `http://localhost:5173` (Vite proxies 
 | `GET /api/paper/:sessionId.pdf` | | the summary PDF (404 `{error}` until the `paper` step) |
 
 ## The ideas in one screen
-- **Steps**: `greet, ask_report, ask_bank, ask_letter, questions..., assessing, diagnosis, decline, paper, coach...`. A `letter` is accepted at any step (one acknowledgement, step unchanged)
+- **Steps** (115): `intro` (Cap's card) → `opening` (picks `branch`: declined, report, prepare, new) → the branch's steps (`ask_letter`, `ask_report`, `ask_bank`, `questions`, `decline`) → `goals...` → `questions...` → `assessing` → `diagnosis` → `decline`? → `paper` → `coach...`; see `shared/conversation.md`, "Branches". `greet` stays in the enum but is no longer sent. A `letter` is accepted at any step (one acknowledgement, step unchanged); at `opening` it picks the declined branch
+- **115 additions**: `TurnResponse.branch` (null before `opening`), message kind `card` (no ref; text for screen readers), gesture `slide-card`. `result` can arrive before `assessing` (the declined, prepare and new branches run the engine once for their early read)
 - **Messages** (`AgentMessage`): `{id, kind, text, emote, gesture, ref?, writtenBy?}`. `kind` is `text | reason | decline | step | projection | ladder | whatif | paper`. Cards render from `ref` into `result` (`resolveRef(ref, result, {whatIfs, paperUrl})`), never from numbers in the text
 - **Expects**: `{kind: file | choice | text | none, fileKinds?, chips?, optional?, placeholder?, allowVoice?}`. `none` = send `{type: 'skip'}` after the messages
 - **`result`** is the engine's `analyse()` output exactly: `{profile, findings, result, decline}`. Note the nesting: the factors are at `result.result.diagnosis.ranked`, the plans at `result.result.plans['3m' | '6m']`, the card ladder at `result.result.ladder`, the decoded decline at `result.decline`
