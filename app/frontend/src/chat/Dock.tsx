@@ -44,6 +44,8 @@ export function Dock(props: {
   onSliders?: () => void
   /** 115: big friendly chips with an icon each: one per row ('list', the opening) or a grid ('grid', goals). */
   big?: 'list' | 'grid'
+  /** 117: a wide, short screen (the line in a bubble beside Cap): every menu in two columns. */
+  twoCols?: boolean
   /** 116: how many menu rows fit under the question; more rows page. */
   pageSize?: number
 }) {
@@ -111,7 +113,7 @@ export function Dock(props: {
     if (!fieldOpen) setPin(null)
   }, [fieldOpen])
   const shownPin = fieldOpen && pin && pin.top !== null ? { top: pin.top, h: pin.h } : null
-  const cols = big === 'grid' && (props.pageSize ?? 99) >= 3 && document.documentElement.dataset.textSize !== '150' && window.innerWidth >= 600 ? 2 : 1
+  const cols = ((big === 'grid' && (props.pageSize ?? 99) >= 3) || props.twoCols) && document.documentElement.dataset.textSize !== '150' && window.innerWidth >= 600 ? 2 : 1
 
   return (
     <div style={shownPin ? { minHeight: shownPin.h } : undefined} className="flex-none">

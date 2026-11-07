@@ -172,7 +172,7 @@ export default function App() {
       const left = Math.min(Math.max(8, cam.mouth.x - width / 2), stageW - 8 - width)
       return { left, width, bottom: vp.h - (cam.head.top - 14), tail: 'down', tailAt: cam.mouth.x - left }
     }
-    const top = Math.max(3.5 * rem + 22, cam.mouth.y - 2.5 * rem)
+    const top = Math.max(3.5 * rem + 18, Math.min(cam.mouth.y - 2.5 * rem, cam.head.top + rem))
     if (cam.side === 'right') {
       const left = cam.head.right + 18
       return { left, width: Math.min(maxW, stageW - left - 10), top, tail: 'left', tailAt: cam.mouth.y - top }
@@ -182,8 +182,10 @@ export default function App() {
     return { left: right - width, width, top, tail: 'right', tailAt: cam.mouth.y - top }
   }, [cam, kbd, stageW, vp.h, rem])
   const [bubbleHost, setBubbleHost] = useState<HTMLDivElement | null>(null)
-  // The box (or, in bubble mode, the inputs) may grow up to just under his chin, never over his face.
-  const boxMax = cam ? Math.floor(vp.h - cam.chinY - 8) : boxMax116
+  // The box (or, in bubble mode, the inputs) may grow up to just under his chin, never over his face; with a
+  // bubble beside his head, only up to the bubble's bottom (three lines, its padding and border).
+  const bubbleBottom = bubble && !kbd && bubble.top !== undefined && bubble.tail !== 'down' ? bubble.top + 3 * lineLh + 2.75 * rem : 0
+  const boxMax = cam ? Math.floor(vp.h - Math.max(cam.chinY, bubbleBottom) - 8) : boxMax116
 
   // ---------- samples ----------
   const [personas, setPersonas] = useState<Persona[] | null>(null)
@@ -618,6 +620,7 @@ export default function App() {
                   onSliders={inCoach ? () => setSheet('whatif') : undefined}
                   big={state.step === 'opening' ? 'list' : state.step === 'goals' ? 'grid' : undefined}
                   pageSize={rowsFit}
+                  twoCols={bubble?.tail === 'left' || bubble?.tail === 'right'}
                 />
               )}
             </GameBox>
