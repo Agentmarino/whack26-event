@@ -181,7 +181,14 @@ export function DialogueBox(props: DialogueBoxProps) {
           }}
         />
         {/* Keep focus (and the keyboard) in the reply box when Send is tapped, so the row does not jump. */}
-        <button type="submit" className="npc-reply__send" onPointerDown={(e) => pinned && e.preventDefault()}>Send</button>
+        <button
+          type="submit"
+          className="npc-reply__send"
+          onPointerDown={(e) => pinned && e.preventDefault()}
+          onMouseDown={(e) => pinned && e.preventDefault()}
+        >
+          Send
+        </button>
       </form>
       </div>
     </section>

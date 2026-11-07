@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type CSSProperties } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { describeAgent } from './describe'
 import { NpcEngine, type AgentState, type Emote, type Gesture, type NpcSnapshot } from './engine'
 import type { ColorName } from './palette'
@@ -52,6 +52,7 @@ const box = (r: { x: number; y: number; w: number; h: number }, s: number): CSSP
 
 export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(props, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const sceneRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const engineRef = useRef<NpcEngine | null>(null)
   const propsRef = useRef(props)
@@ -80,6 +81,32 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   useEffect(() => engineRef.current?.setAmbient(props.ambient ?? true), [props.ambient])
   useEffect(() => engineRef.current?.setReducedMotion(props.reducedMotion ?? false), [props.reducedMotion])
   useEffect(() => engineRef.current?.setWordmarkVisible(!(props.wordmarkSrc && logoOk)), [props.wordmarkSrc, logoOk])
+
+  // Put the scene's top-left corner on a whole CSS pixel. Centring can leave it at x.5 device px
+  // (iPhone 15: 9.83 CSS px = 29.48 device px), and WebKit then paints the 7x canvas 1119 px wide
+  // instead of 1120, so one native column is drawn 6 px wide. A relative offset is exact in layout units.
+  const s = props.scale
+  useLayoutEffect(() => {
+    const el = sceneRef.current
+    if (!el) return
+    const snap = () => {
+      el.style.left = '0px'
+      el.style.top = '0px'
+      const r = el.getBoundingClientRect()
+      const x = r.left + window.scrollX
+      const y = r.top + window.scrollY
+      el.style.left = `${Math.round(x) - x}px`
+      el.style.top = `${Math.round(y) - y}px`
+    }
+    snap()
+    const ro = new ResizeObserver(snap)
+    ro.observe(document.documentElement)
+    window.addEventListener('resize', snap)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', snap)
+    }
+  }, [s])
 
   useImperativeHandle(ref, () => ({
     setState: (s) => engineRef.current?.setState(s),
@@ -136,10 +163,17 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
     }
   }, [])
 
-  const s = props.scale
-  const size = { width: NATIVE_W * s, height: NATIVE_H * s }
+  // The canvas box is a whole number of CSS px and its backing store matches it in device px, so the
+  // browser maps it 1:1. The engine draws the 160x120 frame at deviceScale inside it (iPhone 15: 7x =
+  // 1120 device px in a 374 CSS px = 1122 device px box; the last 2 device px stay transparent).
+  const dpr = window.devicePixelRatio || 1
+  const deviceScale = Math.max(1, Math.round(s * dpr))
+  const size = { width: Math.ceil(NATIVE_W * s - 1e-6), height: Math.ceil(NATIVE_H * s - 1e-6) }
+  const backingW = Math.round(size.width * dpr)
+  const backingH = Math.round(size.height * dpr)
+  useEffect(() => engineRef.current?.setOutput(deviceScale, backingW, backingH), [deviceScale, backingW, backingH])
   return (
-    <div className="npc-scene" style={size}>
+    <div ref={sceneRef} className="npc-scene" style={size}>
       <canvas ref={canvasRef} className="npc-canvas" style={size} role="img" aria-label={describeAgent(snap)} />
       {props.wordmarkSrc && (
         <img

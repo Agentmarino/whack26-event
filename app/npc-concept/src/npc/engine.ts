@@ -145,9 +145,14 @@ export interface NpcEngineOptions {
 }
 
 export class NpcEngine {
+  private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D
+  /** The 160x120 frame; copied onto the visible canvas at a whole-number device scale. */
+  private frame: HTMLCanvasElement
+  private frameCtx: CanvasRenderingContext2D
   private image: ImageData
   private out: Uint32Array
+  private deviceScale = 1
   private colors = buildColorTable()
   private screen = new IndexBuffer(NATIVE_W, NATIVE_H)
   private headBuf = new IndexBuffer(HEAD.w + 6, HEAD.h)
@@ -186,10 +191,15 @@ export class NpcEngine {
     canvas.width = NATIVE_W
     canvas.height = NATIVE_H
     const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('2D canvas not available')
-    ctx.imageSmoothingEnabled = false
+    this.frame = document.createElement('canvas')
+    this.frame.width = NATIVE_W
+    this.frame.height = NATIVE_H
+    const frameCtx = this.frame.getContext('2d')
+    if (!ctx || !frameCtx) throw new Error('2D canvas not available')
+    this.canvas = canvas
     this.ctx = ctx
-    this.image = ctx.createImageData(NATIVE_W, NATIVE_H)
+    this.frameCtx = frameCtx
+    this.image = frameCtx.createImageData(NATIVE_W, NATIVE_H)
     this.out = new Uint32Array(this.image.data.buffer)
     this.ambient = opts.ambient ?? true
     this.reduced = opts.reducedMotion ?? false
@@ -197,6 +207,17 @@ export class NpcEngine {
   }
 
   // ---------- public API ----------
+  /**
+   * Draw at device resolution: the canvas backing store is backingW x backingH device pixels and each
+   * native pixel becomes deviceScale x deviceScale of them. The browser then maps the canvas 1:1 and
+   * never rescales it (WebKit at dpr 3 otherwise paints 7x as 1119 px and drops a column).
+   */
+  setOutput(deviceScale: number, backingW: number, backingH: number) {
+    this.deviceScale = Math.max(1, Math.round(deviceScale))
+    if (this.canvas.width !== backingW) this.canvas.width = backingW
+    if (this.canvas.height !== backingH) this.canvas.height = backingH
+    this.render()
+  }
   start() {
     if (!this.raf) this.raf = requestAnimationFrame(this.loop)
   }
@@ -533,7 +554,11 @@ export class NpcEngine {
     }
 
     b.toRGBA(this.out, this.colors, IDX.standPanel)
-    this.ctx.putImageData(this.image, 0, 0)
+    this.frameCtx.putImageData(this.image, 0, 0)
+    const k = this.deviceScale
+    this.ctx.imageSmoothingEnabled = false
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.ctx.drawImage(this.frame, 0, 0, NATIVE_W * k, NATIVE_H * k)
   }
 
   private drawPaper() {
