@@ -37,7 +37,15 @@ export function factsFor(item: ClaudeItem, res: EngineResult): string | null {
   switch (item.what) {
     case 'headline': {
       const top = r.diagnosis.ranked.slice(0, 3).map(f => `${f.label}: ${f.reason} (${f.because.dataPoint})`)
-      return [`Headline: ${r.headline}`, `Score: ${r.profile.score} out of ${r.scaleMax} (${r.bureau})`, ...top].join('\n')
+      // The engine's headline names its factors without counting them ("your utilisation and identity &
+      // stability"); Claude often says "two things". Give the count as a fact so the checker can verify it.
+      const named = r.diagnosis.ranked.filter(f => r.headline.toLowerCase().includes(f.label.toLowerCase())).length
+      return [
+        `Headline: ${r.headline}`,
+        ...(named > 1 ? [`Factors named in the headline: ${named}`] : []),
+        `Score: ${r.profile.score} out of ${r.scaleMax} (${r.bureau})`,
+        ...top,
+      ].join('\n')
     }
     case 'reason': {
       const f = r.diagnosis.ranked.find(x => x.id === item.factorId)

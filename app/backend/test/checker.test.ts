@@ -55,6 +55,17 @@ describe('facts for each item', () => {
       expect(checkNumbers(template, f!), template).toEqual([])
     }
   })
+  it('"two things" in the headline is a fact when the headline names two factors (also when she cannot register)', () => {
+    // Pre-caching every answer path: with "No, I can't" (register to vote) the facts had no 2, so
+    // Claude's "Two things are holding you back" failed the checker twice and the headline fell back.
+    for (const canRegisterToVote of [true, false]) {
+      const r = analyseProfile({ ...p.report, canRegisterToVote, bank: p.bank!, decline: p.decline! }, null)
+      const f = factsFor({ what: 'headline' }, r)!
+      expect(f).toContain('Factors named in the headline: 2')
+      const worded = "Two things are holding you back most: how much of your credit limit you're using, and how well lenders can confirm who you are."
+      expect(problemsWith(worded, { facts: f, template: r.result.headline })).toEqual([])
+    }
+  })
   it('a worded step with a wrong amount fails', () => {
     const f = factsFor({ what: 'step', plan: '3m', stepIndex: 7 }, res)!
     expect(problemsWith('On 8 Dec 2026, pay £180 extra off your Barclaycard.', { facts: f, template: '' })).toEqual(['£180 is not in the data'])
