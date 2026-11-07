@@ -17,33 +17,34 @@ function sprites<K extends string>(art: Record<K, readonly string[]>): Record<K,
   return out
 }
 
-// ---------- head (25x31) at local (12, -5); centre column 12 ----------
-// Tufts rows 0-1, hair to row 8 (fringe and sideburns lower), face skin rows 9-29 (17 wide, about 4:5),
-// brows row 15, eyes 17-19, ears 17-22, nose 21-22, moustache 23-24, mouth line 25, chin 29.
+// ---------- head (27x31) at local (11, -5); centre column 13 ----------
+// Tufts rows 0-1, hair to row 8 (fringe and sideburns lower), face skin rows 9-29 and columns 4-22
+// (19 x 21, about 0.9 like style-ref-1), brows row 14, eyes 16-18 (eye line at 0.40 of the face height),
+// ears 17-22, nose 21-22, moustache 23-24, mouth line 25, chin 29.
 // The chin outline sits on torso row 1, so two rows of neck show above the collar.
-export const HEAD_POS = { x: 12, y: -5 }
+export const HEAD_POS = { x: 11, y: -5 }
 export const HEAD = sprite(HEAD_ART)
 
 /**
- * Eyes 13x4 at head (6, 16); the eyes themselves are rows 1-3 (row 0 is empty headroom in every frame). Each eye is
+ * Eyes 13x4 at head (7, 15); the eyes themselves are rows 1-3 (row 0 is empty headroom in every frame). Each eye is
  * 4x3: a 2x3 iris with a white highlight at its top-left and white sclera on both sides, no lid line on top.
  */
-export const EYES_POS = { x: 6, y: 16 }
+export const EYES_POS = { x: 7, y: 15 }
 export const EYES = sprites(EYES_ART)
 export type EyeKey = keyof typeof EYES
 
-/** Eyebrows 13x3 at head (6, 14). 1 px soft brows, 4 wide, neutral on row 1 (one free row above the eyes). */
-export const BROWS_POS = { x: 6, y: 14 }
+/** Eyebrows 13x3 at head (7, 13). 1 px soft brows, 4 wide, neutral on row 1 (one free row above the eyes). */
+export const BROWS_POS = { x: 7, y: 13 }
 export const BROWS = sprites(BROWS_ART)
 export type BrowKey = keyof typeof BROWS
 
-/** Mouth 9x4 at head (8, 23), main line on row 2. Rest mouths per emote plus the talking frames small, open, wide. */
-export const MOUTH_POS = { x: 8, y: 23 }
+/** Mouth 9x4 at head (9, 23), main line on row 2. Rest mouths per emote plus the talking frames small, open, wide. */
+export const MOUTH_POS = { x: 9, y: 23 }
 export const MOUTHS = sprites(MOUTHS_ART)
 export type MouthKey = keyof typeof MOUTHS
 
-/** Coach glasses 21x5 at head (2, 16): thin dark frames around each eye, temples to the ears. */
-export const GLASSES_POS = { x: 2, y: 16 }
+/** Coach glasses 21x5 at head (3, 15): thin dark frames around each eye, temples to the ears. */
+export const GLASSES_POS = { x: 3, y: 15 }
 export const GLASSES = sprite(GLASSES_ART)
 
 // ---------- facial hair: its own layer, drawn with the head group ----------
@@ -58,8 +59,8 @@ export function normalizeFacialHair(f: FacialHair | 'stubble'): FacialHair {
 }
 /** Stubble covers the head sprite: a flat darker skin tone along the jaw, the chin and around the mouth. */
 export const STUBBLE = sprite(STUBBLE_ART)
-/** Moustache 9x2 at head (8, 23), drawn over the mouth so the upper lip hides under it. */
-export const MOUSTACHE_POS = { x: 8, y: 23 }
+/** Moustache 9x2 at head (9, 23), drawn over the mouth so the upper lip hides under it. */
+export const MOUSTACHE_POS = { x: 9, y: 23 }
 export const MOUSTACHE = sprite(MOUSTACHE_ART)
 
 // ---------- torso (41x36) at local (4, 24); the desk hides it from torso y 31 ----------
