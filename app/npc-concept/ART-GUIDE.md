@@ -1,6 +1,6 @@
 # Credit agent: art guide
 
-The rules for the pixel-art credit agent, his desk and the glass wall office behind him (since handoff 110). The code in `src/npc/` is the source of truth; this file explains it. Every state, emote and gesture is in `screens/contact-sheet.png` (iPhone 15, WebKit), at 25% in `screens/contact-sheet-small.png`, and at desktop size in `screens/contact-sheet-desktop.png`. The facial hair options are in `screens/options.png`, the background variants in `screens/backgrounds.png`.
+The rules for the pixel-art credit agent, his desk and the glass wall office behind him (since handoff 110; head proportions and defaults since 111). The code in `src/npc/` is the source of truth; this file explains it. Every state, emote and gesture is in `screens/contact-sheet.png` (iPhone 15, WebKit), at 25% in `screens/contact-sheet-small.png`, and at desktop size in `screens/contact-sheet-desktop.png`. The default look (idle, moustache with stubble, day) is `screens/default.png`. The facial hair options are in `screens/options.png`, the background variants in `screens/backgrounds.png`.
 
 Tone: game look, real help. The agent is calm, warm and direct. No points, levels, jokes or mascot antics.
 
@@ -26,9 +26,12 @@ const reduced = usePrefersReducedMotion()
 <DialogueBox line={line} width={NATIVE_W * scale} speed={speed} onSpeedChange={setSpeed} reducedMotion={reduced}
   onChar={c => npc.current?.talk(c)} onLineDone={() => npc.current?.stopTalking()} chips={chips} onChip={...} onSubmit={...} />
 npc.current?.setState('reading'); npc.current?.emote('concerned'); npc.current?.gesture('point-down')
-// optional since 110: <NpcScene facialHair="moustache" background="evening" ... /> or npc.current?.setFacialHair('stubble')
+// optional: <NpcScene facialHair="none" background="evening" ... /> or npc.current?.setFacialHair('moustache')
+// defaults since 111: facialHair 'moustache-stubble', background 'day'
 ```
 `npc.css` (imported by `index.ts`) uses `npc-` class names only, and its class selectors win over Tailwind's preflight. `src/App.tsx` is a full example, including the sample conversation runner.
+
+**API since 111:** the facial hair value `'stubble'` is now called `'moustache-stubble'` (it always meant the moustache plus stubble) and is the default; `FACIAL_HAIR` is `['none', 'moustache', 'moustache-stubble']`. `setFacialHair()` and the `facialHair` prop still accept `'stubble'` and map it to `'moustache-stubble'`; only code that typed `'stubble'` as a `FacialHair` needs the new name. New export `DEFAULT_FACIAL_HAIR`. The background default stays `'day'`. Geometry moved (see Native sizes): the desk, its props and the agent's body sit 3 px lower (`COUNTER_TOP_Y` 73, `AGENT_ORIGIN` (44, 18), `TRAY`, `CALC`, `KEYBOARD`, `PAPER_*`, `MONITOR`, `SCREEN`, `MUG`, `PLANT` all +3 in y), and the head rises 5 rows above the character box (`HEAD_POS` (12, -5)). Code that reads those constants (as `NpcScene` does for the hotspots and the logo) needs no change.
 
 **API since 110:** nothing removed or renamed. Added, all optional: `NpcScene` props `facialHair` (`'none' | 'moustache' | 'stubble'`, default `'none'`) and `background` (`'day' | 'evening'`, default `'day'`); `NpcHandle.setFacialHair()` and `setBackground()`; `NpcSnapshot.facialHair` and `.background`; exports `FACIAL_HAIR`, `BACKGROUNDS`, `BACKGROUND_NAMES` and their types. `NATIVE_W` x `NATIVE_H` is now 128 x 96 (still 4:3), so the scene is chunkier at the same screen size. `wordmarkSrc` keeps its name; the logo now shows on the desk monitor.
 
@@ -39,49 +42,51 @@ Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`,
 
 **Checklist** (every round was checked against it, see handoff 110 RESULT):
 1. Reads as the same style as the style refs at phone size: a chunky dark outline (`outline`) around every shape, flat colours with one or two shades per material, hair in chunky tufts with clusters of highlight, eyes with a white highlight.
-2. The agent fills about the same share of the frame as the composition ref: head top at y 15, desk top at y 70 (55 of 96 rows), about 40 of 128 columns wide.
-3. Face friendly and calm, not intense: open eyes, soft 1 px brows set two rows above them, a warm closed smile, a light blush.
+2. The agent fills about the same share of the frame as the composition ref: head top at y 13, desk top at y 73 (60 of 96 rows), about 40 of 128 columns wide.
+3. Face friendly and calm, not intense: open eyes (white on both sides of the iris, a highlight, no lid line across the top), soft 1 px brows with one free row above the eyes, a warm closed smile, a light blush. Head proportions follow style-ref-1 (see "Head proportions" below): the face is taller than wide.
 4. Arms and hands thick (9 px sleeves, 9 px hands) with white cuffs.
 5. The tie has a knot, a narrow neck and a blade with two 2 px stripes.
 6. The background has depth but stays behind the agent: cooler, lighter and lower in contrast than him.
 7. No single pixels of noise: details come in pairs or clusters (hair strands 2 px, city windows 2x1, colleagues' eyes 1x2, tie stripes 2 px thick).
 8. Every scaled pixel block is one flat colour (no smoothing; checked with the pixel test).
 
-**The agent** (original character, a friendly businessman): short tufty hair (three tufts, a fringe lock, highlight clusters, two 2 px strands), ears, calm eyes (each 3x2: a dark lid row over a white sclera pixel and a 2 px iris; glances move the iris), soft 1 px brows, small nose shade, blush on both cheeks, a warm closed smile at rest. Navy suit with a light side (screen left, `uniformLight`) and a dark side (`uniform`, `uniformShade` at the edge), lapels with a dark outer edge, white shirt with collar points, red tie with a knot and stripes (`redLight`), pocket square (screen right), name badge (screen left). No pencil, no grey patch, no hat, no likeness to any existing character or real person.
+**The agent** (original character, a friendly businessman): short tufty hair (three tufts, a fringe lock, short strands; lit on screen left with `hairLight` clusters, `hairShade` on the far right side and sideburn), ears at eye-to-nose height, open calm eyes (each 4x3: a 2x3 iris with a white highlight at its top-left, white sclera on both sides, no lid line across the top; glances move the iris), soft 1 px brows, small nose shade, blush under the eyes, a warm closed smile at rest, a defined chin and a visible neck. Navy suit with a light side (screen left, `uniformLight`) and a dark side (`uniform`, `uniformShade` at the edge), lapels with a dark outer edge, white shirt with collar points, red tie with a knot and stripes (`redLight`), pocket square (screen right), name badge (screen left). No pencil, no grey patch, no hat, no likeness to any existing character or real person.
 
-**Facial hair** is its own layer with three settings: `none` (default, clean-shaven), `moustache` (a neat bold moustache over the upper lip), `stubble` (the moustache plus light stubble: a flat darker skin-tone shape over the jaw, chin and upper lip, no dither).
+**Facial hair** is its own layer with three settings: `moustache-stubble` (default since 111, option C: the moustache plus light stubble, a flat darker skin-tone shape along the jaw that widens towards the chin, over the chin and around the mouth, no dither), `moustache` (a neat bold moustache over the upper lip), `none` (clean-shaven).
 
-**The scene:** the agent sits behind a desk in front of a glass wall. Behind the glass: a ceiling with three light panels, a back wall with a long window band (sky and a two-row city), two back desks, colleague A seated behind a monitor (facing us), colleague B standing with a mug, a tall plant in the back left corner. The glass has a top rail with a brand red line, two slim dark mullions with a light edge, a frosted band (translucent: what is behind shows as two soft tones) and two pairs of diagonal reflections (a wide and a thin band, done as a lighter-colour map, not a paint stroke). On the desk: a slim monitor at the left showing the official logo, the navy in-tray (drop zone), the keyboard under his hands, the calculator, a red mug and a small plant at the right. The desk top is light with a thin highlight; the front panel is navy with a red stripe and kept short.
+**Head proportions** (since 111, copied from style-ref-1, not the character): the skin area without ears is 17 wide and 21 tall (about 4:5); hair adds 8 rows of volume on top, so the head is 25 x 31. Measured as a share of the face height (hairline to chin): eye line 0.45 (a full forehead above), nose about 0.62, mouth line 0.79; ears sit at eye-to-nose height; the jaw runs straight down to the mouth line and then tapers to a 7 px chin; two rows of neck show above the collar. Style-ref-1 measures about 0.95 (0.85 from the temple hairline) for width to height, eye line 0.39, mouth line 0.77: our face is a little narrower, as the 111 handoff asked for 4:5. The local-only `screens/compare-face.png` (gitignored, it embeds the ref) puts the two side by side at the same head height.
+
+**The scene:** the agent sits behind a desk in front of a glass wall. Behind the glass: a ceiling with three light panels, a back wall with a long window band (sky and a two-row city), two back desks, two colleagues seated at them facing us (since 111: rounded shoulders, upper arms split from the body by a seam in a shade tone, elbows out and forearms on the desk with the hands together; A has a monitor beside them, B a mug by the right hand), a tall plant in the back left corner. The glass has a top rail with a brand red line, two slim dark mullions with a light edge, a frosted band just under the back desk tops (translucent: what is behind shows as two soft tones) and two pairs of diagonal reflections (a wide and a thin band, done as a lighter-colour map, not a paint stroke). On the desk: a slim monitor at the left showing the official logo, the navy in-tray (drop zone), the keyboard under his hands, the calculator, a red mug and a small plant at the right. The desk top is light with a thin highlight; the front panel is navy with a red stripe and kept short (13 rows since 111, was 16).
 
 ## Native sizes
 | Thing | Size (px) | Where |
 |---|---|---|
 | Canvas | 128 x 96 (4:3) | Whole-number device scale (`useIntegerScale`); iPhone 15 portrait 9x (1152 x 864 device px = 384 x 288 CSS px), desktop 1440 x 900 5x (640 x 480) at dpr 1 |
-| Character box | 49 x 60 | Top-left at scene (44, 15). Visible figure head to desk: y 15 to 70 |
-| Head | 25 x 27 | Box (12, 0), centre column 12. Tufts rows 0 to 1, hair to row 10, brows row 13, eyes 15 to 16, nose 17 to 18, mouth 19 to 22, chin 25 |
-| Eyes layer | 11 x 4 | Head (7, 14). Each eye 3 x 2 (lid row, then sclera pixel and 2 px iris); left eye x 0-2, right eye x 8-10 |
-| Eyebrows layer | 11 x 3 | Head (7, 12). 3 wide, 1 px |
-| Mouth layer | 9 x 4 | Head (8, 19) |
-| Facial hair | stubble 25 x 27 (head-sized), moustache 9 x 2 | Stubble at head (0, 0) under the eyes and mouth; moustache at head (8, 19) over the mouth |
-| Glasses (coach) | 18 x 4 | Head (3, 14) |
+| Character box | 49 x 60 | Top-left at scene (44, 18). The head rises 5 rows above it. Visible figure head to desk: y 13 to 73 |
+| Head | 25 x 31 | Box (12, -5), centre column 12. Tufts rows 0 to 1, hair to row 8 (fringe to 10, sideburns to 15), face skin rows 9 to 29 and columns 4 to 20, brows row 15, eyes 17 to 19, ears 17 to 22, nose 21 to 22, moustache 23 to 24, mouth line 25, chin 29, chin outline 30 (on torso row 1, so torso rows 2 to 3 are the visible neck) |
+| Eyes layer | 13 x 4 | Head (6, 16). Row 0 only for looking up; each eye 4 x 3 on rows 1 to 3 (2 x 3 iris with a highlight top-left, sclera both sides); left eye x 0-3, right eye x 9-12 |
+| Eyebrows layer | 13 x 3 | Head (6, 14). 4 wide, 1 px, neutral on row 1 |
+| Mouth layer | 9 x 4 | Head (8, 23), main line on row 2 |
+| Facial hair | stubble 25 x 31 (head-sized), moustache 9 x 2 | Stubble at head (0, 0) under the eyes and mouth; moustache at head (8, 23) over the mouth |
+| Glasses (coach) | 21 x 5 | Head (2, 16): a frame around each eye, temples to the ears |
 | Torso | 41 x 36 | Box (4, 24). Shoulder joints at box (9, 33) and (39, 33). Hidden by the desk from torso y 31 |
 | Sleeves | 9 px wide (outline), 7 px fill | Screen-left sleeve `uniformLight` with a 2 px `uniform` rim on the right; screen-right sleeve `uniform` with a 1 px `uniformLight` rim on the left and a 2 px `uniformShade` rim on the right; white cuff 3.5 to 6 px back from the hand, dark hem behind it (skipped where the forearm is too short) |
 | Hands | rest 9x6, grip 8x7, open 11x9, point down 8x10, point right 10x8, flat 10x4 | Centred on the hand point of the arm pose |
 | Held items | doc 8x10, doc held 20x14, planner 10x12 | Top-left given by the pose |
-| Desk | top y 70 to 79, front panel 80 to 95 | Full width. Hides the agent below y 70 |
-| Monitor | 40 x 23 at (5, 44); screen 36 x 17 at (7, 46) | `MONITOR`, `SCREEN` in `scene.ts` |
-| Tray (drop zone) | 18 x 6 at (31, 73) | Tap / keyboard hotspot covers it plus the arrow above (at least 44 CSS px) |
-| Keyboard | 22 x 5 at (58, 73) | Under the hands in idle |
-| Calculator | 11 x 6 at (84, 73) | `tap-calc` hits it |
-| Mug, desk plant | 9 x 8 at (95, 66); 15 x 14 at (107, 59) | Right side of the desk |
-| Summary sheet | 20 x 5, slides from y 71 to y 75 | Ends on the front edge of the desk |
+| Desk | top y 73 to 82, front panel 83 to 95 | Full width. Hides the agent below y 73 |
+| Monitor | 40 x 23 at (5, 47); screen 36 x 17 at (7, 49) | `MONITOR`, `SCREEN` in `scene.ts` |
+| Tray (drop zone) | 18 x 6 at (31, 76) | Tap / keyboard hotspot covers it plus the arrow above (at least 44 CSS px) |
+| Keyboard | 22 x 5 at (58, 76) | Under the hands in idle |
+| Calculator | 11 x 6 at (84, 76) | `tap-calc` hits it |
+| Mug, desk plant | 9 x 8 at (95, 69); 15 x 14 at (107, 62) | Right side of the desk |
+| Summary sheet | 20 x 5, slides from y 74 to y 78 | Ends on the front edge of the desk |
 | Thinking bubble | 18 x 11 at (82, 5) | |
-| Office | ceiling y 0 to 9, wall 10 to 45 (windows 12 to 33), floor from 46 | Behind the glass; colleague A at (21, 24), colleague B at (111, 19) |
-| Glass | top rail y 0 to 2, mullions x 42 and 98, frosted band y 37 to 41 | Drawn over the office, under the agent |
+| Office | ceiling y 0 to 9, wall 10 to 45 (windows 12 to 33), floor from 46, back desk tops y 41 | Behind the glass; seated colleagues 16 x 18 (`SEATED_ROWS`), heads at A (21, 24) and B (110, 24), forearms on the desk top at y 41 |
+| Glass | top rail y 0 to 2, mullions x 42 and 98, frosted band y 42 to 46 | Drawn over the office, under the agent |
 
 ## Layers (back to front)
 1. Office (`buildOffice`, static): ceiling and lights, back wall, sky and city, back desks, tall plant
-2. Office life (`drawOfficeLife`): the two colleagues; with `ambient` on and motion allowed, colleague A looks down now and then, colleague B lifts the mug, one ceiling light flickers off for 140 ms every ~9 s
+2. Office life (`drawOfficeLife`): the two seated colleagues; with `ambient` on and motion allowed, colleague A looks down now and then, colleague B lifts the mug to the chest, one ceiling light flickers off for 140 ms every ~9 s
 3. Glass (`drawGlass`): reflections (lighter-colour map in two diagonal band pairs), the translucent frosted band, the top rail with the red line, mullions
 4. Agent, back pass: torso, then the head group (head, stubble, eyes, glasses, eyebrows, mouth, moustache), composed together so a tilt moves them as one
 5. Desk (`buildDesk`)
@@ -93,12 +98,12 @@ Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`,
 To change the setting, replace layers 1 to 3 and 5. Keep `AGENT_ORIGIN`, `COUNTER_TOP_Y`, `TRAY`, `CALC`, `KEYBOARD` and the paper positions, or move them together with the arm poses that touch them (`rest*`, `reach*`, `tap*`, `pointDownR`, `explain*`, slide hand).
 
 ## Facial hair and background variants
-- **Facial hair:** `<NpcScene facialHair="none" | "moustache" | "stubble">` or `npc.current.setFacialHair(...)`. Default `none`. Debug panel: "Facial hair" buttons. See `screens/options.png` (A clean-shaven, B neat moustache, C moustache with light stubble, idle, final scene).
+- **Facial hair:** `<NpcScene facialHair="moustache-stubble" | "moustache" | "none">` or `npc.current.setFacialHair(...)`. Default `moustache-stubble` (since 111; `'stubble'` is still accepted). Debug panel: "Facial hair" buttons. See `screens/options.png` (A clean-shaven, B neat moustache, C moustache with light stubble = default; idle, final scene).
 - **Background:** `<NpcScene background="day" | "evening">` or `npc.current.setBackground(...)`. Default `day`. Debug panel: "Background" buttons. A variant only swaps the office colours (`BACKGROUNDS` in `palette.ts`): evening warms the walls and ceiling lights, turns the sky to dusk and lights the city windows. The agent, desk and brand colours never change. See `screens/backgrounds.png`.
 - To add a variant, add an entry to `BACKGROUNDS` with overrides for the `office*`, `sky*`, `city*`, `desk*`, `colleague*`, `frosted*` and `*Shine` names. `setPalette()` overrides are applied on top of the background.
 
 ## Authoring
-The agent's pixels live in `src/npc/sprites/art.ts` as rows of palette characters (`HEAD_ART`, `EYES_ART`, `TORSO_ART` and so on). In 110 they were generated by a small design script (Python, outside the repo) that builds each part from fills, an automatic outside outline, mirrored collar shapes and hand-placed highlights, then writes `art.ts`. The TS file is the source of truth now: edit the rows by hand (every row of a sprite must have the same width; `sprite()` throws if not). `sprites/character.ts` places the parts; `scene.ts` draws the office and desk in code with palette indices.
+The agent's pixels live in `src/npc/sprites/art.ts` as rows of palette characters (`HEAD_ART`, `EYES_ART`, `TORSO_ART` and so on). In 110 they were generated by a small design script (Python, outside the repo) that builds each part from fills, an automatic outside outline, mirrored collar shapes and hand-placed highlights, then writes `art.ts`. In 111 a second script reused the 110 torso, hands and items and redrew the head parts (head, eyes, brows, mouths, moustache, stubble, glasses) from a per-row face outline. The seated colleagues are rows in `scene.ts` (`SEATED_ROWS`). The TS file is the source of truth now: edit the rows by hand (every row of a sprite must have the same width; `sprite()` throws if not). `sprites/character.ts` places the parts; `scene.ts` draws the office and desk in code with palette indices.
 
 ## Logo
 The official file `public/brand/capital-one-logo.png` (231 x 218, artwork in the box (5, 71) to (225, 146) on white) is shown unchanged on the desk monitor's screen. `vite.config.ts` finds it at start-up and `App` passes it to `NpcScene` as `wordmarkSrc`. `NpcScene` puts a white box at `SCREEN` under the canvas (z-index 0, canvas 1, hotspots 2) and scales the image inside so its artwork fits with a small margin (smoothing is allowed for this image only; only white margin falls outside the box). While the logo is shown, the engine writes the monitor's white screen pixels as transparent, so the logo shows through and any arm, hand or document drawn over the monitor stays on top of it. If the file is missing or fails to load, the monitor shows a plain dashboard drawn in code (bars and lines, never a drawn logo). Never draw or trace the Capital One logo. The logo row is in `app/DISCLOSURES.md`.
@@ -195,6 +200,9 @@ One file: `src/npc/palette.ts`. Since 110 the stand entries (`standPanel`, `hall
 | `]` | screenWhite | `#ffffff` | Desk props |
 | `,` | bezel | `#22262e` | Desk props |
 | `"` | bezelLight | `#3a404b` | Desk props |
+| `8` | hairShade | `#2a1c17` | Character (111: far side of the hair) |
+| `(` | colleagueTopAShade | `#6c7b91` | Office (111: colleague A's arm seams; evening swaps it) |
+| `)` | colleagueTopBShade | `#8c7282` | Office (111: colleague B's arm seams; evening swaps it) |
 
 UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgDeep #06131f`, `uiText #f3f2ec`, `uiMuted #b9c3cf`, `uiAccent #d03027`, `uiFocus #ffd84d`, page `#10141c`.
 
@@ -307,6 +315,6 @@ The canvas hotspots (tray and sheet) are transparent DOM buttons placed over the
 
 **Text size.** All sizes are in rem. At 200% root font size the dialogue box grows and wraps, and the scene steps down to the next whole scale instead of overlapping (checked in 108; the 109 layout keeps the same rem rules).
 
-**Checked with Playwright** (2026-11-07, again after the 110 redraw): WebKit `iPhone 15` profile and Chromium 1440 x 900, reduced motion, keyboard-only pass, tray tap, drag and drop, the sample conversation. Results are in handoffs 109 and 110 RESULT. Screens: `screens/iphone-page.png`, `screens/iphone-reply-focused.png`, `screens/iphone-reduced-motion.png`, `screens/desktop-1440.png`.
+**Checked with Playwright** (2026-11-07, again after the 110 redraw and the 111 head): WebKit `iPhone 15` profile and Chromium 1440 x 900, reduced motion, keyboard-only pass, tray tap, drag and drop, the sample conversation. Results are in handoffs 109, 110 and 111 RESULT. Screens: `screens/iphone-page.png`, `screens/iphone-reply-focused.png`, `screens/iphone-reduced-motion.png`, `screens/desktop-1440.png`.
 
 **Not covered yet:** no real screen-reader test (VoiceOver or NVDA), only the DOM and ARIA checks above; forced colours not checked; the iPhone checks ran in emulation, not on a device.
