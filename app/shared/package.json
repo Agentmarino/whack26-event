@@ -1,0 +1,26 @@
+{
+  "name": "shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The contract between backend (113) and frontend (114): zod schemas, examples, mock conversation",
+  "exports": {
+    ".": "./contract.ts",
+    "./contract": "./contract.ts",
+    "./mock-conversation": "./mock-conversation.ts",
+    "./examples/*": "./examples/*"
+  },
+  "scripts": {
+    "examples": "tsx scripts/make-examples.ts",
+    "mock-walk": "tsx scripts/mock-walk.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

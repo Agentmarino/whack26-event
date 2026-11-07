@@ -1,0 +1,8 @@
+packages:
+  - app/backend
+  - app/frontend
+  - app/shared
+
+# esbuild (used by tsx, and by Vite in 114) needs its install script
+allowBuilds:
+  esbuild: true
