@@ -283,6 +283,26 @@ describe('POST /api/whatif', () => {
     expect(unknown.json().error).toMatch(/I can only test/)
   })
 
+  it('unsafe or impossible slider changes are refused, worse changes say so (review 113)', async () => {
+    const c = chat()
+    await c.send({ type: 'start' })
+    await c.send({ type: 'choice', value: "Let's start" })
+    await c.send({ type: 'sample', fileKind: 'credit_report', personaId: 'priya' })
+    await c.send({ type: 'sample', fileKind: 'bank' })
+    let r = await c.send({ type: 'skip' })
+    while (r.step === 'questions') r = await c.send({ type: 'choice', value: r.expects.chips?.[0] ?? 'A credit card' })
+    const proto = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, changes: [{ lever: 'set', path: '__proto__.polluted', value: 1 }] } })
+    expect(proto.statusCode).toBe(422)
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+    const nonsense = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, changes: [{ lever: 'set', path: 'score', value: 'abc' }] } })
+    expect(nonsense.statusCode).toBe(422)
+    expect(typeof nonsense.json().error).toBe('string')
+    const off = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, changes: [{ lever: 'electoralRoll', value: false }, { lever: 'rentReporting', value: false }] } })
+    const o = WhatIfResponse.parse(off.json())
+    if (o.whatIf.output.delta.m3.high < 0) expect(o.messages[0]!.text).toMatch(/would drop to/)
+    else expect(o.messages[0]!.text).not.toMatch(/already gets you there/)
+  })
+
   it('before the check: 409', async () => {
     const c = chat()
     await c.send({ type: 'start' })

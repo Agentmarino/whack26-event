@@ -28,3 +28,5 @@ Read by `/demo-check`. Keep this current from the first working screen.
 - Settings come from the repo-root `.env`: `ANTHROPIC_API_KEY`, `LLM_MODEL` (default `claude-sonnet-5-5`), `DEMO_OFFLINE` (default `false`)
 - Check it: `curl localhost:8000/api/health`, then `bash app/backend/scripts/curl-walk.sh` walks Priya from greet to coach
 - Tests: `pnpm --filter backend test`
+- Files for a live upload (all made up, in `app/backend/data/samples/`): `sample-credit-report.pdf` (Alex's report as a PDF; Claude reads it, about 8 s live, instant from the cache), `priya-bank.csv` (3 months, matches Priya's bank data), `capital-one-letter.txt` (Priya's decline letter). `app/backend/data/personas/mock-credit-report.json` uploads as a JSON report
+- Before going offline, walk the demo path once with Claude on (and once with Plain English on) so `data/ai-cache.json` holds the wording; commit the cache

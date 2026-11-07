@@ -7,11 +7,12 @@
 
 import type Anthropic from '@anthropic-ai/sdk'
 import { createHash } from 'node:crypto'
-import { CreditReport, Profile } from 'shared'
+import { CreditReport, EngineResult, Profile } from 'shared'
 import type { FileKind, Finding, UploadResult } from 'shared'
 import { z } from 'zod'
 import * as E from '../engine/index.ts'
 import { isoDate, parseBankCsv, readBank, type Txn } from './bank.ts'
+import { analyseProfile } from './analysis.ts'
 import { askClaude, jsonIn, log, remember } from './claude.ts'
 import { config } from './config.ts'
 import type { Sample } from './personas.ts'
@@ -112,6 +113,26 @@ const REPORT_SCHEMA = `{
  "declineLetters": []
 }`
 
+/**
+ * A report is only accepted if the engine can run on it and the result fits the contract: a card with
+ * no limit or balance would otherwise give "NaN%" messages and responses that fail the zod schemas.
+ */
+function unusable(sample: Sample): string | null {
+  const profile = Profile.safeParse(sample.report)
+  if (!profile.success) return `profile: ${profile.error.issues[0]?.path.join('.')} ${profile.error.issues[0]?.message}`
+  const merged = { ...sample.report, ...(sample.bank ? { bank: sample.bank } : {}), ...(sample.decline ? { decline: sample.decline } : {}) }
+  let res
+  try {
+    res = analyseProfile(merged, sample.findings)
+  } catch (err) {
+    return `engine run: ${err instanceof Error ? err.message : err}`
+  }
+  const checked = EngineResult.safeParse(res)
+  if (!checked.success) return `engine result: ${checked.error.issues[0]?.path.join('.')} ${checked.error.issues[0]?.message}`
+  if (/\bNaN\b|undefined/.test(JSON.stringify(res.result.diagnosis))) return 'engine result has NaN or undefined in the diagnosis'
+  return null
+}
+
 async function ingestReport(u: Upload, kind: Kind, mediaType?: string): Promise<UploadResult> {
   let json: unknown
   let via = 'json'
@@ -126,7 +147,7 @@ async function ingestReport(u: Upload, kind: Kind, mediaType?: string): Promise<
     const call = {
       purpose: 'read-report',
       system: `You read UK credit reports (Experian, Equifax, TransUnion, or apps like ClearScore and Credit Karma) into JSON.
-Copy values exactly as printed. Never estimate or calculate a value; leave a field out if it is not shown.
+Copy values exactly as printed. Never estimate or calculate a value; leave a field out if it is not shown, except that every credit card needs "limit", "balance" and "opened" (skip a card whose limit or balance is not shown).
 Reply with JSON only, in this shape:\n${REPORT_SCHEMA}`,
       content: [block, { type: 'text' as const, text: 'Read this credit report into the JSON shape. JSON only.' }],
       maxTokens: 6000,
@@ -162,6 +183,8 @@ Reply with JSON only, in this shape:\n${REPORT_SCHEMA}`,
       findings: parsed.found,
       bundled: { bank: hasBank, letter: Boolean(decline) },
     }
+    const why = unusable(sample)
+    if (why) return fail('credit_report', u.fileName, `read via ${via} but not usable: ${why}`)
     log('upload:credit_report', `${u.fileName}: read via ${via}, ${parsed.found.report.length} findings`)
     return ok({ fileKind: 'credit_report', report: sample }, u.fileName, [...parsed.found.report, ...parsed.found.bank, ...parsed.found.letter])
   }
@@ -170,6 +193,8 @@ Reply with JSON only, in this shape:\n${REPORT_SCHEMA}`,
   if (profile.success && ['score', 'cards', 'age', 'grossIncome'].some(k => k in (json as object))) {
     const { bank, decline, ...rest } = profile.data
     const sample: Sample = { id: 'upload', report: rest, bank: bank ?? null, decline: decline ?? null, findings: null, bundled: { bank: Boolean(bank), letter: Boolean(decline) } }
+    const why = unusable(sample)
+    if (why) return fail('credit_report', u.fileName, `Profile JSON not usable: ${why}`)
     const findings: Finding[] = [
       ...(rest.score != null ? [{ label: 'Score', value: `${rest.score} (${rest.bureau ?? 'experian'})`, tone: 'neutral' as const }] : []),
       ...(rest.cards ?? []).map(c => ({ label: `${c.name} card`, value: `${E.gbp(c.balance)} of ${E.gbp(c.limit)}`, tone: (c.balance / c.limit > 0.5 ? 'bad' : c.balance / c.limit > 0.3 ? 'warn' : 'good') as Finding['tone'] })),

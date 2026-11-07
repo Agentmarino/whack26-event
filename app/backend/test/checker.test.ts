@@ -20,6 +20,14 @@ describe('checkNumbers', () => {
     expect(checkNumbers('You have five searches.', facts)).toEqual(['the number 5 is not in the data'])
     expect(checkNumbers('Wait until 9 May 2027.', facts)).toEqual(['the month May is not in the data'])
   })
+  it('reads numbers in words and short months (review 113)', () => {
+    expect(checkNumbers('Pay sixty pounds a month.', facts)).toEqual(['the number 60 is not in the data'])
+    expect(checkNumbers('Pay a thousand pounds off.', facts)).toEqual(['the number 1000 is not in the data'])
+    expect(checkNumbers('About eighteen months of history.', facts)).toEqual(['the number 18 is not in the data'])
+    expect(checkNumbers('Aim to finish by Feb.', facts)).toEqual(['the month Feb is not in the data'])
+    expect(checkNumbers('twenty-five of them', facts)).toEqual(['the number 25 is not in the data'])
+    expect(checkNumbers('You may want to start with one idea and three searches.', facts)).toEqual([])
+  })
 })
 
 describe('checkStyle', () => {
@@ -50,5 +58,19 @@ describe('facts for each item', () => {
   it('a worded step with a wrong amount fails', () => {
     const f = factsFor({ what: 'step', plan: '3m', stepIndex: 7 }, res)!
     expect(problemsWith('On 8 Dec 2026, pay £180 extra off your Barclaycard.', { facts: f, template: '' })).toEqual(['£180 is not in the data'])
+  })
+})
+
+describe('goal in own words (keywords)', async () => {
+  const { parseGoal } = await import('../src/questions.ts')
+  it.each([
+    ['A mortgage', 'mortgage'],
+    ['I want to buy my first flat', 'mortgage'],
+    ["I'd like to be able to rent a nicer flat", 'build'],
+    ['A credit card', 'card'],
+    ['Car finance', 'build'],
+    ['Just build my credit', 'build'],
+  ])('%s', (text, goal) => {
+    expect(parseGoal(text).goal).toBe(goal)
   })
 })

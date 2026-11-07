@@ -1,7 +1,10 @@
 // The questions step (conversation.md): the engine's form fields the data has not answered,
 // goal and horizon always, then up to 2 questions built from the data. Chips and typed text count the same.
 
-import type { Bureau, Expects, Goal, Profile } from 'shared'
+import { Goal } from 'shared'
+import type { Bureau, Expects, Profile } from 'shared'
+import { z } from 'zod'
+import { askClaude, jsonIn, remember } from './claude.ts'
 import { CHIPS, type Draft, fit } from './templates.ts'
 import type { QuestionKey, Session } from './session.ts'
 
@@ -99,17 +102,37 @@ export function parseHousing(t: string): string | null {
   return null
 }
 
-/** Engine goal plus the person's words when the goal is not one of the engine's. Never fails. */
-export function parseGoal(t: string): { goal: Goal; words: string | null } {
+/** Engine goal plus the person's words when the goal is not one of the engine's. `matched` false = a guess. */
+export function parseGoal(t: string): { goal: Goal; words: string | null; matched?: false } {
   const s = t.toLowerCase()
-  if (/mortgage|house|home|flat|property/.test(s)) return { goal: 'mortgage', words: null }
+  if (/\brent(ing|al)?\b|landlord|tenan/.test(s)) return { goal: 'build', words: 'renting a home' }
+  if (/mortgage|\b(buy|buying|own)\b.*\b(house|home|flat|place|property)\b|first home|homeowner|property ladder/.test(s)) return { goal: 'mortgage', words: null }
   if (/\bcar\b|vehicle|motor/.test(s)) return { goal: 'build', words: 'car finance' }
   if (/card/.test(s)) return { goal: 'card', words: null }
   if (/build|improve|better|score|rating/.test(s)) return { goal: 'build', words: null }
   if (/loan/.test(s)) return { goal: 'build', words: 'a loan' }
   if (/phone|contract/.test(s)) return { goal: 'build', words: 'a phone contract' }
-  return { goal: 'build', words: t.trim().slice(0, 60) || null }
+  return { goal: 'build', words: t.trim().slice(0, 60) || null, matched: false }
 }
+
+const GoalReply = z.object({ goal: Goal })
+
+/** Own words the keywords don't know: Claude picks one of the engine's three goals, else `build`. */
+async function goalFromClaude(text: string): Promise<Goal | null> {
+  const call = {
+    purpose: 'goal',
+    system: 'A person says what they hope to get from improving their UK credit. Pick the closest engine goal: "card" (a credit card), "mortgage" (buying a home), or "build" (anything else, or just a better score). Reply with JSON only: {"goal": "card" | "mortgage" | "build"}.',
+    content: text.trim().slice(0, 300),
+    maxTokens: 30,
+    keyInput: text.trim().toLowerCase(),
+  }
+  const reply = await askClaude(call)
+  const parsed = reply ? GoalReply.safeParse(jsonIn(reply.text)) : null
+  if (!parsed?.success) return null
+  if (reply?.from === 'claude') remember(call, reply.text)
+  return parsed.data.goal
+}
+
 
 export function parseBureau(t: string): Bureau {
   const s = t.toLowerCase()
@@ -128,7 +151,7 @@ export function parseYesNo(t: string): boolean | null {
 }
 
 /** Apply one answer to the profile. `skip` takes the engine default. */
-export function answer(s: Session, key: QuestionKey, value: string | null): Answer {
+export async function answer(s: Session, key: QuestionKey, value: string | null): Promise<Answer> {
   const p: Profile = s.profile
   if (value === null) {
     if (key === 'goal') p.goal = 'build'
@@ -155,7 +178,7 @@ export function answer(s: Session, key: QuestionKey, value: string | null): Answ
     }
     case 'goal': {
       const g = parseGoal(value)
-      p.goal = g.goal
+      p.goal = g.matched === false ? ((await goalFromClaude(value)) ?? 'build') : g.goal
       s.goalWords = g.words
       return { ok: true }
     }

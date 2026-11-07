@@ -75,6 +75,17 @@ describe('POST /api/upload', () => {
     expect(s.result?.decline?.lender).toBe('Capital One')
   })
 
+  it('a report the engine cannot use is refused kindly (review 113)', async () => {
+    const report = JSON.parse(data('personas/mock-credit-report.json').toString('utf8'))
+    for (const field of ['limit', 'balance', 'opened']) {
+      const broken = structuredClone(report)
+      delete broken.accounts[0][field]
+      const u = UploadResult.parse((await upload('credit_report', { name: `no-${field}.json`, type: 'application/json', body: Buffer.from(JSON.stringify(broken)) })).body)
+      expect(u.ok, field).toBe(false)
+      expect(u.error).toMatch(/couldn't read that one/)
+    }
+  })
+
   it('a pasted letter in the text field', async () => {
     const res = await upload('letter', undefined, { text: 'Vodafone. We are sorry, we cannot offer you a pay monthly contract. This decision used Experian data. 23/09/2026' })
     const u = UploadResult.parse(res.body)
