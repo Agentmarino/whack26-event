@@ -151,7 +151,7 @@ async function ingestReport(u: Upload, kind: Kind, mediaType?: string): Promise<
 Copy values exactly as printed. Never estimate or calculate a value; leave a field out if it is not shown, except that every credit card needs "limit", "balance" and "opened" (skip a card whose limit or balance is not shown).
 Reply with JSON only, in this shape:\n${REPORT_SCHEMA}`,
       content: [block, { type: 'text' as const, text: 'Read this credit report into the JSON shape. JSON only.' }],
-      maxTokens: 6000,
+      maxTokens: 12_000, // room for the model's thinking as well as the JSON
       keyInput: { file: sha(u) },
       timeoutMs: 120_000,
       schema: REPORT,
@@ -223,7 +223,7 @@ async function ingestBank(u: Upload, kind: Kind, mediaType?: string): Promise<Up
 Reply with JSON only: {"rows": [{"date": "YYYY-MM-DD", "description": "<payee as printed>", "amount": <number, negative for money out, positive for money in>}]}.
 Never add, merge or calculate rows.`,
       content: [documentBlock(u, kind, mediaType)!, { type: 'text' as const, text: 'List the transactions. JSON only.' }],
-      maxTokens: 8000,
+      maxTokens: 16_000, // room for the model's thinking as well as the JSON
       keyInput: { file: sha(u) },
       timeoutMs: 120_000,
       schema: BANK_ROWS,

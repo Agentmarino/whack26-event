@@ -36,6 +36,10 @@ describe('Claude lever checker', () => {
     })
     expect(rollDirection('what if I register to vote')).toBe(true)
     expect(rollDirection('what if I pay 300')).toBeNull()
+    expect(checkClaudeChanges([{ lever: 'electoralRoll', value: true }], 'what if I opt out of the electoral roll', priya)).toEqual({
+      ok: true,
+      changes: [{ lever: 'electoralRoll', value: false }],
+    })
   })
 
   it('windfalls are not levers (114 review)', () => {
@@ -44,6 +48,8 @@ describe('Claude lever checker', () => {
     expect(windfallOnly('what if I inherit £5k')).toBe(true)
     expect(windfallOnly('what if I win the lottery and pay off my card')).toBe(false)
     expect(windfallOnly('what if I pay 300 a month')).toBe(false)
+    expect(windfallOnly("what if I won't gamble any more")).toBe(false)
+    expect(windfallOnly('what if I never play the lottery again')).toBe(false)
   })
 })
 
@@ -75,6 +81,22 @@ describe('keyword reader', () => {
     ['what if I deregister from voting', [{ lever: 'electoralRoll', value: false }]],
     ["I'm not on the electoral roll, what if I register to vote?", [{ lever: 'electoralRoll', value: true }]],
     ['what if I remove my ex and register to vote', [{ lever: 'electoralRoll', value: true }, { lever: 'removeAssociates' }]],
+    // Reviewer pass 2026-11-07: stop phrasings are not windfalls ("won't" is not "won").
+    ["what if I won't gamble any more", [{ lever: 'stop', what: 'gambling' }]],
+    ["what if I won’t use Klarna any more", [{ lever: 'stop', what: 'bnpl' }]],
+    ['what if I never play the lottery again', [{ lever: 'stop', what: 'gambling' }]],
+    ['what if I spent less on the lottery', [{ lever: 'stop', what: 'gambling' }]],
+    ['what if I close my Klarna', [{ lever: 'stop', what: 'bnpl' }]],
+    // ...the noun "electoral register" and opting out are coming off; the question after "what if" decides.
+    ["what if I wasn't on the electoral register", [{ lever: 'electoralRoll', value: false }]],
+    ["what if I'm not on the electoral register any more", [{ lever: 'electoralRoll', value: false }]],
+    ['what if I opt out of the electoral roll', [{ lever: 'electoralRoll', value: false }]],
+    ['what if I cancel my electoral registration', [{ lever: 'electoralRoll', value: false }]],
+    ['what if I delete myself from the electoral roll', [{ lever: 'electoralRoll', value: false }]],
+    ['I came off the roll when I moved, what if I get back on', [{ lever: 'electoralRoll', value: true }]],
+    ['what if I register to vote but leave my ex', [{ lever: 'electoralRoll', value: true }, { lever: 'removeAssociates' }]],
+    ['what if I register to vote when I leave uni', [{ lever: 'electoralRoll', value: true }]],
+    ['what if I stop reporting my rent', [{ lever: 'rentReporting', value: false }]],
   ])('%s', (text, changes) => {
     expect(keywordChanges(text, priya)).toEqual(changes)
   })

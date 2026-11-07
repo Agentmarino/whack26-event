@@ -23,7 +23,7 @@ Only these levers exist (JSON):
 - {"lever":"rentReporting","value":true}  get rent reported to the credit agencies
 Reply with JSON only, no prose: {"changes":[...]}. Several levers are fine.
 Coming off, being removed from, leaving or not being on the electoral roll is {"lever":"electoralRoll","value":false}.
-Money that arrives (winning the lottery, a bet, an inheritance, a bonus, a pay rise) is not a lever: nothing fits.
+Money that arrives (winning the lottery, a bet, an inheritance, a bonus, a pay rise) is not a lever by itself: if that is all they ask, nothing fits. What they would do with it can be (paying off a card is clearCard).
 "stop" is only for someone who says they'd stop or cut out that spending.
 If nothing fits, reply {"changes":[],"reason":"<a few words>"}. Never invent an amount; never use any other lever.`
 
@@ -70,7 +70,7 @@ export function amountsIn(text: string): number[] {
 
 // Money arriving is not something the engine models. "What if I win the lottery" used to read as
 // "stop gambling" (114 review). Windfall words are removed before looking for an action, so "a pay rise" is not "pay".
-const WINDFALL = /\b(win|wins|won|winning|winnings|lottery|lotto|jackpot|premium bonds?|inherit\w*|inheritance|windfall|bonus|pay ?rise|payrise|promotion|gift(ed)?)\b/g
+const WINDFALL = /\b(win|wins|won(?!'t)|winning|winnings|lottery|lotto|jackpot|premium bonds?|inherit\w*|inheritance|windfall|bonus|pay ?rise|payrise|promotion|gift(ed)?)\b/g
 const ACTION = /\b(pay|paid|paying|put|putting|clear\w*|stop\w*|quit\w*|give up|gave up|cut\w*|regist\w*|report\w*|break|remov\w*|cancel\w*)\b/
 /** Lower case with straight apostrophes (iPhone keyboards type ’). */
 const norm = (text: string) => text.toLowerCase().replace(/[\u2018\u2019]/g, "'")
@@ -79,27 +79,36 @@ const norm = (text: string) => text.toLowerCase().replace(/[\u2018\u2019]/g, "'"
 export function windfallOnly(text: string): boolean {
   const t = norm(text)
   if (!t.match(WINDFALL)) return false
+  // "what if I never play the lottery again" is about stopping, not money arriving.
+  if (STOPPING.test(t)) return false
   return !ACTION.test(t.replace(WINDFALL, ' '))
 }
 
 // Stop levers need the person to say they'd stop: "what if I play the lottery" is not "stop gambling".
-const STOPPING = /\b(stop\w*|quit\w*|give up|giving up|gave up|cut(ting)? (out|back|down)|no more|without|didn'?t|don'?t|do not|did not|never|cancel\w*|ban\w*|block\w*|self-?exclu\w*|less|fewer|ditch\w*)\b/
+const STOPPING = /\b(stop\w*|quit\w*|give up|giving up|gave up|cut(ting)? (out|back|down)|no more|no longer|without|didn'?t|don'?t|do not|did not|won'?t|wouldn'?t|never|cancel\w*|ban\w*|block\w*|self-?exclu\w*|less|fewer|ditch\w*|clos(e|es|ed|ing)|pa(y|id|ying) off|settl\w*)\b/
 
 // The electoral roll, read per clause so "remove my ex and register to vote" still registers.
 const ROLL = /electoral|\b(the|voting) roll\b|\bregist\w* to vote\b|\bvot(e|es|ing)\b/
 const OFF_ROLL =
-  /\b(come|comes|coming|came|get|gets|got|getting|go|goes|going|went|taken?|took|kicked|drop(s|ped|ping)?|fall(s|en|ing)?|fell)\s+(me\s+)?off\b|\boff (of )?the (electoral )?(roll|register)\b|\bremov(e|es|ed|ing|al)\b|\b(de|un)-?regist\w*|\b(leave|leaves|leaving|left)\b|\bno longer\b|\bstop(ped|ping)? (being|voting)\b/
+  /\b(come|comes|coming|came|get|gets|got|getting|go|goes|going|went|taken?|took|kicked|struck|drop(s|ped|ping)?|fall(s|en|ing)?|fell)\s+((me|myself)\s+)?off\b|\boff (of )?the (electoral )?(roll|register)\b|\bremov(e|es|ed|ing|al)\b|\b(de|un)-?regist\w*|\b(leave|leaves|leaving|left)\b|\bno longer\b|\bstop(ped|ping)? (being|voting)\b|\bopt(s|ed|ing)? out\b|\b(cancel|quit|delet|withdr[ae]w|unsubscrib)\w*/
 const NOT_ON = /\b(wasn'?t|weren'?t|isn'?t|aren'?t|was not|were not|am not|not|never)\s+(on|registered)\b/
-const REGISTERING = /(?<!(de|un)-?)\bregist(er|ers|ering|ration)\b|\b(get|getting|got|go|going|put me|sign(ed)? up|join(ed)?)\s+on\b/
+// The verb only: "the electoral register" (the noun) and "registered"/"registration" (a state) are not asking to register.
+const REGISTERING = /(?<!(de|un)-?)(?<!electoral )\bregist(er|ers|ering)\b|\b(get|gets|getting|got|go|going|put me|sign(ed)? up|join(ed)?)\s+(back\s+)?on\b|\bback on\b/
+const CLAUSES = /\band\b|\bbut\b|\bwhen\b|\bafter\b|\bbefore\b|\bbecause\b|\bwhile\b|\bso\b|,|;|\bthen\b|\bplus\b|\balso\b/
 
 /** Which way the electoral roll goes in this text: true = register, false = come off, null = not about the roll. */
 export function rollDirection(text: string): boolean | null {
   const t = norm(text)
-  const clauses = t.split(/\band\b|,|;|\bthen\b|\bplus\b|\balso\b/).filter(c => ROLL.test(c))
-  if (!clauses.length) return null
-  if (clauses.some(c => OFF_ROLL.test(c))) return false
-  // "what if I wasn't on the roll" is coming off; "I'm not on the roll, what if I register" is registering.
-  if (clauses.some(c => NOT_ON.test(c)) && !REGISTERING.test(t)) return false
+  if (!ROLL.test(t)) return null
+  // The question decides: in "I came off the roll when I moved, what if I get back on" read the part after "what if" first.
+  const at = t.lastIndexOf('what if')
+  for (const part of at > 0 ? [t.slice(at), t] : [t]) {
+    const clauses = part.split(CLAUSES)
+    if (clauses.some(c => ROLL.test(c) && OFF_ROLL.test(c))) return false
+    if (clauses.some(c => REGISTERING.test(c))) return true
+    // "what if I wasn't on the roll" is coming off; "I'm not on the roll, what if I register" registered above.
+    if (clauses.some(c => ROLL.test(c) && NOT_ON.test(c))) return false
+  }
   return true
 }
 
@@ -152,7 +161,9 @@ export function keywordChanges(text: string, profile: Profile): Change[] {
   const roll = rollDirection(t)
   if (roll !== null) out.push({ lever: 'electoralRoll', value: roll })
   if (/associate|financial link|\bex\b|ex-partner|joint account|disassociat/.test(t)) out.push({ lever: 'removeAssociates' })
-  if (/rent/.test(t) && /report|credit ?ladder|count|track/.test(t)) out.push({ lever: 'rentReporting', value: true })
+  // "what if I stop reporting my rent" takes it away (never shown as a gain).
+  if (/rent/.test(t) && /report|credit ?ladder|count|track/.test(t))
+    out.push({ lever: 'rentReporting', value: !/\b(stop\w*|don'?t|not|no longer|never|without|cancel\w*)\b[^.]{0,20}(report|credit ?ladder|count|track)/.test(t) })
   return out
 }
 
@@ -187,6 +198,8 @@ const UNSAFE_PATH = /(^|\.)(__proto__|constructor|prototype)(\.|$)/
 export function runWhatIf(s: Session, changes: Change[], text: string | null): WhatIfRun | null {
   const res = s.result
   if (!res) throw new Error('runWhatIf before the analysis')
+  // A slider `set` of the roll is the roll lever, so it gets the same rules (a removal never shows a rise).
+  changes = changes.map(c => (c.lever === 'set' && c.path === 'electoralRoll' && typeof c.value === 'boolean' ? { lever: 'electoralRoll', value: c.value } : c))
   if (changes.some(c => c.lever === 'set' && UNSAFE_PATH.test(c.path))) return null
   let output
   try {

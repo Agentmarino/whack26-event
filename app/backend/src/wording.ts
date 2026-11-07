@@ -107,7 +107,7 @@ async function callBatch(items: Item[], plain: boolean): Promise<Map<string, str
       purpose: 'wording',
       system: SYSTEM(plain),
       content: `${attempt ? 'Your last version broke the rules (see problemsLastTime). Fix those items.\n' : ''}Items:\n${JSON.stringify(payload, null, 1)}`,
-      maxTokens: 1024 + 150 * pending.length, // room for the model's thinking as well as the JSON
+      maxTokens: 2048 + 200 * pending.length, // room for the model's thinking as well as the JSON
       cache: false, // cached per item below, not per call
       schema: WORDING,
       timeoutMs: 30_000,

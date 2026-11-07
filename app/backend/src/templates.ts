@@ -152,7 +152,7 @@ export function diagnosis(res: EngineResult): Draft[] {
   const flags = r.diagnosis.flags
   const out: Draft[] = [
     d('diag-headline', 'text', r.headline, 'warm', 'explaining', { on: 'headline' }, { what: 'headline' }),
-    d('diag-intro', 'text', `${count(top3.length)} things are holding your score back most. Here they are, worst first.`, 'neutral', 'explaining'),
+    d('diag-intro', 'text', "Here's what's holding your score back, worst first.", 'neutral', 'explaining'),
     ...top3.map(f => d(`diag-${f.id}`, 'reason', f.reason, emoteFor(f.rag), 'explaining', { on: 'factor', factorId: f.id }, { what: 'reason', factorId: f.id })),
   ]
   if (flags.length) {

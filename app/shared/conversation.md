@@ -60,7 +60,7 @@ Other good ones: a new address in the last 3 years and not on the roll; a BNPL o
 ## Diagnosis
 In order, one message each:
 1. The engine `headline` (kind `text`, ref `{on: 'headline'}`, warm)
-2. "Three things are holding your score back most. Here they are, worst first."
+2. "Here's what's holding your score back, worst first." (no count: Claude's headline may already say "two things")
 3. One message per top-3 factor of `diagnosis.ranked`: kind `reason`, ref `{on: 'factor', factorId}`, text = the factor's `reason`. Emote `concerned` for red, `warm` for amber, `pleased` for green. The card shows the health pill (word + symbol), the reason and the because-trail
 4. Spending flags, if any (kind `text`, ref `{on: 'flags'}`, concerned): "Two things in your spending stand out: £40/month on buy now, pay later and minimum-only payments on your Barclaycard."
 

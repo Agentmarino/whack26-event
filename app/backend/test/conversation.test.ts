@@ -329,16 +329,30 @@ describe('POST /api/whatif', () => {
     expect(stop.whatIf?.changes).toEqual([{ lever: 'stop', what: 'gambling' }])
   })
 
+  it('the line after the headline gives no count, so it cannot contradict a worded "two things" (reviewer pass)', async () => {
+    const { c } = await checkedSession('priya')
+    const d = await c.send({ type: 'skip' })
+    const intro = d.messages.find(m => m.id.includes('intro'))
+    expect(intro?.text).toBe("Here's what's holding your score back, worst first.")
+  })
+
   it('coming off the electoral roll never shows a rise, for any persona or no data (114 review)', async () => {
     const asks = [
       'what if I come off the electoral roll',
       'what if I remove myself from the electoral roll',
       "what if I wasn't on the electoral roll",
       'what if I deregister from voting',
+      "what if I wasn't on the electoral register",
+      'what if I opt out of the electoral roll',
     ]
     for (const who of ['priya', 'mei', 'alex', null]) {
       const { c } = await checkedSession(who)
-      const bodies: Record<string, unknown>[] = [...asks.map(text => ({ text })), { changes: [{ lever: 'electoralRoll', value: false }] }]
+      const bodies: Record<string, unknown>[] = [
+        ...asks.map(text => ({ text })),
+        { changes: [{ lever: 'electoralRoll', value: false }] },
+        // Reviewer pass: a slider `set` of the roll showed a rise with no data. It is the roll lever now.
+        { changes: [{ lever: 'set', path: 'electoralRoll', value: false }] },
+      ]
       for (const body of bodies) {
         const label = `${who}: ${JSON.stringify(body)}`
         const res = await app.inject({ method: 'POST', url: '/api/whatif', payload: { sessionId: c.sessionId, ...body } })
