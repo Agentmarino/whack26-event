@@ -1,0 +1,17 @@
+{
+ "whatif:c4463212990edb120d9b2e994af4a6c0": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":300}]}",
+  "at": "2026-11-07T17:31:14.737Z"
+ },
+ "whatif:19f004a95c0b5ae27432e02545656942": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"clearCard\",\"card\":\"Barclaycard\"},{\"lever\":\"stop\",\"what\":\"bnpl\"}]}",
+  "at": "2026-11-07T17:31:16.186Z"
+ },
+ "whatif:cdbd6fd70d3103c2b1887d08d199391e": {
+  "purpose": "whatif",
+  "text": "{\"changes\":[{\"lever\":\"paydown\",\"value\":200}]}",
+  "at": "2026-11-07T17:31:50.743Z"
+ }
+}

@@ -27,12 +27,39 @@ const Reply = z.object({ changes: z.array(z.unknown()), reason: z.string().optio
 
 type FromText = { changes: Change[]; from: 'claude' | 'cache' | 'keywords' } | { unknown: true; why: string }
 
-/** Numbers the person wrote, in pounds ("300", "£1,200", "1.2k"). */
-function amountsIn(text: string): number[] {
+const WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+}
+const WORD_RUN = /\b((?:(?:a|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|grand|and)(?:[\s-]+|$))+)/g
+
+/** Numbers the person wrote, in pounds: "300", "£1,200", "1.2k", "two hundred", "a grand". */
+export function amountsIn(text: string): number[] {
   const out: number[] = []
   for (const m of text.replace(/,/g, '').matchAll(/£?\s*(\d+(?:\.\d+)?)\s*(k\b|grand)?/gi)) {
     const n = Number(m[1]) * (m[2] ? 1000 : 1)
     if (Number.isFinite(n)) out.push(n)
+  }
+  for (const m of text.toLowerCase().matchAll(WORD_RUN)) {
+    let total = 0
+    let cur = 0
+    let scaled = false
+    for (const w of m[1]!.split(/[\s-]+/)) {
+      if (WORDS[w] !== undefined) {
+        cur += WORDS[w]!
+      } else if (w === 'hundred') {
+        cur = (cur || 1) * 100
+        scaled = true
+      } else if (w === 'thousand' || w === 'grand') {
+        total += (cur || 1) * 1000
+        cur = 0
+        scaled = true
+      }
+    }
+    total += cur
+    // "a" or "and" alone is not an amount; small bare words ("three months") are not pounds either.
+    if (total >= 10 && (scaled || total >= 20)) out.push(total)
   }
   return out
 }
@@ -65,7 +92,7 @@ export function keywordChanges(text: string, profile: Profile): Change[] {
   const out: Change[] = []
   const cards = (profile.cards ?? []).map(c => c.name)
   const named = cards.find(n => t.includes(n.toLowerCase()))
-  const clearing = /\b(clear|pay off|paid off|pay it off|pay them off)\b/.test(t)
+  const clearing = /\b(clear(ed|ing)?|(pay|paid|paying) (it |them |my \w+ )?off)\b/.test(t)
   const amounts = amountsIn(t).filter(n => n > 0)
   // An amount means a monthly paydown ("pay £300 a month", "300 extra"), unless it is about rent.
   if (amounts.length && !/\brent\b/.test(t)) out.push({ lever: 'paydown', value: amounts[0]! })
