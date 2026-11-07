@@ -113,7 +113,7 @@ async function step(s: Session, input: TurnInput): Promise<Reply> {
       if (!key) return startQuestions(s, [])
       const value = textOf(input)
       if (value === null && input.type !== 'skip') return stay(s, [question(s, key).draft])
-      const a = answer(s, key, value)
+      const a = await answer(s, key, value)
       if (!a.ok) return stay(s, [a.retry])
       return nextQuestion(s, [])
     }

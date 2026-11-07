@@ -40,6 +40,10 @@ describe('keyword reader', () => {
     ['What if I register to vote?', [{ lever: 'electoralRoll', value: true }]],
     ['What if I report my rent?', [{ lever: 'rentReporting', value: true }]],
     ['what if I move to Spain', []],
+    // Review 113: durations are not amounts; a rent figure is not a paydown; the rent lever doesn't hide a paydown.
+    ['what if in 3 months I pay 200 extra', [{ lever: 'paydown', value: 200 }]],
+    ['what if I pay 300 extra and report my rent', [{ lever: 'paydown', value: 300 }, { lever: 'rentReporting', value: true }]],
+    ['what if my £650 rent was reported', [{ lever: 'rentReporting', value: true }]],
   ])('%s', (text, changes) => {
     expect(keywordChanges(text, priya)).toEqual(changes)
   })

@@ -4,9 +4,35 @@
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 const MONTH_RE = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/gi
-const WORD_NUM: Record<string, number> = {
-  two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
-  fifteen: 15, twenty: 20, thirty: 30, forty: 40, fifty: 50, hundred: 100,
+const UNITS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+}
+const SCALES: Record<string, number> = { hundred: 100, thousand: 1000, million: 1_000_000 }
+const WORD_RUN = new RegExp(
+  `\\b(?:(?:a|an)[\\s-]+(?=hundred|thousand|million|dozen|half))?(?:(?:${[...Object.keys(UNITS), ...Object.keys(SCALES), 'dozen', 'half', 'and'].join('|')})(?:[\\s-]+|\\b))+`,
+  'gi',
+)
+
+/** Numbers written in words: "twenty-five" 25, "a thousand" 1000, "two hundred and fifty" 250, "a dozen" 12. "one" alone is prose, not a count. */
+export function wordNumbers(text: string): number[] {
+  const out: number[] = []
+  for (const m of text.matchAll(WORD_RUN)) {
+    const words = m[0].toLowerCase().split(/[\s-]+/).filter(w => w && w !== 'and')
+    if (!words.length || (words.length === 1 && ['one', 'a', 'an', 'half'].includes(words[0]!))) continue
+    let total = 0
+    let cur = 0
+    let any = false
+    for (const w of words) {
+      if (UNITS[w] !== undefined) (cur += UNITS[w]!), (any = true)
+      else if (w === 'dozen') (cur = (cur || 1) * 12), (any = true)
+      else if (w === 'hundred') (cur = (cur || 1) * 100), (any = true)
+      else if (SCALES[w] !== undefined) (total += (cur || 1) * SCALES[w]!), (cur = 0), (any = true)
+    }
+    if (any) out.push(total + cur)
+  }
+  return out
 }
 
 export type Numbers = { money: Set<number>; percent: Set<number>; plain: Set<number>; months: Set<string> }
@@ -26,13 +52,12 @@ export function numbersIn(text: string, opts: { words?: boolean } = {}): Numbers
     const at = m.index ?? 0
     const before = text.slice(Math.max(0, at - 6), at)
     const after = text.slice(at + word.length, at + word.length + 6)
-    const dated = /\d{1,2}(st|nd|rd|th)?\s+$/.test(before) || /^\s+\d{4}/.test(after)
+    const lead = text.slice(Math.max(0, at - 8), at)
+    const dated = /\d{1,2}(st|nd|rd|th)?\s+$/.test(before) || /^\s+\d{4}/.test(after) || /\b(by|in|from|until|till|before|since|after|of)\s+$/i.test(lead)
     const named = word.length > 3 && word[0] === word[0]!.toUpperCase() && !/^may$/i.test(word)
     if (dated || named) out.months.add(word.slice(0, 3).toLowerCase())
   }
-  if (opts.words)
-    for (const m of text.toLowerCase().matchAll(/\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred)\b/g))
-      out.plain.add(WORD_NUM[m[1]!]!)
+  if (opts.words) for (const n of wordNumbers(text)) out.plain.add(n)
   return out
 }
 

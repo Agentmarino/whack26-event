@@ -2,7 +2,7 @@
 // when Claude is off or unsure) → engine whatIf() → a `whatif` message quoting the chosen plan.
 // Claude never computes: a paydown amount must be a number the person actually said.
 
-import { ClaudeChange } from 'shared'
+import { ClaudeChange, EngineWhatIf } from 'shared'
 import type { Change, Profile, WhatIfRun } from 'shared'
 import { z } from 'zod'
 import * as E from '../engine/index.ts'
@@ -93,9 +93,15 @@ export function keywordChanges(text: string, profile: Profile): Change[] {
   const cards = (profile.cards ?? []).map(c => c.name)
   const named = cards.find(n => t.includes(n.toLowerCase()))
   const clearing = /\b(clear(ed|ing)?|(pay|paid|paying) (it |them |my \w+ )?off)\b/.test(t)
-  const amounts = amountsIn(t).filter(n => n > 0)
+  // A monthly amount: prefer a £ figure, else the largest number; skip durations ("in 3 months") and the rent itself.
+  const pounds = [...t.replace(/,/g, '').matchAll(/£\s?(\d+(?:\.\d+)?)\s*(k\b)?/g)].map(m => Number(m[1]) * (m[2] ? 1000 : 1))
+  const durations = new Set([...t.replace(/,/g, '').matchAll(/(\d+)\s*(day|week|month|year)s?\b/g)].map(m => Number(m[1])))
+  const rentAmounts = new Set([...t.replace(/,/g, '').matchAll(/rent\D{0,12}(\d+)|(\d+)\D{0,6}rent/g)].map(m => Number(m[1] ?? m[2])))
+  const amounts = (pounds.length ? pounds : amountsIn(t).filter(n => !durations.has(n)))
+    .filter(n => n > 0 && !rentAmounts.has(n))
+    .sort((a, b) => b - a)
   // An amount means a monthly paydown ("pay £300 a month", "300 extra"), unless it is about rent.
-  if (amounts.length && !/\brent\b/.test(t)) out.push({ lever: 'paydown', value: amounts[0]! })
+  if (amounts.length) out.push({ lever: 'paydown', value: amounts[0]! })
   else if (clearing && (named || /card|balance|debt/.test(t))) out.push(named ? { lever: 'clearCard', card: named } : { lever: 'clearCard' })
   if (/bnpl|buy now|pay later|klarna|clearpay|laybuy|paypal (in|pay) 3/.test(t)) out.push({ lever: 'stop', what: 'bnpl' })
   if (/gambl|betting|\bbet\b|bet365|casino|lottery|scratch/.test(t)) out.push({ lever: 'stop', what: 'gambling' })
@@ -127,11 +133,27 @@ export async function changesFromText(text: string, profile: Profile): Promise<F
 }
 
 /** Run the engine and keep the run on the session, by id. */
-export function runWhatIf(s: Session, changes: Change[], text: string | null): WhatIfRun {
+/** `set` writes any profile path: never let it reach the object prototype. */
+const UNSAFE_PATH = /(^|\.)(__proto__|constructor|prototype)(\.|$)/
+
+/** Run the engine and keep the run on the session, by id. null when the changes or the engine's answer don't fit the contract. */
+export function runWhatIf(s: Session, changes: Change[], text: string | null): WhatIfRun | null {
   const res = s.result
   if (!res) throw new Error('runWhatIf before the analysis')
+  if (changes.some(c => c.lever === 'set' && UNSAFE_PATH.test(c.path))) return null
+  let output
+  try {
+    output = EngineWhatIf.safeParse(E.whatIf(structuredClone(res.profile), changes))
+  } catch (err) {
+    log('whatif', `engine: ${err instanceof Error ? err.message : err}`)
+    return null
+  }
+  if (!output.success) {
+    log('whatif', `engine answer does not fit the contract: ${output.error.issues[0]?.path.join('.')} ${output.error.issues[0]?.message}`)
+    return null
+  }
   s.whatIfCount += 1
-  const run: WhatIfRun = { id: `wi-${s.whatIfCount}`, text, changes, output: E.whatIf(structuredClone(res.profile), changes) }
+  const run: WhatIfRun = { id: `wi-${s.whatIfCount}`, text, changes, output: output.data }
   s.whatIfs[run.id] = run
   return run
 }
@@ -143,11 +165,13 @@ export async function whatIfFromText(s: Session, text: string): Promise<WhatIfOu
   const got = await changesFromText(text, res.profile)
   if ('unknown' in got) return { ok: false, draft: T.whatIfUnknown() }
   const run = runWhatIf(s, got.changes, text)
+  if (!run) return { ok: false, draft: T.whatIfUnknown() }
   return { ok: true, run, draft: T.whatIfMessage(res, run, s.plan ?? s.horizon) }
 }
 
 export function whatIfFromChanges(s: Session, changes: Change[]): WhatIfOut {
   const res = s.result!
   const run = runWhatIf(s, changes, null)
+  if (!run) return { ok: false, draft: T.whatIfFailed() }
   return { ok: true, run, draft: T.whatIfMessage(res, run, s.plan ?? s.horizon) }
 }

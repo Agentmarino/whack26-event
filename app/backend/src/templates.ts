@@ -310,19 +310,18 @@ export function whatIfMessage(res: EngineResult, run: WhatIfRun, plan: PlanId): 
   const end = res.result.plans[plan].projection.at(-1)
   const by = end ? end.date : 'the end of your plan'
   const up = delta.high > 0 || delta.low > 0
+  // A change that takes something good away (off the roll, no rent reporting, a number set by the sliders)
+  // can really lower the estimate: say so with the engine's numbers.
+  const down = (delta.high < 0 || delta.low < 0) && run.changes.some(c => ('value' in c && c.value === false) || c.lever === 'set')
   const under30 = run.output.because.under30
   const tail = under30?.after ? ` You'd get under 30% by ${under30.after}.` : ''
   const lead = leadFor(run)
-  return d(
-    'whatif',
-    'whatif',
-    up
-      ? `${lead}: by ${by} your score could be ${a.low} to ${a.high}, up from ${b.low} to ${b.high}. An estimate.${tail}`
-      : `${lead}: your estimate by ${by} stays at ${b.low} to ${b.high}. Your plan already gets you there.${tail}`,
-    up ? 'pleased' : 'neutral',
-    'explaining',
-    { on: 'whatif', whatIfId: run.id },
-  )
+  const text = up
+    ? `${lead}: by ${by} your score could be ${a.low} to ${a.high}, up from ${b.low} to ${b.high}. An estimate.${tail}`
+    : down
+      ? `${lead}: by ${by} your estimate would drop to ${a.low} to ${a.high}, from ${b.low} to ${b.high}. Better to keep it.`
+      : `${lead}: your estimate by ${by} stays at ${b.low} to ${b.high}. Your plan already gets you there.${tail}`
+  return d('whatif', 'whatif', text, up ? 'pleased' : down ? 'concerned' : 'neutral', 'explaining', { on: 'whatif', whatIfId: run.id })
 }
 
 export const whatIfUnknown = (): Draft =>
@@ -333,3 +332,6 @@ export const whatIfUnknown = (): Draft =>
     'neutral',
     'coach',
   )
+
+export const whatIfFailed = (): Draft =>
+  d('whatif-failed', 'text', "I couldn't work that one out. Try a different amount, or one change at a time.", 'neutral', 'coach')

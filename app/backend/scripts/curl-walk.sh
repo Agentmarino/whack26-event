@@ -10,7 +10,7 @@ SID=null
 
 turn() { # $1 = input JSON
   local body
-  body=$(jq -nc --argjson sid "$SID" --argjson input "$1" '{sessionId: $sid, input: $input, settings: {plainEnglish: false}}')
+  body=$(jq -nc --argjson sid "$SID" --argjson input "$1" '{sessionId: $sid, input: $input, settings: {plainEnglish: ($ENV.PLAIN == "true")}}')
   RES=$(curl -sf -X POST "$BASE/api/turn" -H 'content-type: application/json' -d "$body")
   SID=$(jq -c '.sessionId' <<<"$RES")
   printf '%-11s %-56s | %s\n' "$(jq -r .step <<<"$RES")" "$(jq -c "$1" <<<null 2>/dev/null || echo "$1")" \

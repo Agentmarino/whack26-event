@@ -20,6 +20,14 @@ describe('checkNumbers', () => {
     expect(checkNumbers('You have five searches.', facts)).toEqual(['the number 5 is not in the data'])
     expect(checkNumbers('Wait until 9 May 2027.', facts)).toEqual(['the month May is not in the data'])
   })
+  it('reads numbers in words and short months (review 113)', () => {
+    expect(checkNumbers('Pay sixty pounds a month.', facts)).toEqual(['the number 60 is not in the data'])
+    expect(checkNumbers('Pay a thousand pounds off.', facts)).toEqual(['the number 1000 is not in the data'])
+    expect(checkNumbers('About eighteen months of history.', facts)).toEqual(['the number 18 is not in the data'])
+    expect(checkNumbers('Aim to finish by Feb.', facts)).toEqual(['the month Feb is not in the data'])
+    expect(checkNumbers('twenty-five of them', facts)).toEqual(['the number 25 is not in the data'])
+    expect(checkNumbers('You may want to start with one idea and three searches.', facts)).toEqual([])
+  })
 })
 
 describe('checkStyle', () => {

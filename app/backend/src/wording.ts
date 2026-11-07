@@ -64,7 +64,8 @@ async function wordItems(items: Item[], plain: boolean): Promise<Map<string, str
   const waiting: Array<Promise<void>> = []
   for (const it of items) {
     const hit = cacheGet(it.key)
-    if (hit !== undefined) out.set(it.id, hit)
+    // Cached text is checked again, so a stricter checker also covers older cache entries.
+    if (hit !== undefined && !problemsWith(hit, it).length) out.set(it.id, hit)
     else if (inFlight.has(it.key)) waiting.push(inFlight.get(it.key)!.then(t => void out.set(it.id, t)))
     else todo.push(it)
   }
