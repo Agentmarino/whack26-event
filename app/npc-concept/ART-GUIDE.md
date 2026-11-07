@@ -13,7 +13,7 @@ cd app/npc-concept && pnpm install && pnpm dev --host   # http://localhost:5173 
 The phone on the same wifi opens the `Network:` URL (see `app/DEMO.md`). Tap **Debug** (top right) or press `D` for the debug panel: buttons for every state, emote and gesture, the facial hair and background switches, plus "Play sample conversation".
 
 ## Lifting it into 102 (frontend)
-1. Copy `src/npc/` unchanged. It imports nothing from outside the folder except React.
+1. Copy `src/npc/` unchanged. It imports nothing from outside the folder except React. Copy `public/brand/capital-one-logo.png` into the app's `public/` and pass it as `wordmarkSrc` (without it the monitor shows a plain coded dashboard).
 2. Load the font once in the app: `pnpm add @fontsource/press-start-2p` and `import '@fontsource/press-start-2p/400.css'` (or any Press Start 2P source). Without it the dialogue falls back to monospace.
 3. In `index.html` use `<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />` and pad the page with `env(safe-area-inset-*)` (see `src/index.css`).
 4. Use it:
@@ -22,7 +22,7 @@ import { NpcScene, DialogueBox, NATIVE_W, useIntegerScale, usePrefersReducedMoti
 const npc = useRef<NpcHandle>(null)
 const { scale } = useIntegerScale(23)            // rem kept free under the scene for the dialogue box
 const reduced = usePrefersReducedMotion()
-<NpcScene ref={npc} scale={scale} reducedMotion={reduced} onFileDrop={f => ...} onPaperClick={() => ...} />
+<NpcScene ref={npc} scale={scale} reducedMotion={reduced} wordmarkSrc="/brand/capital-one-logo.png" onFileDrop={f => ...} onPaperClick={() => ...} />
 <DialogueBox line={line} width={NATIVE_W * scale} speed={speed} onSpeedChange={setSpeed} reducedMotion={reduced}
   onChar={c => npc.current?.talk(c)} onLineDone={() => npc.current?.stopTalking()} chips={chips} onChip={...} onSubmit={...} />
 npc.current?.setState('reading'); npc.current?.emote('concerned'); npc.current?.gesture('point-down')
@@ -65,7 +65,7 @@ Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`,
 | Facial hair | stubble 25 x 27 (head-sized), moustache 9 x 2 | Stubble at head (0, 0) under the eyes and mouth; moustache at head (8, 19) over the mouth |
 | Glasses (coach) | 18 x 4 | Head (3, 14) |
 | Torso | 41 x 36 | Box (4, 24). Shoulder joints at box (9, 33) and (39, 33). Hidden by the desk from torso y 31 |
-| Sleeves | 9 px wide (outline), 7 px fill | Shaded: light rim on the left edge, 2 px dark rim on the right; white cuff 3.5 to 6 px back from the hand, dark hem behind it |
+| Sleeves | 9 px wide (outline), 7 px fill | Screen-left sleeve `uniformLight` with a 2 px `uniform` rim on the right; screen-right sleeve `uniform` with a 1 px `uniformLight` rim on the left and a 2 px `uniformShade` rim on the right; white cuff 3.5 to 6 px back from the hand, dark hem behind it (skipped where the forearm is too short) |
 | Hands | rest 9x6, grip 8x7, open 11x9, point down 8x10, point right 10x8, flat 10x4 | Centred on the hand point of the arm pose |
 | Held items | doc 8x10, doc held 20x14, planner 10x12 | Top-left given by the pose |
 | Desk | top y 70 to 79, front panel 80 to 95 | Full width. Hides the agent below y 70 |
@@ -73,7 +73,7 @@ Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`,
 | Tray (drop zone) | 18 x 6 at (31, 73) | Tap / keyboard hotspot covers it plus the arrow above (at least 44 CSS px) |
 | Keyboard | 22 x 5 at (58, 73) | Under the hands in idle |
 | Calculator | 11 x 6 at (84, 73) | `tap-calc` hits it |
-| Mug, desk plant | 9 x 8 at (95, 66); 15 x 14 at (107, 55) | Right side of the desk |
+| Mug, desk plant | 9 x 8 at (95, 66); 15 x 14 at (107, 59) | Right side of the desk |
 | Summary sheet | 20 x 5, slides from y 71 to y 75 | Ends on the front edge of the desk |
 | Thinking bubble | 18 x 11 at (82, 5) | |
 | Office | ceiling y 0 to 9, wall 10 to 45 (windows 12 to 33), floor from 46 | Behind the glass; colleague A at (21, 24), colleague B at (111, 19) |
@@ -85,7 +85,7 @@ Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`,
 3. Glass (`drawGlass`): reflections (lighter-colour map in two diagonal band pairs), the translucent frosted band, the top rail with the red line, mullions
 4. Agent, back pass: torso, then the head group (head, stubble, eyes, glasses, eyebrows, mouth, moustache), composed together so a tilt moves them as one
 5. Desk (`buildDesk`)
-6. Desk props: monitor (white screen; the logo file sits on it as DOM), keyboard, mug, plant, calculator, tray, document in the tray, summary sheet
+6. Desk props: monitor (white screen, transparent while the logo file shows through from under the canvas), keyboard, mug, plant, calculator, tray, document in the tray, summary sheet
 7. Drop zone highlight: marching dashes and a bouncing arrow over the tray
 8. Agent, front pass: arms (outline, shaded fill, cuff, hem), held items, hands. Arms are drawn after the desk so hands can rest on the keyboard and reach the tray and calculator
 9. Thinking bubble
@@ -101,7 +101,7 @@ To change the setting, replace layers 1 to 3 and 5. Keep `AGENT_ORIGIN`, `COUNTE
 The agent's pixels live in `src/npc/sprites/art.ts` as rows of palette characters (`HEAD_ART`, `EYES_ART`, `TORSO_ART` and so on). In 110 they were generated by a small design script (Python, outside the repo) that builds each part from fills, an automatic outside outline, mirrored collar shapes and hand-placed highlights, then writes `art.ts`. The TS file is the source of truth now: edit the rows by hand (every row of a sprite must have the same width; `sprite()` throws if not). `sprites/character.ts` places the parts; `scene.ts` draws the office and desk in code with palette indices.
 
 ## Logo
-The official file `public/brand/capital-one-logo.png` (231 x 218, artwork in the box (5, 71) to (225, 146) on white) is shown unchanged on the desk monitor's screen. `vite.config.ts` finds it at start-up and `App` passes it to `NpcScene` as `wordmarkSrc`. `NpcScene` puts a white box over `SCREEN` and scales the image inside so its artwork fits with a small margin (smoothing is allowed for this image only; only white margin falls outside the box). If the file is missing or fails to load, the monitor shows a plain dashboard drawn in code (bars and lines, never a drawn logo). Never draw or trace the Capital One logo. The logo row is in `app/DISCLOSURES.md`.
+The official file `public/brand/capital-one-logo.png` (231 x 218, artwork in the box (5, 71) to (225, 146) on white) is shown unchanged on the desk monitor's screen. `vite.config.ts` finds it at start-up and `App` passes it to `NpcScene` as `wordmarkSrc`. `NpcScene` puts a white box at `SCREEN` under the canvas (z-index 0, canvas 1, hotspots 2) and scales the image inside so its artwork fits with a small margin (smoothing is allowed for this image only; only white margin falls outside the box). While the logo is shown, the engine writes the monitor's white screen pixels as transparent, so the logo shows through and any arm, hand or document drawn over the monitor stays on top of it. If the file is missing or fails to load, the monitor shows a plain dashboard drawn in code (bars and lines, never a drawn logo). Never draw or trace the Capital One logo. The logo row is in `app/DISCLOSURES.md`.
 
 ## Palette
 One file: `src/npc/palette.ts`. Since 110 the stand entries (`standPanel`, `hall*`, `booth*` and so on) are unused but kept so indices stay stable; new colours are appended at the end. Sprites store palette indices (one character per pixel, `.` is transparent), never colours. Recolouring is a palette change only: `npc.current.setPalette({ uniform: '#1f6b45', uniformShade: '#124a2f', uniformLight: '#3d8c63' })` turns the suit green (arms included) and leaves the desk and office alone (screenshot: the `palette-recolour` tile in `screens/contact-sheet.png`). The desk's navy has its own entries (`brandNavy*`). `red` is shared on purpose: tie, badge bar, planner, the desk stripe, the tray label and the glass rail line are all the brand red. The coach glasses are `outline` (dark), not red. The Capital One hex values are approximations; swap in the official ones.
@@ -161,7 +161,6 @@ One file: `src/npc/palette.ts`. Since 110 the stand entries (`standPanel`, `hall
 | `5` | counterTopLight | `#f8f6f1` | Character and props |
 | `6` | keyboard | `#4a5260` | Character and props |
 | `7` | keyboardKey | `#8e97a6` | Character and props |
-| `8` | mug | `#d03027` | Character and props |
 | `9` | leaf | `#5b9a5a` | Character and props |
 | `0` | leafShade | `#3c7445` | Character and props |
 | `D` | skyTop | `#a9c8dc` | Office (day value; evening swaps it) |
@@ -185,13 +184,12 @@ One file: `src/npc/palette.ts`. Since 110 the stand entries (`standPanel`, `hall
 | `_` | officePlant | `#7ba38a` | Office (day value; evening swaps it) |
 | `:` | officePlantShade | `#62897a` | Office (day value; evening swaps it) |
 | `;` | officePot | `#a6a09c` | Office (day value; evening swaps it) |
-| `<` | glassFrame | `#2b3442` | Office (day value; evening swaps it) |
-| `>` | glassFrameLight | `#56637a` | Office (day value; evening swaps it) |
+| `<` | glassFrame | `#2b3442` | Glass and desk (same in every background) |
+| `>` | glassFrameLight | `#56637a` | Glass and desk (same in every background) |
 | `?` | frosted | `#e4ebf1` | Office (day value; evening swaps it) |
 | `/` | frostedLine | `#d2dce5` | Office (day value; evening swaps it) |
-| `\|` | shine | `#e9f1f7` | Office (day value; evening swaps it) |
 | `{` | skyShine | `#d3e5f0` | Office (day value; evening swaps it) |
-| ``` | skyLowShine | `#dceaf2` | Office (day value; evening swaps it) |
+| `` ` `` | skyLowShine | `#dceaf2` | Office (day value; evening swaps it) |
 | `}` | cityShine | `#a7c1d4` | Office (day value; evening swaps it) |
 | `[` | wallShine | `#dbe2e8` | Office (day value; evening swaps it) |
 | `]` | screenWhite | `#ffffff` | Desk props |
@@ -203,7 +201,7 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 ## Animation system
 - Fixed step: 60 updates per second (`STEP_MS`), driven by `requestAnimationFrame` with an accumulator. Timing does not depend on the display's refresh rate. Positions are whole pixels.
 - The frame is built in a 128x96 palette-index buffer, then copied onto the visible canvas at the whole device scale with smoothing off (`setOutput`). The canvas box is a whole number of CSS px with a matching backing store, and `NpcScene` puts its top-left corner on a whole CSS px. The browser never rescales it (see iPhone).
-- API: `setState(state)`, `emote(emote)`, `gesture(gesture)`, `talk(char)`, `stopTalking()`, `setTrayDoc`, `setDropHover`, `clearPaper`, `setPalette`, `reset`, `settleIn()` (ms until a one-shot state has finished), `snapshot()`.
+- API: `setState(state)`, `emote(emote)`, `gesture(gesture)`, `talk(char)`, `stopTalking()`, `setTrayDoc`, `setDropHover`, `clearPaper`, `setPalette`, `setFacialHair`, `setBackground`, `reset`, `settleIn()` (ms until a one-shot state has finished), `snapshot()`.
 - Emotes and gestures combine with any state. A non-neutral emote wins the eyebrows, except in `asking`, which keeps its eyebrows up unless the emote is `concerned`. `thinking` shows quizzical eyebrows with `neutral`. An emote's eyes replace the plain open eyes only; a state's own eyes (reading, listening, glances, looking at the calculator) win.
 - Idle never freezes: the breathing bob (1 px) and blinks run in every state unless reduced motion is on. Glances (the iris moves inside the eye) run in `idle`, after the wave in `greeting` and after the switch in `coach`.
 - `setState()` clears any running gesture, so call `gesture()` after `setState()`, not before.
@@ -216,7 +214,7 @@ UI colours (DOM, mirrored as CSS variables in `npc.css`): `uiBg #0b1d2e`, `uiBgD
 | `talking` | mouth cycles small, open, wide, open, small, closed | 75 ms per mouth frame; open while a letter was printed in the last 130 ms; punctuation closes it at once |
 | `listening` | eyes down (lid lowered); head nod 2 (0, +1 px) | two 180 ms nods every 2.2 s |
 | `asking` | open palm presented in front of the chest (1); head tilt (row shear, 2 px at the top); eyebrows raised | static pose |
-| `receive-document` | left arm 6 keyframes: reach 1, reach 2, take (hand on the tray), back 2, back 1, hold | 0, 200, 450, 700, 950, 1200 ms; document leaves the tray at 600 ms; lean 3 px from 200 to 950 ms |
+| `receive-document` | left arm 6 keyframes: reach 1, reach 2, take (hand on the tray), back 2, back 1, hold | 0, 200, 450, 700, 950, 1200 ms; document leaves the tray at 600 ms; lean 2 px from 200 to 950 ms |
 | `reading` | both hands hold the document at the chest (1); eyes 4 (down-left, down, down-right, half) | one line every 1.5 s (450, 450, 450, 150 ms) |
 | `thinking` | right hand to chin, forearm up across the chest (1); eyes up-right; bubble dots 3 | dots step every 400 ms |
 | `explaining` | right hand points down at the front-centre of the desk, where the summary lands (2: tap +1 px) | 450 ms per frame |
@@ -234,7 +232,7 @@ Emotes change eyebrows, eyes and mouth together:
 Gestures move the whole arm:
 | Gesture | Arm and pose | Duration |
 |---|---|---|
-| `wave` | left: hand up by the head, open hand swings 7 px | 1600 ms, 2 frames at 200 ms |
+| `wave` | left: hand up by the head, open hand swings 6 px | 1600 ms, 2 frames at 200 ms |
 | `open-palm` | left: forearm raised in front of the chest, open palm presented (clear of the monitor) | 1800 ms |
 | `point-down` | right: arm crosses the body to the in-tray, finger down at its right edge | 2000 ms |
 | `point-side` | right: arm straight out to screen right, finger pointing; eyes right | 2000 ms |
@@ -255,7 +253,7 @@ Left and right always mean screen left and right. At 25% size the hardest pair t
 ## Do and don't
 - Do keep the character original (see Style).
 - Do keep every pixel on the native grid: whole-number positions, no rotation, no smoothing, no sub-pixel easing. Fake tilts with row shears and depth with layer order.
-- Do outline every part with `outline` and keep sprites palette-indexed so a recolour stays a palette change. Parts drawn in code (torso, items, bubble) use palette indices too.
+- Do outline every part with `outline` and keep sprites palette-indexed so a recolour stays a palette change. Parts drawn in code (office, glass, desk, monitor, tray, arms) use palette indices too; the agent's parts are rows in `sprites/art.ts`.
 - Do keep new colours in `palette.ts`, appended at the end so indices stay stable; keep the desk and the suit on separate entries, and keep office colours light, cool and low in contrast so the agent pops.
 - Don't draw or trace the Capital One logo. It is the official file on the monitor or nothing.
 - Don't commit or show the reference images (`refs/`, gitignored) or the round comparisons (`screens/compare-round*.png`, gitignored).

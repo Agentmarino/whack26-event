@@ -14,7 +14,7 @@ export const DESK_FRONT_Y = 80
 /** In-tray on the desk, between the monitor and the keyboard (the drop zone and the phone's tap target). */
 export const TRAY = { x: 31, y: 73, w: 18, h: 6 }
 export const CALC = { x: 84, y: 73 }
-export const KEYBOARD = { x: 58, y: 73, w: 22, h: 4 }
+export const KEYBOARD = { x: 58, y: 73, w: 22, h: 5 }
 export const PAPER_SIZE = { w: 20, h: 5 }
 export const PAPER_START = { x: 59, y: 71 }
 export const PAPER_END = { x: 59, y: 75 }
@@ -22,7 +22,7 @@ export const PAPER_END = { x: 59, y: 75 }
 export const MONITOR = { x: 5, y: 44, w: 40, h: 23 }
 export const SCREEN = { x: 7, y: 46, w: 36, h: 17 }
 export const MUG = { x: 95, y: 66 }
-export const PLANT = { x: 107, y: 55 }
+export const PLANT = { x: 107, y: 59 }
 export const BUBBLE_AT = { x: 82, y: 5 }
 
 // ---------- office behind the glass ----------
@@ -105,7 +105,12 @@ export function drawOfficeLife(b: IndexBuffer, t: number, animate: boolean) {
   const a = COLLEAGUE_A
   const down = animate && Math.floor(t / 4200) % 3 === 2 ? 1 : 0
   person(b, a.x, a.y, IDX.colleagueTopA, down, 8)
-  if (down) b.rect(a.x + 2, a.y + 5, 4, 1, IDX.colleagueSkin) // eyes lowered
+  if (down) {
+    // eyes lowered: two 2x1 lids instead of the 1x2 eyes
+    b.rect(a.x + 2, a.y + 5, 4, 2, IDX.colleagueSkin)
+    b.rect(a.x + 1, a.y + 6, 2, 1, IDX.colleagueHair)
+    b.rect(a.x + 5, a.y + 6, 2, 1, IDX.colleagueHair)
+  }
   b.rect(a.x - 6, a.y + 13, 20, 5, IDX.monitorBack) // their monitor, back towards us
   b.rect(a.x + 3, a.y + 18, 2, 1, IDX.monitorBack)
   // colleague B, standing by desk B with a mug; lifts it now and then

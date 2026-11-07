@@ -59,7 +59,6 @@ export const PALETTE_DEF = [
   ['5', 'counterTopLight', '#f8f6f1'],
   ['6', 'keyboard', '#4a5260'],
   ['7', 'keyboardKey', '#8e97a6'],
-  ['8', 'mug', '#d03027'],
   ['9', 'leaf', '#5b9a5a'],
   ['0', 'leafShade', '#3c7445'],
   // ---- 110: office behind the glass (cool, low contrast; the evening variant swaps these values) ----
@@ -88,7 +87,6 @@ export const PALETTE_DEF = [
   ['>', 'glassFrameLight', '#56637a'],
   ['?', 'frosted', '#e4ebf1'],
   ['/', 'frostedLine', '#d2dce5'],
-  ['|', 'shine', '#e9f1f7'],
   ['{', 'skyShine', '#d3e5f0'],
   ['`', 'skyLowShine', '#dceaf2'],
   ['}', 'cityShine', '#a7c1d4'],
@@ -112,7 +110,7 @@ export const BACKGROUNDS = {
     officeWall: '#c4b8ac', officeWallShade: '#ab9f95', wallShine: '#d3c9be', ceiling: '#d2c7bb', ceilingLight: '#ffe8b5',
     officeFloor: '#9d9189', deskBack: '#b6aa9f', deskBackShade: '#958980', monitorBack: '#56606e', monitorBackLit: '#e9cc92',
     colleagueSkin: '#c59b83', colleagueHair: '#5d4b46', colleagueTopA: '#7b8398', colleagueTopB: '#9c7f87',
-    officePlant: '#7d9a77', officePlantShade: '#607e62', officePot: '#a2978e', frosted: '#eee4d8', frostedLine: '#dcd0c3', shine: '#f4ebe1',
+    officePlant: '#7d9a77', officePlantShade: '#607e62', officePot: '#a2978e', frosted: '#eee4d8', frostedLine: '#dcd0c3',
   },
 } as const satisfies Record<string, Partial<Record<ColorName, string>>>
 export type Background = keyof typeof BACKGROUNDS

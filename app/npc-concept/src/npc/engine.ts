@@ -4,8 +4,8 @@ import { BACKGROUNDS, buildColorTable, IDX, type Background, type ColorName } fr
 import { IndexBuffer, NATIVE_H, NATIVE_W } from './raster'
 import {
   AGENT_ORIGIN, BUBBLE_AT, buildDesk, buildOffice, CALC, CALCULATOR, DESK_PLANT, drawGlass, drawMonitor, drawOfficeLife,
-  drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT, TRAY,
-  TRAY_DOC,
+  drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT, SCREEN,
+  TRAY, TRAY_DOC,
 } from './scene'
 import {
   BROWS, BROWS_POS, BUBBLE, EYES, EYES_POS, GLASSES, GLASSES_POS, HANDS, HEAD, HEAD_POS, ITEMS, MOUSTACHE, MOUSTACHE_POS,
@@ -581,6 +581,16 @@ export class NpcEngine {
     }
 
     b.toRGBA(this.out, this.colors, IDX.officeWall)
+    // The logo image sits under the canvas: let the white screen show through, so arms and held
+    // items drawn over the monitor stay on top of the logo.
+    if (!this.wordmark) {
+      for (let y = SCREEN.y; y < SCREEN.y + SCREEN.h; y++) {
+        for (let x = SCREEN.x; x < SCREEN.x + SCREEN.w; x++) {
+          const i = y * NATIVE_W + x
+          if (b.px[i] === IDX.screenWhite) this.out[i] = 0
+        }
+      }
+    }
     this.frameCtx.putImageData(this.image, 0, 0)
     const k = this.deviceScale
     this.ctx.imageSmoothingEnabled = false
@@ -627,9 +637,10 @@ export class NpcEngine {
   }
 
   /**
-   * Thick sleeves (9 px with the outline) shaded like a cylinder: a light rim on the screen-left edge and a
-   * dark rim on the screen-right edge, the screen-left arm one step lighter (the light side of the suit).
-   * A white cuff and a dark hem sit just before the hand.
+   * Thick sleeves (9 px with the outline) shaded like a cylinder. The screen-left sleeve is the light side
+   * of the suit (uniformLight with a uniform rim on its right edge); the screen-right sleeve is uniform with
+   * a uniformLight rim on its left edge and a uniformShade rim on its right. A white cuff and a dark hem
+   * sit just before the hand (only where the forearm is long enough to keep them off the elbow).
    */
   private drawArms(f: Frame, ox: number, oy: number, bob: number) {
     const b = this.screen
@@ -648,7 +659,7 @@ export class NpcEngine {
       ab.thickLine(e.x, e.y, h.x, h.y, 10, 3, FILL)
       const base = side === 'L' ? IDX.uniformLight : IDX.uniform
       const dark = side === 'L' ? IDX.uniform : IDX.uniformShade
-      const light = side === 'L' ? IDX.uniformLight : IDX.uniformLight
+      const light = IDX.uniformLight
       // cuff band: fill pixels 4..6 px back from the hand along the forearm, hem at 6..7
       const len = Math.hypot(e.x - h.x, e.y - h.y) || 1
       const ux = (e.x - h.x) / len
@@ -665,8 +676,9 @@ export class NpcEngine {
           const across = Math.abs((x - h.x) * uy - (y - h.y) * ux)
           const rimR = isOut(x + 1, y) || isOut(x + 2, y)
           const rimL = isOut(x - 1, y)
-          if (along >= 3.5 && along < 6 && across <= 4.5) px[i] = rimR ? IDX.shirtShade : IDX.shirt
-          else if (along >= 6 && along < 7 && across <= 4.5) px[i] = IDX.outline
+          const onForearm = across <= 4.5 && along < len - 1.5
+          if (onForearm && along >= 3.5 && along < 6) px[i] = rimR ? IDX.shirtShade : IDX.shirt
+          else if (onForearm && along >= 6 && along < 7) px[i] = IDX.outline
           else px[i] = rimR ? dark : rimL ? light : base
         }
       }
