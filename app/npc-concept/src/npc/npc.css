@@ -28,18 +28,30 @@
   position: relative;
   margin: 0 auto;
 }
+/* The canvas sits above the logo image (its white monitor screen is transparent over it); hotspots above both. */
 .npc-canvas {
+  position: relative;
+  z-index: 1;
   display: block;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
 }
+/* Official logo on the desk monitor: a white screen-sized box; the image inside is scaled, smoothing allowed. */
 .npc-logo {
   position: absolute;
-  object-fit: contain;
+  z-index: 0;
+  overflow: hidden;
+  background: #ffffff;
   pointer-events: none;
+}
+.npc-logo img {
+  position: absolute;
+  max-width: none;
+  image-rendering: auto;
 }
 .npc-hotspot {
   position: absolute;
+  z-index: 2;
   -webkit-tap-highlight-color: transparent;
   margin: 0;
   padding: 0;

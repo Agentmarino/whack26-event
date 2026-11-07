@@ -1,9 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { describeAgent } from './describe'
 import { NpcEngine, type AgentState, type Emote, type Gesture, type NpcSnapshot } from './engine'
-import type { ColorName } from './palette'
+import type { Background, ColorName } from './palette'
 import { NATIVE_H, NATIVE_W } from './raster'
-import { PAPER_END, PAPER_SIZE, TRAY, WORDMARK, WORDMARK_AT } from './scene'
+import { PAPER_END, PAPER_SIZE, SCREEN, TRAY } from './scene'
+import type { FacialHair } from './sprites/character'
 
 export interface NpcHandle {
   setState(s: AgentState): void
@@ -16,6 +17,10 @@ export interface NpcHandle {
   setDropHover(on: boolean): void
   clearPaper(): void
   setPalette(overrides: Partial<Record<ColorName, string>>): void
+  /** Facial hair layer: 'none' (default), 'moustache', 'stubble' (moustache with light stubble). */
+  setFacialHair(f: FacialHair): void
+  /** Office behind the glass: 'day' (default) or 'evening'. */
+  setBackground(b: Background): void
   reset(): void
   /** ms until the current one-shot animation (wave, reach, slide, coach switch) has finished. */
   settleIn(): number
@@ -31,17 +36,35 @@ export interface NpcSceneProps {
   onFileDrop?: (file: File) => void
   onChange?: (s: NpcSnapshot) => void
   /**
-   * Optional URL of the official logo file. When it loads, it is shown in the wordmark layer's
-   * area instead of the pixel text, scaled to fit. Never redraw or trace the logo.
+   * Optional URL of the official logo file. When it loads, it is shown unchanged on the desk monitor's
+   * screen, scaled to fit. Never redraw or trace the logo.
    */
   wordmarkSrc?: string
+  /** Facial hair layer (default 'none'). Same as calling setFacialHair. */
+  facialHair?: FacialHair
+  /** Office behind the glass (default 'day'). Same as calling setBackground. */
+  background?: Background
 }
 
 // Hit areas in native pixels for the touch/keyboard/mouse hotspots over the canvas.
 const TRAY_HOT = { x: TRAY.x - 4, y: TRAY.y - 12, w: TRAY.w + 8, h: TRAY.h + 16 }
 const PAPER_HOT = { x: PAPER_END.x - 3, y: PAPER_END.y - 4, w: PAPER_SIZE.w + 6, h: PAPER_SIZE.h + 8 }
-/** Room for the official logo: the wordmark's spot, a little wider and taller. */
-const LOGO_BOX = { x: WORDMARK_AT.x - 13, y: WORDMARK_AT.y - 1, w: WORDMARK.w + 26, h: 9 }
+/**
+ * The official logo file (public/brand/capital-one-logo.png, 231x218) has its artwork in the box
+ * (5, 71) to (225, 146) on a white ground. It is shown on the monitor's white screen with that artwork
+ * scaled to fit (smoothing allowed for this image only); only white margin falls outside the screen.
+ */
+const LOGO_FILE = { w: 231, h: 218, art: { x: 5, y: 71, w: 221, h: 76 } }
+function logoStyle(s: number): CSSProperties {
+  const box = { w: SCREEN.w * s, h: SCREEN.h * s }
+  const k = Math.min((box.w * 0.86) / LOGO_FILE.art.w, (box.h * 0.8) / LOGO_FILE.art.h)
+  return {
+    left: box.w / 2 - (LOGO_FILE.art.x + LOGO_FILE.art.w / 2) * k,
+    top: box.h / 2 - (LOGO_FILE.art.y + LOGO_FILE.art.h / 2) * k,
+    width: LOGO_FILE.w * k,
+    height: LOGO_FILE.h * k,
+  }
+}
 /** Touch targets are at least 44x44 CSS px (Apple HIG 44pt), grown around their centre. */
 const MIN_TARGET = 44
 const box = (r: { x: number; y: number; w: number; h: number }, s: number): CSSProperties => {
@@ -81,10 +104,16 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   useEffect(() => engineRef.current?.setAmbient(props.ambient ?? true), [props.ambient])
   useEffect(() => engineRef.current?.setReducedMotion(props.reducedMotion ?? false), [props.reducedMotion])
   useEffect(() => engineRef.current?.setWordmarkVisible(!(props.wordmarkSrc && logoOk)), [props.wordmarkSrc, logoOk])
+  useEffect(() => {
+    if (props.facialHair) engineRef.current?.setFacialHair(props.facialHair)
+  }, [props.facialHair])
+  useEffect(() => {
+    if (props.background) engineRef.current?.setBackground(props.background)
+  }, [props.background])
 
   // Put the scene's top-left corner on a whole CSS pixel. Centring can leave it at x.5 device px
-  // (iPhone 15: 9.83 CSS px = 29.48 device px), and WebKit then paints the 7x canvas 1119 px wide
-  // instead of 1120, so one native column is drawn 6 px wide. A relative offset is exact in layout units.
+  // (iPhone 15: 9.83 CSS px = 29.48 device px), and WebKit could then paint the canvas one device px
+  // narrow and draw one native column a pixel thinner (seen at 7x in 109). A relative offset is exact in layout units.
   const s = props.scale
   useLayoutEffect(() => {
     const el = sceneRef.current
@@ -118,6 +147,8 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
     setDropHover: (on) => engineRef.current?.setDropHover(on),
     clearPaper: () => engineRef.current?.clearPaper(),
     setPalette: (o) => engineRef.current?.setPalette(o),
+    setFacialHair: (f) => engineRef.current?.setFacialHair(f),
+    setBackground: (b) => engineRef.current?.setBackground(b),
     reset: () => engineRef.current?.reset(),
     settleIn: () => engineRef.current?.settleIn() ?? 0,
     snapshot: () => engineRef.current?.snapshot() ?? null,
@@ -164,8 +195,8 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   }, [])
 
   // The canvas box is a whole number of CSS px and its backing store matches it in device px, so the
-  // browser maps it 1:1. The engine draws the 160x120 frame at deviceScale inside it (iPhone 15: 7x =
-  // 1120 device px in a 374 CSS px = 1122 device px box; the last 2 device px stay transparent).
+  // browser maps it 1:1. The engine draws the 128x96 frame at deviceScale inside it (iPhone 15: 9x =
+  // 1152 device px in a 384 CSS px = 1152 device px box).
   const dpr = window.devicePixelRatio || 1
   const deviceScale = Math.max(1, Math.floor(s * dpr + 1e-6))
   const size = { width: Math.ceil(NATIVE_W * s - 1e-6), height: Math.ceil(NATIVE_H * s - 1e-6) }
@@ -176,17 +207,12 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
     <div ref={sceneRef} className="npc-scene" style={size}>
       <canvas ref={canvasRef} className="npc-canvas" style={size} role="img" aria-label={describeAgent(snap)} />
       {props.wordmarkSrc && (
-        <img
+        <div
           className="npc-logo"
-          src={props.wordmarkSrc}
-          alt=""
-          style={{
-            left: LOGO_BOX.x * s, top: LOGO_BOX.y * s, width: LOGO_BOX.w * s, height: LOGO_BOX.h * s,
-            visibility: logoOk ? 'visible' : 'hidden',
-          }}
-          onLoad={() => setLogoOk(true)}
-          onError={() => setLogoOk(false)}
-        />
+          style={{ left: SCREEN.x * s, top: SCREEN.y * s, width: SCREEN.w * s, height: SCREEN.h * s, visibility: logoOk ? 'visible' : 'hidden' }}
+        >
+          <img src={props.wordmarkSrc} alt="" style={logoStyle(s)} onLoad={() => setLogoOk(true)} onError={() => setLogoOk(false)} />
+        </div>
       )}
       <button
         type="button"
@@ -219,7 +245,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
           type="button"
           className="npc-hotspot"
           style={box(PAPER_HOT, s)}
-          aria-label="Summary sheet on the counter. Open your summary."
+          aria-label="Summary sheet on the desk. Open your summary."
           data-npc-hotspot="paper"
           onClick={() => propsRef.current.onPaperClick?.()}
           onMouseEnter={() => engineRef.current?.setPaperHover(true)}

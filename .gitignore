@@ -10,3 +10,5 @@ practice/
 .claude/*.lock
 .playwright-mcp/
 app/npc-concept/refs/
+# 110 art-direction rounds put the reference images next to our render: local only
+app/npc-concept/screens/compare-round*.png

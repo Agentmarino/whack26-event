@@ -1,15 +1,16 @@
 // The NPC engine: state machine + fixed-step animation + layered renderer.
 // No React in here, so it can be driven from anywhere.
-import { buildColorTable, IDX, type ColorName } from './palette'
+import { BACKGROUNDS, buildColorTable, IDX, type Background, type ColorName } from './palette'
 import { IndexBuffer, NATIVE_H, NATIVE_W } from './raster'
 import {
-  AGENT_ORIGIN, BUBBLE_AT, buildBackdrop, buildCounter, CALC, CALCULATOR, DROP_ARROW, drawScreen, drawTray,
-  PAPER, PAPER_END, PAPER_SIZE, PAPER_START, TRAY, TRAY_DOC, WORDMARK, WORDMARK_AT,
+  AGENT_ORIGIN, BUBBLE_AT, buildDesk, buildOffice, CALC, CALCULATOR, DESK_PLANT, drawGlass, drawMonitor, drawOfficeLife,
+  drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT, SCREEN,
+  TRAY, TRAY_DOC,
 } from './scene'
 import {
-  BROWS, BROWS_POS, BUBBLE, EYES, EYES_POS, GLASSES, GLASSES_POS, HANDS, HEAD, HEAD_POS, ITEMS, MOUTH_POS,
-  MOUTHS, SHOULDER_L, SHOULDER_R, TORSO, TORSO_POS,
-  type BrowKey, type EyeKey, type HandKey, type ItemKey, type MouthKey,
+  BROWS, BROWS_POS, BUBBLE, EYES, EYES_POS, GLASSES, GLASSES_POS, HANDS, HEAD, HEAD_POS, ITEMS, MOUSTACHE, MOUSTACHE_POS,
+  MOUTH_POS, MOUTHS, SHOULDER_L, SHOULDER_R, STUBBLE, TORSO, TORSO_POS,
+  type BrowKey, type EyeKey, type FacialHair, type HandKey, type ItemKey, type MouthKey,
 } from './sprites/character'
 
 export const AGENT_STATES = [
@@ -36,6 +37,8 @@ export interface NpcSnapshot {
   dropHover: boolean
   reducedMotion: boolean
   ambient: boolean
+  facialHair: FacialHair
+  background: Background
 }
 
 /** Fixed simulation step (ms). Animation timing never depends on the display refresh rate. */
@@ -52,8 +55,9 @@ const GESTURE_MS: Record<Gesture, number> = {
   none: 0, wave: 1600, 'point-down': 2000, 'point-side': 2000, chin: 2500, 'tap-calc': 2000, 'open-palm': 1800,
 }
 
-// ---------- arm poses (local coords in the 64x72 box; shoulders at (17, 31) and (46, 31)) ----------
-// Gestures move the whole arm so each one reads in a thumbnail. The counter top is local y 64.
+// ---------- arm poses (local coords in the 49x60 box; shoulders at (9, 33) and (39, 33)) ----------
+// Gestures move the whole arm so each one reads in a thumbnail. The desk top is local y 55; the
+// keyboard is local x 14..35, y 58..61; the tray local x -13..4, y 58..63; the calculator local x 40..50.
 interface P { x: number; y: number }
 interface ArmPose { elbow: P; hand: P; sprite: HandKey; grounded?: boolean }
 const pt = (x: number, y: number): P => ({ x, y })
@@ -62,39 +66,40 @@ const arm = (ex: number, ey: number, hx: number, hy: number, sprite: HandKey, gr
 })
 
 export const ARM_POSES = {
-  restL: arm(11, 49, 16, 67, 'rest', true),
-  restR: arm(52, 49, 47, 67, 'rest', true),
+  // both hands on the keyboard
+  restL: arm(4, 47, 16, 58, 'rest', true),
+  restR: arm(44, 47, 33, 58, 'rest', true),
   // wave: hand up by the head
-  raiseL: arm(5, 44, 4, 30, 'open'),
-  waveL1: arm(5, 34, 3, 15, 'open'),
-  waveL2: arm(6, 33, 10, 12, 'open'),
-  // open palm: forearm out to the side, hand presented at chest height
-  palmL: arm(3, 51, -6, 43, 'openL'),
+  raiseL: arm(-1, 41, -3, 28, 'open'),
+  waveL1: arm(-2, 35, -5, 18, 'open'),
+  waveL2: arm(-1, 34, 1, 16, 'open'),
+  // open palm: forearm raised in front of the chest, palm presented to the customer (clear of the monitor)
+  palmL: arm(-2, 49, 5, 37, 'openL'),
   // reach to the tray (screen left) and back
-  reach1L: arm(6, 48, 2, 60, 'open'),
-  reach2L: arm(0, 52, -8, 66, 'open'),
-  reach3L: arm(-2, 56, -12, 71, 'grip', true),
-  reach2LDoc: arm(0, 52, -8, 66, 'grip'),
-  reach1LDoc: arm(6, 48, 2, 60, 'grip'),
-  holdDocL: arm(8, 54, 18, 58, 'grip'),
-  readL: arm(8, 54, 21, 52, 'grip'),
-  readR: arm(55, 54, 42, 52, 'grip'),
+  reach1L: arm(1, 47, -2, 53, 'open'),
+  reach2L: arm(-3, 49, -6, 56, 'open'),
+  reach3L: arm(-5, 51, -4, 60, 'grip', true),
+  reach2LDoc: arm(-3, 49, -6, 56, 'grip'),
+  reach1LDoc: arm(1, 47, -2, 53, 'grip'),
+  holdDocL: arm(3, 49, 12, 50, 'grip'),
+  readL: arm(3, 49, 13, 47, 'grip'),
+  readR: arm(45, 49, 35, 47, 'grip'),
   // hand to chin, forearm up across the chest
-  chinR: arm(53, 56, 37, 28, 'grip'),
+  chinR: arm(43, 49, 30, 27, 'grip'),
   // point down: the right arm crosses the body towards the tray
-  pointDownR: arm(38, 55, 4, 63, 'pointDown'),
-  // explaining: points down at the front-centre of the counter, where the summary lands
-  explainR: arm(56, 52, 40, 66, 'pointDown'),
-  explainTapR: arm(56, 53, 40, 67, 'pointDown'),
+  pointDownR: arm(24, 52, 4, 54, 'pointDown'),
+  // explaining: points down at the front-centre of the desk, where the summary lands
+  explainR: arm(45, 49, 28, 54, 'pointDown'),
+  explainTapR: arm(45, 50, 28, 55, 'pointDown'),
   // point side: arm straight out to screen right
-  pointSideR: arm(59, 37, 72, 34, 'pointRight'),
+  pointSideR: arm(50, 38, 62, 36, 'pointRight'),
   // tap the calculator (screen right)
-  tapUpR: arm(61, 52, 75, 61, 'pointDown'),
-  tapDownR: arm(61, 53, 75, 64, 'pointDown', true),
-  retractR: arm(54, 54, 44, 70, 'flat', true),
-  plannerR: arm(56, 54, 43, 56, 'grip'),
-  toFace1L: arm(7, 46, 12, 34, 'grip'),
-  toFace2L: arm(9, 40, 22, 16, 'grip'),
+  tapUpR: arm(50, 48, 45, 52, 'pointDown'),
+  tapDownR: arm(50, 49, 45, 55, 'pointDown', true),
+  retractR: arm(43, 49, 32, 59, 'flat', true),
+  plannerR: arm(45, 49, 35, 47, 'grip'),
+  toFace1L: arm(3, 45, 8, 36, 'grip'),
+  toFace2L: arm(5, 39, 16, 17, 'grip'),
 } satisfies Record<string, ArmPose>
 
 /** x, y are local coords, or an offset from the hand when attached to an arm. */
@@ -154,11 +159,16 @@ export class NpcEngine {
   private out: Uint32Array
   private deviceScale = 1
   private colors = buildColorTable()
+  private paletteOverrides: Partial<Record<ColorName, string>> = {}
   private screen = new IndexBuffer(NATIVE_W, NATIVE_H)
   private headBuf = new IndexBuffer(HEAD.w + 6, HEAD.h)
-  private backdrop = buildBackdrop()
-  private counter = buildCounter()
+  private armBuf = new IndexBuffer(NATIVE_W, NATIVE_H)
+  private office = buildOffice()
+  private desk = buildDesk()
+  /** True while no logo image covers the monitor: the monitor then shows a plain dashboard. */
   private wordmark = true
+  private facialHairV: FacialHair = 'none'
+  private backgroundV: Background = 'day'
 
   private raf = 0
   private last: number | undefined
@@ -279,7 +289,7 @@ export class NpcEngine {
     this.ambient = on
     this.emit()
   }
-  /** Hide the pixel-text wordmark when the official logo image is shown in its place. */
+  /** false when the official logo image is shown on the desk monitor (the monitor then stays plain white under it). */
   setWordmarkVisible(on: boolean) {
     this.wordmark = on
   }
@@ -293,7 +303,19 @@ export class NpcEngine {
     this.emit()
   }
   setPalette(overrides: Partial<Record<ColorName, string>>) {
-    this.colors = buildColorTable(overrides)
+    this.paletteOverrides = overrides
+    this.colors = buildColorTable({ ...BACKGROUNDS[this.backgroundV], ...overrides })
+  }
+  /** Facial hair layer: 'none' (default), 'moustache', or 'stubble' (moustache with light stubble). */
+  setFacialHair(f: FacialHair) {
+    this.facialHairV = f
+    this.emit()
+  }
+  /** Office behind the glass: 'day' (default) or 'evening'. A palette swap of the office colours only. */
+  setBackground(b: Background) {
+    this.backgroundV = b
+    this.setPalette(this.paletteOverrides)
+    this.emit()
   }
   reset() {
     this.paperHover = false
@@ -312,6 +334,7 @@ export class NpcEngine {
     return {
       state: this.state, emote: this.emoteV, gesture: this.gestureV, mode: this.mode, trayDoc: this.trayDoc,
       paper: this.paper, dropHover: this.dropHover, reducedMotion: this.reduced, ambient: this.ambient,
+      facialHair: this.facialHairV, background: this.backgroundV,
     }
   }
 
@@ -406,15 +429,15 @@ export class NpcEngine {
         break
       case 'receive-document': {
         f.L = seq(T, [[0, A.reach1L], [200, A.reach2L], [450, A.reach3L], [700, A.reach2LDoc], [950, A.reach1LDoc], [1200, A.holdDocL]])
-        if (T >= 200 && T < 950) f.lean = -3
-        if (T >= 600) f.items.push({ key: 'docSmall', x: -5, y: -13, attach: 'L' })
+        if (T >= 200 && T < 950) f.lean = -2
+        if (T >= 600) f.items.push({ key: 'docSmall', x: -4, y: -11, attach: 'L' })
         f.eyes = T < 700 ? 'down-left' : 'open'
         break
       }
       case 'reading':
         f.L = A.readL
         f.R = A.readR
-        f.items.push({ key: 'docHeld', x: 20, y: 40 })
+        f.items.push({ key: 'docHeld', x: 14, y: 40 })
         f.eyes = rm ? 'down' : seq(st % 1500, [[0, 'down-left'], [450, 'down'], [900, 'down-right'], [1350, 'half']] as [number, EyeKey][])
         f.headDy = 1
         break
@@ -433,7 +456,7 @@ export class NpcEngine {
         const p = clamp01((T - 250) / 750)
         const paperY = Math.round(PAPER_START.y + (PAPER_END.y - PAPER_START.y) * p)
         const handY = paperY + 2 - AGENT_ORIGIN.y
-        if (T < 1000) f.R = { elbow: pt(54, 52 + Math.round(p * 4)), hand: pt(38, handY), sprite: 'flat', grounded: true }
+        if (T < 1000) f.R = { elbow: pt(44, 49 + Math.round(p * 3)), hand: pt(27, handY), sprite: 'flat', grounded: true }
         else if (T < 1200) f.R = A.retractR
         f.eyes = T < 1000 ? 'down' : 'open'
         break
@@ -442,7 +465,7 @@ export class NpcEngine {
         f.L = seq(T, [[0, A.toFace1L], [250, A.toFace2L], [600, A.restL]])
         if (T >= 850) {
           f.R = A.plannerR
-          f.items.push({ key: 'planner', x: -7, y: -12, attach: 'R' })
+          f.items.push({ key: 'planner', x: -5, y: -10, attach: 'R' })
         }
         f.glance = T >= 1300
         break
@@ -460,7 +483,7 @@ export class NpcEngine {
     // An arm that leaves a two-handed document hands it to the other hand.
     if (f.items.some((i) => i.key === 'docHeld')) {
       f.items = f.items.filter((i) => i.key !== 'docHeld')
-      f.items.push({ key: 'docSmall', x: -5, y: -13, attach: usesR ? 'L' : 'R' })
+      f.items.push({ key: 'docSmall', x: -4, y: -11, attach: usesR ? 'L' : 'R' })
     }
     if (usesR) f.items = f.items.filter((i) => i.key !== 'planner')
     f.glance = false
@@ -518,42 +541,56 @@ export class NpcEngine {
     const ox = AGENT_ORIGIN.x + f.lean
     const oy = AGENT_ORIGIN.y
 
-    // 1 stand backdrop, 2 wordmark, 3 stand screen (ambient only)
+    // 1 office behind the glass (life only with ambient on), 2 glass: reflections, frosted band, frames
     b.clear()
-    b.blitBuffer(this.backdrop)
-    if (this.wordmark) b.blit(WORDMARK, WORDMARK_AT.x, WORDMARK_AT.y)
-    if (this.ambient) drawScreen(b, t, !this.reduced)
+    b.blitBuffer(this.office)
+    drawOfficeLife(b, t, this.ambient && !this.reduced)
+    drawGlass(b)
 
-    // 4 agent, back pass: torso then the head group
+    // 3 agent, back pass: torso then the head group
     b.blit(TORSO, ox + TORSO_POS.x, oy + TORSO_POS.y + bob)
     this.drawHead(f, ox, oy + bob + f.headDy)
 
-    // 5 counter, 6 props, 7 drop zone
-    b.blitBuffer(this.counter)
+    // 4 desk, 5 desk props (monitor with the logo area, keyboard, tray, calculator, mug, plant), 6 drop zone
+    b.blitBuffer(this.desk)
+    drawMonitor(b, !this.wordmark)
+    b.blit(KEYBOARD_SPRITE, KEYBOARD.x, KEYBOARD.y)
+    b.blit(MUG_SPRITE, MUG.x, MUG.y)
+    b.blit(DESK_PLANT, PLANT.x, PLANT.y)
     b.blit(CALCULATOR, CALC.x, CALC.y)
     if (this.gestureV === 'tap-calc' && !this.reduced) {
-      for (let i = 0; i < 4; i++) if ((Math.floor(t / 220) + i) % 3 !== 0) b.rect(CALC.x + 2 + i * 2, CALC.y + 2, 1, 2, IDX.outline)
+      for (let i = 0; i < 3; i++) if ((Math.floor(t / 220) + i) % 3 !== 0) b.rect(CALC.x + 2 + i * 2, CALC.y + 1, 1, 1, IDX.outline)
     }
     drawTray(b)
-    if (this.trayDoc) b.blit(TRAY_DOC, TRAY.x + 4, TRAY.y + 2)
+    if (this.trayDoc) b.blit(TRAY_DOC, TRAY.x + 3, TRAY.y + 1)
     if (this.paper !== 'none') this.drawPaper()
     if (this.dropHover) {
       const phase = this.reduced ? 0 : Math.floor(t / 120)
       b.dashed(TRAY.x - 2, TRAY.y - 2, TRAY.w + 4, TRAY.h + 4, IDX.glow, phase)
       const bounce = this.reduced ? 0 : Math.floor(t / 300) % 2
-      b.blit(DROP_ARROW, TRAY.x + (TRAY.w >> 1) - 3, TRAY.y - 11 + bounce)
+      b.blit(DROP_ARROW, TRAY.x + (TRAY.w >> 1) - 3, TRAY.y - 10 + bounce)
     }
 
-    // 8 agent, front pass: arms, held items, hands
+    // 7 agent, front pass: arms, held items, hands
     this.drawArms(f, ox, oy, bob)
 
-    // 9 thinking bubble
+    // 8 thinking bubble
     if (f.bubbleDots > 0) {
       b.blit(BUBBLE, BUBBLE_AT.x, BUBBLE_AT.y)
-      for (let i = 0; i < f.bubbleDots; i++) b.rect(BUBBLE_AT.x + 5 + i * 5, BUBBLE_AT.y + 4, 2, 2, IDX.outline)
+      for (let i = 0; i < f.bubbleDots; i++) b.rect(BUBBLE_AT.x + 4 + i * 4, BUBBLE_AT.y + 3, 2, 2, IDX.outline)
     }
 
-    b.toRGBA(this.out, this.colors, IDX.standPanel)
+    b.toRGBA(this.out, this.colors, IDX.officeWall)
+    // The logo image sits under the canvas: let the white screen show through, so arms and held
+    // items drawn over the monitor stay on top of the logo.
+    if (!this.wordmark) {
+      for (let y = SCREEN.y; y < SCREEN.y + SCREEN.h; y++) {
+        for (let x = SCREEN.x; x < SCREEN.x + SCREEN.w; x++) {
+          const i = y * NATIVE_W + x
+          if (b.px[i] === IDX.screenWhite) this.out[i] = 0
+        }
+      }
+    }
     this.frameCtx.putImageData(this.image, 0, 0)
     const k = this.deviceScale
     this.ctx.imageSmoothingEnabled = false
@@ -586,35 +623,66 @@ export class NpcEngine {
     const m = 3 // margin so the tilt has room
     hb.clear()
     hb.blit(HEAD, m, 0)
+    if (this.facialHairV === 'stubble') hb.blit(STUBBLE, m, 0)
     hb.blit(EYES[this.eyesFor(f)], m + EYES_POS.x, EYES_POS.y)
     if (this.mode === 'coach') hb.blit(GLASSES, m + GLASSES_POS.x, GLASSES_POS.y)
     const face = EMOTE_FACE[this.emoteV]
     const brows = f.browsForce && this.emoteV !== 'concerned' ? f.browsForce : face.brows ?? f.brows ?? 'neutral'
     hb.blit(BROWS[brows], m + BROWS_POS.x, BROWS_POS.y)
     hb.blit(MOUTHS[this.mouthFor()], m + MOUTH_POS.x, MOUTH_POS.y)
+    if (this.facialHairV !== 'none') hb.blit(MOUSTACHE, m + MOUSTACHE_POS.x, MOUSTACHE_POS.y)
     const s = { w: hb.w, h: hb.h, px: hb.px }
     if (f.tilt) this.screen.blitShear(s, ox + HEAD_POS.x - m, oy + HEAD_POS.y, f.tilt, HEAD.h - 1)
     else this.screen.blit(s, ox + HEAD_POS.x - m, oy + HEAD_POS.y)
   }
 
+  /**
+   * Thick sleeves (9 px with the outline) shaded like a cylinder. The screen-left sleeve is the light side
+   * of the suit (uniformLight with a uniform rim on its right edge); the screen-right sleeve is uniform with
+   * a uniformLight rim on its left edge and a uniformShade rim on its right. A white cuff and a dark hem
+   * sit just before the hand (only where the forearm is long enough to keep them off the elbow).
+   */
   private drawArms(f: Frame, ox: number, oy: number, bob: number) {
     const b = this.screen
+    const ab = this.armBuf
     const place = (p: P, grounded = false) => pt(ox + p.x, oy + p.y + (grounded ? 0 : bob))
-    const arms: [P, ArmPose][] = [[SHOULDER_L, f.L], [SHOULDER_R, f.R]]
-    for (const [sh, a] of arms) {
+    const arms: [P, ArmPose, 'L' | 'R'][] = [[SHOULDER_L, f.L, 'L'], [SHOULDER_R, f.R, 'R']]
+    const FILL = 250 // temporary marker for sleeve fill before shading
+    for (const [sh, a, side] of arms) {
       const s = place(sh)
       const e = place(a.elbow)
       const h = place(a.hand, a.grounded)
-      // sleeve: 7px outline, 5px navy fill, so the arm reads as one bold shape
-      b.thickLine(s.x, s.y, e.x, e.y, 10, 3, IDX.outline)
-      b.thickLine(e.x, e.y, h.x, h.y, 10, 3, IDX.outline)
-      b.thickLine(s.x, s.y, e.x, e.y, 5, 2, IDX.uniform)
-      b.thickLine(e.x, e.y, h.x, h.y, 5, 2, IDX.uniform)
-      // white shirt cuff just before the hand
-      const len = Math.hypot(h.x - e.x, h.y - e.y) || 1
-      const cx = Math.round(h.x - ((h.x - e.x) / len) * 4)
-      const cy = Math.round(h.y - ((h.y - e.y) / len) * 4)
-      b.thickLine(cx, cy, cx, cy, 5, 2, IDX.shirt)
+      ab.clear()
+      ab.thickLine(s.x, s.y, e.x, e.y, 17, 4, IDX.outline)
+      ab.thickLine(e.x, e.y, h.x, h.y, 17, 4, IDX.outline)
+      ab.thickLine(s.x, s.y, e.x, e.y, 10, 3, FILL)
+      ab.thickLine(e.x, e.y, h.x, h.y, 10, 3, FILL)
+      const base = side === 'L' ? IDX.uniformLight : IDX.uniform
+      const dark = side === 'L' ? IDX.uniform : IDX.uniformShade
+      const light = IDX.uniformLight
+      // cuff band: fill pixels 4..6 px back from the hand along the forearm, hem at 6..7
+      const len = Math.hypot(e.x - h.x, e.y - h.y) || 1
+      const ux = (e.x - h.x) / len
+      const uy = (e.y - h.y) / len
+      const px = ab.px
+      const W = ab.w
+      const src = px.slice()
+      const isOut = (x: number, y: number) => x < 0 || y < 0 || x >= W || y >= ab.h || src[y * W + x] !== FILL
+      for (let y = 0; y < ab.h; y++) {
+        for (let x = 0; x < W; x++) {
+          const i = y * W + x
+          if (src[i] !== FILL) continue
+          const along = (x - h.x) * ux + (y - h.y) * uy
+          const across = Math.abs((x - h.x) * uy - (y - h.y) * ux)
+          const rimR = isOut(x + 1, y) || isOut(x + 2, y)
+          const rimL = isOut(x - 1, y)
+          const onForearm = across <= 4.5 && along < len - 1.5
+          if (onForearm && along >= 3.5 && along < 6) px[i] = rimR ? IDX.shirtShade : IDX.shirt
+          else if (onForearm && along >= 6 && along < 7) px[i] = IDX.outline
+          else px[i] = rimR ? dark : rimL ? light : base
+        }
+      }
+      b.blitBuffer(ab)
     }
     for (const it of f.items) {
       const holder = it.attach === 'L' ? f.L : it.attach === 'R' ? f.R : null
