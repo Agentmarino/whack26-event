@@ -40,6 +40,22 @@ export function DialogueBox(props: DialogueBoxProps) {
   const { line, speed, reducedMotion = false } = props
   const id = useId()
   const [draft, setDraft] = useState('')
+  // Phone: while the reply box is focused, pin the reply row just above the on-screen keyboard.
+  // The visual viewport shrinks when the keyboard opens; its bottom edge is where the row goes.
+  const formRef = useRef<HTMLFormElement>(null)
+  const [pin, setPin] = useState<{ bottom: number; h: number } | null>(null)
+  const pinned = pin !== null
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!pinned || !vv) return
+    const on = () => setPin((p) => p && { ...p, bottom: vv.offsetTop + vv.height })
+    vv.addEventListener('resize', on)
+    vv.addEventListener('scroll', on)
+    return () => {
+      vv.removeEventListener('resize', on)
+      vv.removeEventListener('scroll', on)
+    }
+  }, [pinned])
   const tw = useTypewriter(line.text, line.id, {
     speed,
     instant: reducedMotion,
@@ -130,8 +146,12 @@ export function DialogueBox(props: DialogueBoxProps) {
         </div>
       )}
 
+      <div className="npc-reply-slot" style={pin ? { minHeight: pin.h } : undefined}>
       <form
-        className="npc-reply"
+        ref={formRef}
+        className={pin ? 'npc-reply npc-reply--pinned' : 'npc-reply'}
+        style={pin ? { top: pin.bottom } : undefined}
+        data-npc-pinned={pin ? 'true' : undefined}
         onSubmit={(e) => {
           e.preventDefault()
           const v = draft.trim()
@@ -148,11 +168,29 @@ export function DialogueBox(props: DialogueBoxProps) {
           placeholder={props.inputPlaceholder ?? 'Type a reply'}
           autoComplete="off"
           onChange={(e) => setDraft(e.target.value)}
-          onFocus={() => props.onInputFocus?.(true)}
-          onBlur={() => props.onInputFocus?.(false)}
+          onFocus={() => {
+            const vv = window.visualViewport
+            if (vv && window.matchMedia('(pointer: coarse)').matches) {
+              setPin({ bottom: vv.offsetTop + vv.height, h: formRef.current?.offsetHeight ?? 0 })
+            }
+            props.onInputFocus?.(true)
+          }}
+          onBlur={() => {
+            setPin(null)
+            props.onInputFocus?.(false)
+          }}
         />
-        <button type="submit" className="npc-reply__send">Send</button>
+        {/* Keep focus (and the keyboard) in the reply box when Send is tapped, so the row does not jump. */}
+        <button
+          type="submit"
+          className="npc-reply__send"
+          onPointerDown={(e) => pinned && e.preventDefault()}
+          onMouseDown={(e) => pinned && e.preventDefault()}
+        >
+          Send
+        </button>
       </form>
+      </div>
     </section>
   )
 }

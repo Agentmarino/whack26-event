@@ -15,15 +15,19 @@ export function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Largest whole-number scale (in device pixels) at which the 320x180 scene fits.
+ * Largest whole-number scale (in device pixels) at which the 160x120 scene fits.
  * reserveRem: height kept free for the dialogue box etc., in rem so it grows with text size.
  * reserveWidthPx: width kept free (e.g. an open side panel).
+ * On a phone-width screen (under 640 CSS px) the scene runs edge to edge: no side gutter.
+ * Example: iPhone 15 portrait is 393 CSS px at dpr 3 = 1179 device px, so 1179 / 160 gives 7x.
  */
 export function useIntegerScale(reserveRem: number, reserveWidthPx = 0) {
   const compute = () => {
     const dpr = window.devicePixelRatio || 1
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-    const availW = (document.documentElement.clientWidth - 32 - reserveWidthPx) * dpr
+    const cw = document.documentElement.clientWidth
+    const gutter = cw < 640 ? 0 : 32
+    const availW = (cw - gutter - reserveWidthPx) * dpr
     const availH = (window.innerHeight - reserveRem * rem) * dpr
     const deviceScale = Math.max(1, Math.floor(Math.min(availW / NATIVE_W, availH / NATIVE_H)))
     return { deviceScale, scale: deviceScale / dpr }
@@ -35,6 +39,9 @@ export function useIntegerScale(reserveRem: number, reserveWidthPx = 0) {
   })
   useEffect(() => {
     const on = () => {
+      // Phone: typing can shrink the window (on-screen keyboard). Keep the scale until the text box closes.
+      const typing = document.activeElement?.matches('input:not([type=radio]):not([type=file]), textarea')
+      if (typing && window.matchMedia('(pointer: coarse)').matches) return
       const next = computeRef.current()
       setV((prev) => (prev.deviceScale === next.deviceScale && prev.scale === next.scale ? prev : next))
     }

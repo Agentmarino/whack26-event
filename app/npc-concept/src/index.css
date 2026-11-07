@@ -9,10 +9,12 @@ body {
   background: #10141c;
 }
 .page {
-  padding: 0.5rem 1rem 1rem;
+  padding: max(0.5rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
 }
 .page-head {
   display: flex;
+  max-width: 60rem;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
@@ -34,6 +36,53 @@ body {
   font-family: inherit;
   padding: 0 0.25rem;
   border: 0.0625rem solid #b9c3cf;
+}
+.page-debug-toggle {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.625rem;
+  color: #f3f2ec;
+  background: transparent;
+  border: 0.125rem solid #b9c3cf;
+  cursor: pointer;
+}
+.page-debug-toggle[aria-pressed='true'] {
+  color: #0b1d2e;
+  background: #f3f2ec;
+}
+.page-debug-toggle:focus-visible {
+  outline: 0.1875rem solid #ffd84d;
+  outline-offset: 0.125rem;
+}
+/* Phone: the scene runs edge to edge (safe areas still respected); the header keeps a small gutter. */
+@media (max-width: 40rem) {
+  .page {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) max(0.75rem, env(safe-area-inset-bottom))
+      env(safe-area-inset-left);
+  }
+  .page-head {
+    flex-wrap: nowrap;
+    align-items: center;
+    margin: 0;
+    padding: 0.25rem 0.75rem;
+  }
+  .page-head h1 {
+    font-size: 0.625rem;
+    line-height: 1.4;
+  }
+  /* no room on a phone, and no D key either */
+  .page-head__sub,
+  .page-debug-toggle kbd {
+    display: none;
+  }
+  .page-main {
+    gap: 0.75rem;
+  }
+  .page-main .npc-debug {
+    width: 100%;
+  }
 }
 .page-main {
   display: flex;

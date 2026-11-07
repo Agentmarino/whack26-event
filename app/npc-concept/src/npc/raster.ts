@@ -1,9 +1,9 @@
-// Tiny palette-indexed raster. Everything is drawn into a 320x180 index buffer,
+// Tiny palette-indexed raster. Everything is drawn into a 160x120 index buffer,
 // then converted to RGBA once per frame. Integer coordinates only.
 import { CHAR_INDEX } from './palette'
 
-export const NATIVE_W = 320
-export const NATIVE_H = 180
+export const NATIVE_W = 160
+export const NATIVE_H = 120
 
 export interface Sprite {
   w: number
