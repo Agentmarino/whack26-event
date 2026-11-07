@@ -12,5 +12,5 @@ export {
   type AgentState, type Emote, type Gesture, type NpcSnapshot, type PaperState,
 } from './engine'
 export { BACKGROUND_NAMES, BACKGROUNDS, PALETTE_DEF, UI_COLORS, type Background, type ColorName } from './palette'
-export { FACIAL_HAIR, type FacialHair } from './sprites/character'
+export { DEFAULT_FACIAL_HAIR, FACIAL_HAIR, type FacialHair } from './sprites/character'
 export { NATIVE_W, NATIVE_H } from './raster'
