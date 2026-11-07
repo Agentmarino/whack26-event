@@ -200,6 +200,8 @@ export function Dock(props: {
                 if (!v) return
                 props.onText(v)
                 setDraft('')
+                // 116: sent: the next turn's choices show again (the field is one tap away)
+                setTyping(null)
               }}
             >
               <label className="sr-only" htmlFor="reply-box">

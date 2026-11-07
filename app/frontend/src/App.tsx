@@ -193,12 +193,12 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Demo mode: a turn that expects nothing moves on by itself once its line is out.
+  // Demo mode: a turn that expects nothing moves on by itself once its line is out (116: page by page).
   useEffect(() => {
-    if (!settings.demo || !typed || state.queue.length || state.pending || state.expects?.kind !== 'none') return
-    const id = window.setTimeout(() => conv.skip(), 900)
+    if (!settings.demo || !current || !tw.done || state.queue.length || state.pending || state.expects?.kind !== 'none') return
+    const id = window.setTimeout(() => (lastPage ? conv.skip() : setPageAt({ key: curKey, page: page + 1 })), 900)
     return () => window.clearTimeout(id)
-  }, [settings.demo, typed, state.queue.length, state.pending, state.expects, conv])
+  }, [settings.demo, current, tw.done, lastPage, curKey, page, state.queue.length, state.pending, state.expects, conv])
 
   // ---------- 115: Cap's business card ----------
   // It opens by itself once per conversation: when the card he slides lands on the desk (at once with
