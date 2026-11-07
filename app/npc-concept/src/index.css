@@ -1,0 +1,51 @@
+/* Concept page only. The kit's own styles live in src/npc/npc.css. */
+html {
+  background: #10141c;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #f3f2ec;
+  background: #10141c;
+}
+.page {
+  padding: 0.5rem 1rem 1rem;
+}
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin: 0 auto 0.5rem;
+  font-family: 'Press Start 2P', ui-monospace, monospace;
+}
+.page-head h1 {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.page-head p {
+  margin: 0;
+  font-size: 0.625rem;
+  color: #b9c3cf;
+}
+.page-head kbd {
+  font-family: inherit;
+  padding: 0 0.25rem;
+  border: 0.0625rem solid #b9c3cf;
+}
+.page-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+}
+.stage {
+  max-width: 100%;
+}
+.npc-debug__select {
+  display: block;
+  margin-top: 0.5rem;
+}
