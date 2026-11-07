@@ -1,13 +1,15 @@
 // The Fastify app: every route from app/shared/contract.ts (ROUTES). Every error body is {error: string}.
 
 import cors from '@fastify/cors'
+import multipart from '@fastify/multipart'
 import Fastify, { type FastifyInstance } from 'fastify'
-import { TurnRequest, WhatIfRequest } from 'shared'
-import type { WhatIfResponse } from 'shared'
+import { FileKind, TurnRequest, WhatIfRequest } from 'shared'
+import type { UploadResult, WhatIfResponse } from 'shared'
 import { handleTurn } from './conversation.ts'
 import { toMessage, type Wording } from './messages.ts'
 import { claudeWording } from './wording.ts'
 import { HttpError } from './errors.ts'
+import { ingest } from './ingest.ts'
 import { personas } from './personas.ts'
 import { getSession } from './session.ts'
 import { whatIfFromChanges, whatIfFromText } from './whatif.ts'
@@ -22,6 +24,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 12 * 1024 * 1024 })
 
   await app.register(cors, { origin: (origin, cb) => cb(null, !origin || ORIGIN.test(origin)) })
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 10 } })
 
   app.setErrorHandler((err, _req, reply) => {
     const e = err as { statusCode?: number; message?: string }
@@ -56,8 +59,24 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     return { sessionId: s.id, messages: [toMessage(s, out.draft, 'template')], whatIf: out.run }
   })
 
-  app.post('/api/upload', async () => {
-    throw new HttpError(501, 'Uploads are not ready yet. Please use a sample for now.')
+  // Multipart: `file`, `fileKind` (credit_report | bank | letter), `sessionId` (may be empty).
+  // Also takes a `text` field instead of a file (a pasted letter). Fields may come before or after the file.
+  app.post('/api/upload', async (req): Promise<UploadResult> => {
+    if (!req.isMultipart()) throw new HttpError(400, 'Send multipart/form-data with fields file, fileKind and sessionId')
+    let file: { fileName: string; mime: string; data: Buffer } | null = null
+    const fields: Record<string, string> = {}
+    for await (const part of req.parts()) {
+      if (part.type === 'file') {
+        const data = await part.toBuffer()
+        if (part.file.truncated) throw new HttpError(413, 'That file is too big. The limit is 10 MB.')
+        file = { fileName: part.filename || 'upload', mime: part.mimetype, data }
+      } else fields[part.fieldname] = String(part.value ?? '')
+    }
+    const kind = FileKind.safeParse(fields.fileKind)
+    if (!kind.success) throw new HttpError(400, 'fileKind must be credit_report, bank or letter')
+    const text = fields.text?.trim() ? fields.text : null
+    if (!file?.data.length && !text) throw new HttpError(400, 'No file in the upload')
+    return ingest(kind.data, { fileName: file?.fileName ?? 'pasted text', mime: file?.mime ?? 'text/plain', data: file?.data.length ? file.data : null, text })
   })
 
   app.get<{ Params: { file: string } }>('/api/paper/:file', async req => {

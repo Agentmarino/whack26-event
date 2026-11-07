@@ -7,7 +7,7 @@ import type { Sample } from './personas.ts'
 
 export type Piece =
   | { fileKind: 'credit_report'; report: Sample }
-  | { fileKind: 'bank'; bank: NonNullable<Profile['bank']>; findings: Finding[] }
+  | { fileKind: 'bank'; bank: NonNullable<Profile['bank']>; findings: Finding[]; netIncome?: number | null }
   | { fileKind: 'letter'; decline: NonNullable<Profile['decline']>; findings: Finding[] }
 
 const store = new Map<string, Piece>()

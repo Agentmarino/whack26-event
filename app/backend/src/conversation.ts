@@ -228,6 +228,8 @@ function applyPiece(s: Session, p: Piece) {
   else if (p.fileKind === 'bank') {
     s.profile.bank = p.bank
     s.has.bank = true
+    // A real statement's take-home pay, unless the report already gave one.
+    if (p.netIncome && s.profile.netIncome == null) s.profile.netIncome = p.netIncome
     if (p.findings.length) (s.findings ??= emptyFindings()).bank = p.findings
   } else {
     s.profile.decline = p.decline
