@@ -12,7 +12,8 @@ import {
   ExtendedScene, extendedLayout, NATIVE_H, usePrefersReducedMotion, useTypewriter, type FacialHair, type NpcHandle,
   type NpcSnapshot,
 } from './npc'
-import { blip } from './game/blip'
+import { blip, primeBlip } from './game/blip'
+import { Guard } from './ui/Guard'
 import { DataWindow } from './game/DataWindow'
 import { GameBox } from './game/GameBox'
 import { GearIcon, NotebookIcon, SidePanel, type PanelTab } from './game/SidePanel'
@@ -133,6 +134,20 @@ export default function App() {
   const onPages = useCallback((key: string, next: string[]) => {
     setPaged((p) => (p.key === key && p.pages.join('\u0000') === next.join('\u0000') ? p : { key, pages: next }))
   }, [])
+  // 116: "Skip all" lands on the last page of the turn's last line: at once when it is on screen, else as
+  // soon as the last line has been paged.
+  const toEnd = useRef(false)
+  useEffect(() => {
+    if (!toEnd.current || state.queue.length || paged.key !== curKey) return
+    toEnd.current = false
+    setPageAt({ key: curKey, page: Math.max(0, paged.pages.length - 1) })
+  }, [paged, curKey, state.queue.length])
+  const showAll = useCallback(() => {
+    if (state.queue.length) {
+      toEnd.current = true
+      conv.showAll()
+    } else setPageAt({ key: curKey, page: Math.max(0, pages.length - 1) })
+  }, [state.queue.length, conv, curKey, pages.length])
   const instant = reduced || settings.demo || settings.speed === 'instant' || current?.msg.kind === 'card'
   const blipOn = settings.blip && !settings.readAloud && !reduced
   const tw = useTypewriter(pages[page] ?? '', `${curKey}:${page}`, {
@@ -150,6 +165,17 @@ export default function App() {
   const typed = !!current && tw.done && lastPage
 
   useSpeech(current?.msg.text ?? null, current?.key ?? null, settings.readAloud, settings.voiceRate)
+  // 116: the letter sound was switched on in an earlier visit: unlock audio on the first tap or key
+  useEffect(() => {
+    if (!settings.blip) return
+    const on = () => primeBlip()
+    window.addEventListener('pointerdown', on, { once: true })
+    window.addEventListener('keydown', on, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', on)
+      window.removeEventListener('keydown', on)
+    }
+  }, [settings.blip])
 
   // ---------- the agent's body ----------
   useEffect(() => {
@@ -186,6 +212,8 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== ' ' && e.key !== 'Enter') return
       if (e.metaKey || e.ctrlKey || e.altKey || isControl(e.target) || document.querySelector('dialog[open]')) return
+      // 116: keys inside the open notebook are the notebook's (Space scrolls it), not "next"
+      if (e.target instanceof Element && e.target.closest('[data-testid="side-panel"]')) return
       e.preventDefault()
       advanceRef.current()
     }
@@ -409,7 +437,11 @@ export default function App() {
             <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live">
               {announce}
             </p>
-            {windowMsg && <DataWindow key={current!.key} msg={windowMsg} onDetails={openDetails} minTop={vp.h - boxMax - 4} />}
+            {windowMsg && (
+              <Guard>
+                <DataWindow key={current!.key} msg={windowMsg} onDetails={openDetails} minTop={vp.h - boxMax - 4} />
+              </Guard>
+            )}
             <GameBox
               current={current ? { key: current.key, msg: current.msg } : null}
               page={page}
@@ -422,13 +454,14 @@ export default function App() {
               onAdvance={advance}
               status={status}
               layoutKey={`${settings.textSize}:${boxVt}:${pf}:${stageW}`}
+              inputKey={mode.kind}
               maxPx={boxMax}
             >
               {(rowsFit) => (
                 <Dock
                   mode={mode}
                   onNext={advance}
-                  onShowAll={conv.showAll}
+                  onShowAll={showAll}
                   onContinue={() => conv.skip()}
                   onChip={(v, how) => conv.choose(v, how)}
                   onText={(v) => conv.choose(v, 'text')}

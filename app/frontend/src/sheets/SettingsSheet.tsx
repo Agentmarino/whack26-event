@@ -104,7 +104,7 @@ export function SettingsSheet(props: { open: boolean; onClose: () => void; onRes
         <div className="flex flex-col gap-3">
           <Toggle
             label="Readable font"
-            hint="A taller, simpler pixel font (VT323) in Cap's box, menus and windows. More words fit on a line."
+            hint="A taller, simpler pixel font (VT323) in Cap's box, menus and windows. More words fit on a line. On a phone with bigger text the box already uses it."
             checked={settings.readable}
             onChange={(v) => set('readable', v)}
             testId="toggle-readable"

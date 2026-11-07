@@ -81,7 +81,8 @@ export function SidePanel(props: {
   const items = useMemo(() => {
     const seen = new Map<string, (typeof conv.entries)[number]>()
     for (const e of conv.entries) {
-      if (e.type !== 'agent' || e.msg.kind === 'text' || e.msg.kind === 'card') continue
+      // a text line with a ref has a card too (the flags)
+      if (e.type !== 'agent' || e.msg.kind === 'card' || (e.msg.kind === 'text' && !e.msg.ref)) continue
       seen.set(e.msg.ref ? JSON.stringify(e.msg.ref) : e.msg.id, e)
     }
     return [...seen.values()]

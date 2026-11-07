@@ -118,7 +118,12 @@ export function Dock(props: {
       <div
         ref={ref}
         className="dock"
-        style={shownPin ? { position: 'fixed', left: 0, right: 0, top: shownPin.top, zIndex: 20 } : undefined}
+        // pinned over the keyboard it leaves the box, so it brings the box's ground with it (8 px + 4 px edge)
+        style={
+          shownPin
+            ? { position: 'fixed', left: 0, right: 0, top: shownPin.top - 20, zIndex: 20, padding: 8, background: 'var(--panel)', borderTop: '4px solid var(--edge)' }
+            : undefined
+        }
         data-testid="dock"
         data-mode={mode.kind}
         role="group"
@@ -235,12 +240,12 @@ export function Dock(props: {
             </form>
             <div className="flex gap-2">
               {hasChoices && (
-                <button type="button" className="gbtn" onClick={() => setTyping(null)} data-action="type-back">
+                <button type="button" className="gbtn" onPointerDown={(e) => pinned && e.preventDefault()} onClick={() => setTyping(null)} data-action="type-back">
                   <PixelArrow dir="left" /> Back
                 </button>
               )}
               {mode.expects.optional && (
-                <button type="button" className="gbtn" onClick={props.onSkip} data-action="skip">
+                <button type="button" className="gbtn" onPointerDown={(e) => pinned && e.preventDefault()} onClick={props.onSkip} data-action="skip">
                   Skip
                 </button>
               )}

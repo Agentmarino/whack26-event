@@ -98,6 +98,8 @@ export function GameBox(props: {
   status: { kind: 'pending' | 'error' | 'notice'; text: string } | null
   /** Re-measure when these change (text size, font, width). */
   layoutKey: string
+  /** What the inputs show (Next, a menu...): the menu's fit starts again when it changes. */
+  inputKey: string
   /** The most the box may take; the menu below the text pages to stay inside it. */
   maxPx: number
   /** The inputs, told how many menu rows fit under the text. */
@@ -118,7 +120,13 @@ export function GameBox(props: {
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
-    return () => ro.disconnect()
+    // a line that came before the pixel font loaded was measured in the fallback font: page it again
+    let live = true
+    void document.fonts?.ready.then(() => live && measure())
+    return () => {
+      live = false
+      ro.disconnect()
+    }
   }, [current?.key, text, props.lines, props.layoutKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // How many menu rows fit under what is showing: the box's room minus the text, the explain line,
@@ -147,7 +155,7 @@ export function GameBox(props: {
   const box = useRef<HTMLElement>(null)
   // (the page count is in it: the line shows whole for one render before it is paged, and a cut made
   // then must not stick)
-  const fitKey = `${current?.key ?? status?.kind ?? 'none'}:${props.page}/${props.pages.length}:${props.lines}:${props.layoutKey}:${props.maxPx}`
+  const fitKey = `${current?.key ?? status?.kind ?? 'none'}:${props.page}/${props.pages.length}:${props.inputKey}:${props.lines}:${props.layoutKey}:${props.maxPx}`
   const [cut, setCut] = useState({ key: fitKey, n: 0 })
   const n = cut.key === fitKey ? cut.n : 0
   const rowsFit = Math.max(1, estimate - n)

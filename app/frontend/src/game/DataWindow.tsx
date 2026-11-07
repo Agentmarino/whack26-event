@@ -163,6 +163,8 @@ export function DataWindow({ msg, onDetails, minTop }: { msg: AgentMessage; onDe
       data-testid="data-window"
       data-window={r?.on ?? 'paper'}
       data-fit={level === 0 ? 'full' : level === 1 ? 'compact' : 'hidden'}
+      // measured again once the pop-in (a scale) has finished: mid-animation the window looks smaller
+      onAnimationEnd={() => setTick((t) => t + 1)}
     >
       <p className="gwin__tag">{tag}</p>
       <p className="gwin__title">{title}</p>

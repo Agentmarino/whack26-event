@@ -1,7 +1,7 @@
 ---
 id: 116
 title: Full-screen scene, 8-bit game dialogue text, expandable side panel
-status: ready
+status: done
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-07
@@ -139,10 +139,77 @@ Work is on `main`, **all uncommitted** apart from `044883f` (handoff + INDEX row
 - If a Playwright selector finds two elements: the closed notebook keeps the history in the DOM.
 
 ## RESULT (filled in by Claude Code)
-- Status:
-- Time taken:
+- Status: done
+- Time taken: about 2 h 45 over two sessions on 2026-11-07 (about 20:00 to 22:45), against a 2 h budget.
 - Font chosen and why:
+  - **Press Start 2P** in the dialogue box, menus, Cap's name plate and the item windows. This was the user's call in the second session; it overrides the first session's VT323 default. It gives the classic 8-bit look.
+  - Sized so every font pixel is a whole number of device pixels: 16 px on a phone (2 CSS px, 6 device px per font pixel on iPhone 15) and 24 px on a wide screen. Bigger text snaps to the nearest such whole-px size (`crispPx` in `App.tsx`). No `font-size-adjust` on it.
+  - The ▼ ▶ ◀ arrows are drawn on the same 8x8 grid (`game/PixelArrow.tsx`), because the font has no arrow glyphs. A full-resolution crop confirmed clean pixel edges at 3x.
+  - A line pages at **at most 4 lines on iPhone 15** (3 on desktop). Pages break at a sentence end when that keeps at least half the page. A one- or two-word last page takes the start of its sentence back.
+  - **VT323** is the **Readable font** option in Settings. It is also always used in the notebook, sheets and cards.
+  - Judgement call: at 125% and 150% text **on a phone**, the box uses VT323 too. Press Start 2P's next crisp size there is 24 px, which fits about 13 letters a line and one menu choice a page; it also overflowed the Next button and the corner button. Desktop keeps Press Start 2P at bigger crisp sizes.
+  - **Pixelify Sans** was compared only (its bold C reads like an O) and is not shipped.
+  - `screens/font-options.png` was re-rendered with the new notes (Press Start 2P 16 px, chosen, paged at 4 lines; VT323 is the Readable font; Pixelify is not used).
 - What was built:
-- Files changed:
-- Verification run and output:
+  - **Full-screen scene**: `ExtendedScene` (kit, `npc-concept` first, copies identical) with the same whole-device-pixel scale rule in App. It adds ceiling, glass wall, office and desks sideways and the floor below. Cap's desk ends just above the box's room.
+  - **Dialogue box** (`game/GameBox.tsx`): name plate, red accent, pixel text, per-page typewriter, blinking ▼, tap or Enter to go on.
+  - **Menus** (`chat/Dock.tsx`): ▶ cursor, arrow keys, 44 px rows. The menu pages with More/Back to fit the box; the overflow check measures the content height, not the shrunk box.
+  - **Typing** is a menu row, "Type or say my own", which opens a pixel field with the mic, Send and Back. The field closes after Send, so the next turn's choices show.
+  - **Item windows** (`game/DataWindow.tsx`): reason (key fact, 10-block health bar, Good/Watch/Problem), step, projection mini chart, ladder, decline, what-if, paper. Each has Details, plus Why? on reasons.
+    - Full width on a phone; about 18 letters a line elsewhere.
+    - The window never reaches above the desk's bottom edge: full, then title and buttons only, then it steps aside (the item stays in the notebook).
+  - **Notebook side panel** (`game/SidePanel.tsx`): Chat and Your plan tabs. 40% on desktop, a sheet on a phone. X, Esc or swipe closes it.
+  - **Settings**: Readable font (VT323) and Letter sound (blip, never during read aloud). Text size goes to 150%; the box grows and the menu pages. Colour modes apply to the box, windows and panel.
+  - **Demo mode** moves a "nothing expected" line on page by page.
+  - **Bug fix**: the Dock's keyboard pin applied on focus alone. It held the dock at a stale spot after Send, and made a mic tap miss. It now applies only when the visual viewport has actually shrunk (an on-screen keyboard).
+  - The paper overlay keeps its 114 fonts (Atkinson Hyperlegible with Press Start 2P tags).
+- Files changed (`git diff --stat 610abcf..HEAD`: 64 files):
+  - app: `App.tsx`; `game/` (GameBox, DataWindow, SidePanel, PixelArrow, blip); `chat/Dock.tsx`, `chat/Transcript.tsx`; `settings.tsx`; `sheets/SettingsSheet.tsx`; `ui/Health.tsx`; `index.css`; `main.tsx`
+  - kit, both copies: `ExtendedScene.tsx`, `extend.ts`, `scene.ts`, `index.ts`, `npc.css`, plus `ART-GUIDE.md`
+  - scripts: `walk.mjs` (`--readable`, menu paging, current-line lookup, box metrics on failure) and `checks.mjs` (menu paging, longer drain)
+  - other: `app/DISCLOSURES.md`, `deliverables/pitch/demo-script.md`, `screens/116-*.png`, `screens/check-*.png`, `screens/font-options.png`, `app/frontend/package.json` (+ `@fontsource/vt323`), `pnpm-lock.yaml`
+- Verification run and output (2026-11-07, servers: `pnpm dev` on :5173 live with backend :8000, mock on :5176):
+  - `pnpm typecheck`: exit 0. `pnpm --filter backend test`: `Tests 101 passed (101)`. `pnpm --filter frontend build`: built. `node scripts/contrast.mjs`: `all pairs pass`.
+  - `node scripts/checks.mjs --base http://127.0.0.1:5176 --live-base http://127.0.0.1:5173`: `all 19 passed` (the mic check failed until the pin fix, then passed).
+  - `node scripts/walk.mjs`: 0 PROBLEM lines on every run:
+    - mock: `--branch declined` (46 shots), `report` (41), `prepare` (41), `new` (43)
+    - live: `--live` (46)
+    - variants: `--desktop` (44), `--keyboard --reduced` (46), `--text 150` (46), `--readable` (43), `--colour contrast` (46)
+  - Live demo re-walk (`demo116.mjs`, WebKit iPhone 15, demo mode): every beat ran with no PROBLEM line. The read-aloud beat read `"Paying £ 400 extra a month: by Feb 2027 your score could be 747 to 854, up from 735 to 836. An estimate. You'd get under 30% by Jan 2027."` with no cancel after it.
+  - Screens, all looked at: `app/frontend/screens/116-*`.
+    - iPhone: card, paged dialogue, menu, reason/step/projection windows, Why?, panel on both tabs, paper.
+    - Variants: 150% goals, Readable goals, high contrast, keyboard + reduced.
+    - Desktop: menu, reason window, panel on both tabs. Live: reason and what-if.
 - Open issues / follow-ups:
+  - **The demo is longer**: 77 taps (about 39 before) and about 2:30, because long lines page. The demo script lists every tap from the real run, and "If short of time" uses Skip all.
+  - At 150% on a phone, menus show 2 choices a page (the goals menu is 4 pages); Cap's scene drops to 2x there to make room.
+  - The kit has no high-contrast palette, so the scene ignores the colour modes (the box, windows and panel follow them). Optional: a contrast palette with `npc.setPalette` (subagent note).
+  - When the box is tall (a menu), the item window steps aside or shows only its title. The full item is one tap away in Details or the notebook.
+  - `app/backend/data/ai-cache.json` has 1 new entry from the live walk (a goal classification). It was left uncommitted because this handoff changes no backend.
+  - The old pre-116 screens in `app/frontend/screens/` (`iphone-*.png`, `desktop-*`, `live-*` without `116-`) show the old layout. They are kept for history; delete them if they confuse.
+  - The "Explain:" term row in the box is small VT323 on desktop. Fine on a phone; could be bigger at ≥64rem.
+
+### Review
+The `reviewer` agent read `610abcf..HEAD` and probed the running mock with Playwright.
+- It confirmed: the kit copies are identical; `paginate` cannot lose words or make an empty page, and a phone page is at most 4 lines; the menu-fit and window-fit loops are bounded; `crispPx` and the scene scale agree with `ExtendedScene`; the live region gets the whole line; reduced motion stops all animation.
+- It agreed with the VT323-at-big-text-on-a-phone call (a deviation from "Press Start 2P for dialogue", made for readability).
+
+Findings, all fixed:
+1. *Medium*: **Skip all did nothing** on the last line of a turn with 3+ pages (the demo's short-of-time fallback). It now jumps to the last page of the turn's last line, at once or once that line is paged.
+2. *Medium*: **Space or Enter in the open notebook** moved Cap's dialogue on (and could send a turn). Keys inside the panel are now the panel's; Space scrolls it.
+3. **The item window was measured mid pop-in** (scaled), so in demo mode it could cover the desk front by up to 25 px. It is measured again when the animation ends.
+4. **The dock pinned over the iOS keyboard** had no ground. It now has the box's panel colour, 8 px padding and an edge (not checked on a device: Playwright has no keyboard).
+5. **Pages could be measured** in the fallback font before Press Start 2P loaded. They are paged again on `document.fonts.ready`.
+6. `DataWindow` is now inside a `Guard`.
+7. **The flags card** (a text line with a ref) now shows in Your plan.
+8. **Back and Skip** in the pinned field keep the field's focus, like Send and the mic.
+9. **Letter sound** switched on in an earlier visit unlocks audio on the first tap or key.
+
+Also: the menu fit now restarts when the inputs change (Next to a menu), and the Settings hint says the box already uses VT323 with bigger text on a phone.
+
+After the fixes:
+- The reviewer's probes report Skip all reaching page 3/3, Space scrolling the panel (scrollTop 0 → 557) with the line unchanged, and no window over the desk.
+- checks `all 19 passed`.
+- Walks with 0 PROBLEM lines: mock declined (46 shots), live (46), desktop (44), `--text 150` (46), `--keyboard --reduced` (46), `--readable` (43).
+- Live demo run: 77 taps, no PROBLEM line, read-aloud reads the £400 answer in full.
+- `pnpm typecheck` exit 0; backend `Tests 101 passed (101)`.
