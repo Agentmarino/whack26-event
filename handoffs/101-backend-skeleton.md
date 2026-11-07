@@ -1,17 +1,19 @@
 ---
 id: 101
-title: Backend skeleton, disclosures, contract, fixtures and stub endpoints
+title: Backend skeleton, disclosures, contract, fixtures, stub endpoints and the scripted conversation
 status: ready
 owner: mihael
 concept: lenders-eyes
 created: 2026-11-06
-time-budget: 75m
+time-budget: 100m
 ---
 
-# 101: Backend skeleton, disclosures, contract, fixtures and stub endpoints
+# 101: Backend skeleton, disclosures, contract, fixtures, stub endpoints and the scripted conversation
 
 ## Goal
-A running FastAPI backend in `app/backend/` that loads the Lender's Eyes fixtures, answers every endpoint of the contract below with the example responses (stubs, replaced by real logic in 103, 105 and 106), plus `app/DISCLOSURES.md`, `app/DEMO.md` and `app/CONTRACT.md`. Partner builds the frontend against the same contract in parallel (102).
+A running FastAPI backend in `app/backend/` that loads the Lender's Eyes fixtures, answers every endpoint of the contract below with the example responses (stubs, replaced by real logic in 103, 105 and 106), plus `app/DISCLOSURES.md`, `app/DEMO.md` and `app/CONTRACT.md`. Partner builds the frontend against the same contract in parallel (102). Also a scripted conversation (`/api/turn`, `/api/upload`) that walks the whole chat on Jordan's sample files, so the NPC chat works end to end before the real logic lands.
+
+**Brief (2026-11-07): Capital One "Make credit accessible".** Our angle: credit is inaccessible because nobody can understand it. The agent makes the lender's view understandable, in plain words, one message at a time.
 
 ## Context
 - Read first: `CLAUDE.md`, `.claude/rules/python.md`, `templates/DISCLOSURES.md`, `templates/DEMO.md`, `prep/lenders-eyes/spec.md` (sections "Data model" and "Decision rules"), `prep/lenders-eyes/fixtures/README.md`
@@ -28,6 +30,15 @@ A running FastAPI backend in `app/backend/` that loads the Lender's Eyes fixture
   - Dates are `YYYY-MM-DD` strings. Money is a number in pounds; negative means money out
   - Errors: HTTP 4xx/5xx with `{"error": string}`. Unknown `profile_id` returns 404
   - One example response per endpoint: `prep/lenders-eyes/fixtures/contract-examples.json` (key `"METHOD /api/path"`)
+  - **Conversation (added 2026-11-07, the app is now a chat with the pixel NPC agent; the backend owns the conversation, the frontend only renders it)**
+  - `AgentMessage` = `{"id": string, "text": string, "emote": "neutral"|"warm"|"concerned"|"pleased", "gesture": "none"|"wave"|"asking"|"receive-document"|"reading"|"thinking"|"explaining"|"slide-paper"|"coach", "rule_id": string|null, "evidence": [Evidence]}`. Frontend maps `gesture` and `emote` onto the 108 NPC states; `text` is shown with the typewriter, one message at a time
+  - `Expects` = `{"kind": "file"|"choice"|"text"|"none", "file_kinds": ["credit_report"|"bank"|"letter"], "chips": [string], "optional": boolean, "placeholder": string|null}`. What input the agent waits for next
+  - `Step` = `"greet"|"ask_report"|"ask_bank"|"ask_letter"|"questions"|"assessing"|"report"|"paper"|"coach"`
+  - `POST /api/upload` multipart form: `session_id`, `file_kind` (`credit_report`|`bank`|`letter`), `file`. Returns `{"file_id": string, "file_kind": string, "name": string, "read_ok": boolean, "summary": string}` (summary is one plain line, for example "Credit report: 3 accounts, 4 searches, 2 addresses")
+  - `POST /api/turn` body `{"session_id": string|null, "input": {"type": "start"|"file"|"skip"|"choice"|"text", "file_kind": string|null, "file_id": string|null, "sample": boolean, "value": string|null}}`. `start` with `session_id: null` opens a session. `sample: true` with `type: "file"` uses the built-in Jordan file of that kind (demo button "Use sample"). A `letter` file is accepted at ANY step: the agent acknowledges it in one message and carries on where it was
+  - Returns `{"session_id": string, "step": Step, "messages": [AgentMessage], "expects": Expects, "assessment": Assessment|null, "plan": Plan|null, "paper_url": string|null}`. `assessment` is set from the `report` step on, `paper_url` from the `paper` step on
+  - Step order: `greet` (wave, then ask for the credit report) → `ask_report` → `ask_bank` → `ask_letter` (optional, chips "Upload letter" / "I don't have one") → `questions` (2 to 4, some built from the data, for example "Your rent has gone to Hollis Lettings since 2026-08-01. Did you move recently?") → `assessing` (thinking) → `report` (decision line, then ONE message per failing reason, gesture `explaining`, `emote` `concerned` for bad news delivered kindly, then watch items in one message) → `paper` (gesture `slide-paper`, the summary sheet) → `coach` (goal chips "Credit card", "Car finance", "Mortgage", "Something else"; then horizon chips "3 months", "6 months", "12 months"; then free text)
+  - `GET /api/paper/{session_id}.pdf` returns the summary package (built in 114; until then 404 `{"error": "Summary not built yet"}`)
 - Pattern: the setup lines in this handoff are the generic ones that passed practice (the generic handoffs are not copied into the event repo, so there is nothing to look up)
 
 ## Requirements
@@ -41,6 +52,10 @@ A running FastAPI backend in `app/backend/` that loads the Lender's Eyes fixture
 - [ ] Stubs: `POST /api/assess`, `POST /api/plan` and `POST /api/check-advice` return the matching example from `contract-examples.json` for a known profile id. Mark each stub in a code comment with the handoff that replaces it (103 for assess and plan, 106 for check-advice)
 - [ ] Config read once at startup: key from `.env` (fail loudly if missing), `LLM_MODEL` default `claude-sonnet-5-5` (one config line), `DEMO_OFFLINE`, `AI_FALLBACK`, `DATA_SOURCE`. Print the model name and the two flags at startup. No Claude call yet (105 adds it)
 - [ ] Error handler so every error body is `{"error": string}`, including 422 validation errors
+- [ ] Pydantic models for `AgentMessage`, `Expects`, the upload result and the turn request/response. Add one example for `POST /api/turn` (the `report` step) and one for `POST /api/upload` to `data/contract-examples.json` and validate them at startup like the others; 102 copies them as mocks
+- [ ] Sessions in memory (a dict keyed by session id, no database). Store uploaded files under `app/backend/data/uploads/<session_id>/` (gitignored). `read_ok` and `summary` are fixed lines in 101: any uploaded file maps to Jordan's matching fixture, with a comment that 112 replaces this with real reading
+- [ ] `POST /api/turn` runs the step order above as a small state machine with scripted messages for Jordan. Report messages are built from the `POST /api/assess` example (one per `fail` rule, using its `plain_reason`, `rule_id` and cited evidence). Questions: (1) "What are you hoping to apply for?" chips "Credit card", "Car finance", "Mortgage", "Something else"; (2) the Hollis Lettings move question, chips "Yes", "No"; (3) "Roughly what do you take home each month?" text. Coach stub: after a goal and horizon chip, one message that reads the `POST /api/plan` example headline, then "Coach mode is coming next" for free text (113 replaces it). Messages: short, plain, at most 40 words each, "you", British spelling, no jargon without a one-line meaning
+- [ ] Any step: a `letter` file input gets one acknowledgement message and the step does not change. Unknown session id returns 404 `{"error": "Unknown session"}`
 - [ ] Start command in `app/DEMO.md`: `cd app/backend && uv run uvicorn main:app --reload --port 8000`. Run it in the background
 - [ ] Commit after each working step
 
@@ -57,7 +72,10 @@ A running FastAPI backend in `app/backend/` that loads the Lender's Eyes fixture
 5. `curl -s -X POST localhost:8000/api/check-advice -H 'content-type: application/json' -d '{"profile_id":"jordan-before","advice":"Apply for two or three other cards this week."}' | jq -c .summary` prints `{"supported":2,"contradicted":4,"misleading":1,"cannot_check":1}` (stub)
 6. `curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8000/api/assess -H 'content-type: application/json' -d '{"profile_id":"nobody"}'` prints `404`, and the body is `{"error":"Unknown profile_id: nobody"}`
 7. `curl -s -X POST localhost:8000/api/assess -H 'content-type: application/json' -d '{}'` returns a 422 with an `{"error": ...}` body
-8. `app/DISCLOSURES.md` lists every package in `app/backend/uv.lock` and the fixtures row; `app/CONTRACT.md` matches the interface above word for word (`diff` against this file's bullets)
+8. Conversation walk with curl (save `session_id` from the first reply): `start` → file `credit_report` sample → file `bank` sample → `skip` → three answers → coach chips. Each reply has the expected `step` in order (`greet`, `ask_bank`, `ask_letter`, `questions`, ..., `report`, `paper`, `coach`), the `report` reply has one message per `fail` rule plus the decision line, and `assessment.decision` is `"decline"`
+9. Send a `letter` sample file during `questions`: one acknowledgement message, `step` stays `questions`
+10. `curl -s -F session_id=<id> -F file_kind=credit_report -F file=@app/backend/data/credit-file.json localhost:8000/api/upload | jq -c .read_ok` prints `true`
+11. `app/DISCLOSURES.md` lists every package in `app/backend/uv.lock` and the fixtures row; `app/CONTRACT.md` matches the interface above word for word (`diff` against this file's bullets)
 
 ---
 

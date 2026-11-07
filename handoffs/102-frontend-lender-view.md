@@ -1,23 +1,29 @@
 ---
 id: 102
-title: Frontend shell and the Lender view on mocks
+title: Frontend, the NPC stand and chat on mocks (rewritten 2026-11-07)
 status: ready
 owner: partner
 concept: lenders-eyes
-created: 2026-11-06
-time-budget: 90m
+created: 2026-11-07
+time-budget: 120m
 ---
 
-# 102: Frontend shell and the Lender view on mocks
+# 102: Frontend, the NPC stand and chat on mocks
 
 ## Goal
-A Vite + React + TypeScript + Tailwind app in `app/frontend/` with the Start screen and the Lender view: decision banner, the three reason cards with evidence chips, watch and pass lists, and the evidence drawer. Works on the mock first, then on the backend from 101 with one switch.
+A Vite + React + TypeScript + Tailwind app in `app/frontend/`: a pixel-art credit agent at a Capital One stand who talks the user through the whole check as a chat. Uploads (credit report, bank data, optional letter), quick-reply chips, the report one message at a time with evidence, the paper summary sliding across the desk, then coach mode. Works on the mock first, then on the backend from 101 with one switch.
 
 ## Context
-- Read first: `CLAUDE.md`, `.claude/rules/frontend.md`, `prep/lenders-eyes/spec.md` (sections "The one demo flow" and "Screens and states", screens 1 and 2), `prep/lenders-eyes/demo-script.md` (steps 0:00 to 0:50)
-- Starts after: nothing, 11:00
-- Mock data: copy `prep/lenders-eyes/fixtures/contract-examples.json` into `app/frontend/src/mocks/` (ignore keys that start with `_`)
-- Env vars: `VITE_USE_MOCK` (default `true`), `API_TARGET` for the Vite proxy (default `http://localhost:8000`), `VITE_SHOW_ADVICE` (default `false`, used in 104)
+- **Brief (2026-11-07): Capital One "Make credit accessible".** Our angle: credit is inaccessible because nobody can understand it. The agent makes the lender's view understandable, in plain words, one message at a time. Accessibility also means the app itself must work for everyone (see the Accessibility requirements)
+- **This replaces the old 102 (Start screen plus Lender view).** The old flow is gone; the app is one screen: the stand scene on top, the chat below
+- Tone: game look, real help. The agent is calm, warm and direct. No points, levels or jokes. The person may have just been declined
+- Capital One branding is allowed (team decision). Their navy and red, the "Capital One" name on the stand. Do not hand-draw their logo: keep the text placeholder from 108 until we get the official asset
+- **The character is done (108 to 111, merged):** `app/npc-concept/src/npc/` is a self-contained kit: `NpcScene` (128x96 canvas, 4:3, whole-number scaling, glass-wall office, desk with the logo monitor and the upload tray), `DialogueBox`, `useIntegerScale`, `usePrefersReducedMotion`, and the `NpcHandle` (`setState`, `emote`, `gesture`, `talk`, `stopTalking`). Defaults: facial hair `moustache-stubble`, background `day`. Copy the folder into `app/frontend/src/npc/` unchanged and follow `app/npc-concept/ART-GUIDE.md` (how to lift it, the font, iPhone notes). `app/npc-concept/src/App.tsx` is a full working example including the sample conversation runner. Do not edit the kit; ask Mihael if it needs a change
+- **The demo runs on an iPhone (Safari, portrait).** Design for 390x844 first, then check desktop. Lessons from the 109 phone screenshot: (1) the text speed row ate a third of the dialogue box, so put speed and Demo mode behind a small settings button; (2) the reply input started below the screen edge, so the input area must be visible without scrolling on a 390x844 screen; (3) Press Start 2P at body size fits about three words a line, so test a smaller pixel font for message text, or a clean readable font for the body with the pixel font for the name tag and buttons (readability is the brief). Tray tap opens the file picker (no drag and drop on iPhone)
+- Read first: `CLAUDE.md`, `.claude/rules/frontend.md`, `context/concepts.md` (Lender's Eyes)
+- Starts after: nothing. 101 may not be finished: build against the mock and switch when Mihael says the backend is up
+- Mock data: copy `prep/lenders-eyes/fixtures/contract-examples.json` into `app/frontend/src/mocks/` (ignore keys that start with `_`). For `/api/turn`, write a mock script in `src/mocks/turns.ts` that returns the same step order as the contract below on Jordan's sample (use the `POST /api/assess` example for the report messages), so the whole chat runs in mock mode
+- Env vars: `VITE_USE_MOCK` (default `true`), `API_TARGET` for the Vite proxy (default `http://localhost:8000`)
 - **Interface with 101 (do not change it without telling Mihael):**
   - Backend on `http://localhost:8000`, all routes under `/api`. CORS allows `http://localhost:5173`
   - `GET /api/health` returns `{"status": "ok"}`
@@ -28,43 +34,53 @@ A Vite + React + TypeScript + Tailwind app in `app/frontend/` with the Start scr
   - Dates are `YYYY-MM-DD` strings. Money is a number in pounds; negative means money out
   - Errors: HTTP 4xx/5xx with `{"error": string}`. Unknown `profile_id` returns 404
   - One example response per endpoint: `prep/lenders-eyes/fixtures/contract-examples.json` (key `"METHOD /api/path"`)
-- 101 may not be finished when you start. Build against the mock and switch when Mihael says the backend is up
-- Pattern: the setup lines in this handoff are the generic ones that passed practice (the generic handoffs are not copied into the event repo, so there is nothing to look up)
+  - **Conversation (added 2026-11-07, the app is now a chat with the pixel NPC agent; the backend owns the conversation, the frontend only renders it)**
+  - `AgentMessage` = `{"id": string, "text": string, "emote": "neutral"|"warm"|"concerned"|"pleased", "gesture": "none"|"wave"|"asking"|"receive-document"|"reading"|"thinking"|"explaining"|"slide-paper"|"coach", "rule_id": string|null, "evidence": [Evidence]}`. Frontend maps `gesture` and `emote` onto the 108 NPC states; `text` is shown with the typewriter, one message at a time
+  - `Expects` = `{"kind": "file"|"choice"|"text"|"none", "file_kinds": ["credit_report"|"bank"|"letter"], "chips": [string], "optional": boolean, "placeholder": string|null}`. What input the agent waits for next
+  - `Step` = `"greet"|"ask_report"|"ask_bank"|"ask_letter"|"questions"|"assessing"|"report"|"paper"|"coach"`
+  - `POST /api/upload` multipart form: `session_id`, `file_kind` (`credit_report`|`bank`|`letter`), `file`. Returns `{"file_id": string, "file_kind": string, "name": string, "read_ok": boolean, "summary": string}` (summary is one plain line, for example "Credit report: 3 accounts, 4 searches, 2 addresses")
+  - `POST /api/turn` body `{"session_id": string|null, "input": {"type": "start"|"file"|"skip"|"choice"|"text", "file_kind": string|null, "file_id": string|null, "sample": boolean, "value": string|null}}`. `start` with `session_id: null` opens a session. `sample: true` with `type: "file"` uses the built-in Jordan file of that kind (demo button "Use sample"). A `letter` file is accepted at ANY step: the agent acknowledges it in one message and carries on where it was
+  - Returns `{"session_id": string, "step": Step, "messages": [AgentMessage], "expects": Expects, "assessment": Assessment|null, "plan": Plan|null, "paper_url": string|null}`. `assessment` is set from the `report` step on, `paper_url` from the `paper` step on
+  - Step order: `greet` (wave, then ask for the credit report) → `ask_report` → `ask_bank` → `ask_letter` (optional, chips "Upload letter" / "I don't have one") → `questions` (2 to 4, some built from the data, for example "Your rent has gone to Hollis Lettings since 2026-08-01. Did you move recently?") → `assessing` (thinking) → `report` (decision line, then ONE message per failing reason, gesture `explaining`, `emote` `concerned` for bad news delivered kindly, then watch items in one message) → `paper` (gesture `slide-paper`, the summary sheet) → `coach` (goal chips "Credit card", "Car finance", "Mortgage", "Something else"; then horizon chips "3 months", "6 months", "12 months"; then free text)
+  - `GET /api/paper/{session_id}.pdf` returns the summary package (built in 114; until then 404 `{"error": "Summary not built yet"}`)
 
 ## Requirements
 - [ ] Wait until `app/` exists on `main` (101 creates it), or create only `app/frontend/` if it does not
-- [ ] Scaffold non-interactively: `pnpm create vite@latest <frontend folder> --template react-ts`, then Tailwind v4 via the `@tailwindcss/vite` plugin and `@import "tailwindcss";` in the main CSS (no `tailwind.config.js`, no PostCSS setup). Run the dev server in the background. Add every package to `app/DISCLOSURES.md` (if 101 has not created it yet, keep a list in RESULT and add them after the merge)
+- [ ] Scaffold non-interactively: `pnpm create vite@latest <frontend folder> --template react-ts`, then Tailwind v4 via the `@tailwindcss/vite` plugin and `@import "tailwindcss";` in the main CSS (no `tailwind.config.js`, no PostCSS setup). Run the dev server in the background. Add every package to `app/DISCLOSURES.md`
 - [ ] Vite dev proxy `/api` to the target in env `API_TARGET`, default `http://localhost:8000` (not hard-coded)
-- [ ] Types in `src/api.ts` mirror the contract exactly. `VITE_USE_MOCK=true` returns the matching example from `src/mocks/contract-examples.json` after a 1 second delay; `false` calls the backend. A dev-only way to force the error state in mock mode (for example `?mock=error` in the URL)
-- [ ] Run `/impeccable init` (writes PRODUCT.md for this app: a calm, private, plain-English tool for a person who has just been declined; dignity, no blame, no jargon) and `/impeccable shape` for the Lender view. Distinctive, not the generic AI look. It should feel like reading a well-set official document, not a fintech dashboard
-- [ ] **Start screen** (empty state): one sentence "See your credit file the way a lender's rules see it, and the date the answer changes", button "Open Jordan's file", and "Synthetic profile: invented person and lenders"
-- [ ] **Lender view** (`POST /api/assess` with `{"profile_id": "jordan-before"}`), per spec screen 2:
-  - Header: `applicant.name` with a "Synthetic" badge, "As of `as_of`", `policy.name`, and the line "Illustrative rules, not a real lender's model" always visible
-  - Decision banner with `decision_line`. Decline and likely-approve states use colour and words (never colour alone)
-  - One reason card per rule with `result: "fail"`, in contract order: `name`, `measured` against `threshold`, `plain_reason`, "Changes on `clears_on`" when not null, evidence chips (ids in `cited_ids` first, marked "cited"), and a small line from `explained_by`: "Explained by Claude, checked against your data" or "Standard wording"
-  - Watch rules (amber, with their `plain_reason`) below the cards, then a collapsed "N checks passed" list
-  - Money in tabular figures, right-aligned in lists, with £ and two decimals; negative amounts shown as money out
-  - Evidence drawer: click any chip to open a side panel (bottom sheet at 390px) listing every evidence row of that rule (date, label, amount, a kind tag: transaction, file or projected) and then its sources (title, quote, link that opens in a new tab). Close with Esc or a close button
-  - Button "Show the plan" (it can lead to a placeholder until 104)
-- [ ] States: empty (Start), loading (skeleton of the banner and three cards), result, error ("Could not load the file", with Retry). All four reachable in mock mode
-- [ ] Footer on every screen: "Illustrative rules for a demo. Not financial advice and not a real lending decision."
-- [ ] No Capital One logo, colours or product names anywhere in the UI
-- [ ] Start command added to `app/DEMO.md` (`cd app/frontend && pnpm dev`). Open `http://localhost:5173`, never `http://127.0.0.1:5173` (CORS allows `localhost` only)
+- [ ] Types in `src/api.ts` mirror the contract exactly. `VITE_USE_MOCK=true` uses the mocks after a short delay (600 ms); `false` calls the backend. `?mock=error` forces the error state
+- [ ] Run `/impeccable init` (PRODUCT.md: a pixel-art credit agent at a Capital One stand who explains, in plain words, why a lender said no and how to get to yes; game look, real help; calm, warm, no blame). Answer its questions yourself from this Context
+- [ ] **Layout:** one screen. Scene on top (the kit's 4:3 `NpcScene`, whole-number scaling), chat below: the current agent message in the dialogue box, a scrollable history above it (collapsed to the last few by default), and the input area under it, which changes with `expects`: file drop plus "Use sample" and "Choose file" buttons for `file`, chips for `choice`, a text box for `text`, nothing for `none`. "Skip" shown when `optional`
+- [ ] **Driving the NPC:** for each message, call the NPC with its `gesture` and `emote`, type the text, and wait for the user (click, space or Enter) before the next message. While waiting for a reply, `thinking`. On a file drop: `receive-document`, then `reading` while the upload runs
+- [ ] **Letter any time:** a small "Have a decline letter?" button is always visible; it uploads a `letter` file and sends a `file` turn
+- [ ] **Report messages:** a message with `rule_id` shows a compact card under the text: rule name, `measured` against `threshold`, and evidence chips. Click a chip to open the evidence drawer (side panel, bottom sheet under 640px): every evidence row (date, label, amount, kind tag) and the rule's sources (title, quote, link in a new tab). Esc closes it
+- [ ] **Paper:** on `slide-paper`, the sheet slides across the counter. Clicking it opens a paper-styled summary overlay of the assessment (decision line, the reasons, the plan headline if present) with a "Download" button that opens `paper_url` (show "Summary not built yet" if it 404s; 114 builds the PDF)
+- [ ] **Coach mode:** when `step` becomes `coach`, the NPC switches to its coach look; chips for goal and horizon, then the text box
+- [ ] **Speed:** a speed control (1x, 2x, instant) and a "Demo mode" toggle that sets instant text and auto-clicks "Use sample" for each file step (for the timed pitch)
+- [ ] **Accessibility (this is the brief, judges will check it):**
+  - Every agent message is real DOM text (not drawn on canvas), in an `aria-live="polite"` region, so screen readers read it. The scene canvas has an `aria-label` describing what the agent is doing
+  - Full keyboard use: Tab through chips, buttons and the drop zone; Enter or space activates; visible focus ring
+  - Text size control (A, A+, A++) for the chat; at the largest size nothing overlaps
+  - `prefers-reduced-motion`: no idle bobbing or sliding, state changes still shown (instant), typewriter off
+  - Contrast at least WCAG AA for all text, including on navy and red. Never colour alone for pass/fail (words plus colour)
+  - Plain words on every label. Any credit term shown (for example "utilisation", "hard search") has a tap-to-explain tooltip in one plain line
+- [ ] States: loading (agent `thinking`), error (agent `concerned`, message "Something went wrong on my side. Try again?" with a Retry chip), all reachable in mock mode
+- [ ] Footer: "Illustrative rules for a demo. Not financial advice and not a real lending decision."
+- [ ] Start command in `app/DEMO.md` (`cd app/frontend && pnpm dev`). Open `http://localhost:5173`, never `http://127.0.0.1:5173`
 - [ ] Commit after each working step
 
 ## Out of scope
-- `app/backend/` (Mihael's)
-- Plan, After and Advice screens (104)
-- `/impeccable polish` and `/impeccable audit` (107 does them across all screens)
+- `app/backend/` and `app/npc-concept/` (Mihael's)
+- Real file reading (112), coach plans and coach chat (113), the PDF (114)
+- `/impeccable polish` and `/impeccable audit` (107)
 
 ## Verification
-1. `pnpm dev` with `VITE_USE_MOCK=true`. Use Playwright MCP to open `http://localhost:5173` at 1440px. Screenshot the Start screen
-2. Click "Open Jordan's file". Screenshot the loading state, then the result at 1440px and at 390px. Visible: "Declined under this illustrative policy. 3 reasons.", three cards "Card balances compared with limits" (94.5%), "Recent credit applications" (3 in 90 days), "Electoral roll at your current address", the amber "Late or missed payments" watch, and "5 checks passed"
-3. Click the chip for TX-020 on the first card. Screenshot the drawer at 1440px and 390px: it lists TX-020 OAKLEAF FURNITURE COVENTRY £520.00, TX-070 LARKFIELD CARD PAYMENT DD £25.00, the CARD-2026-09 entry £1,134.22, and the Experian source with its link
-4. Force the error state in mock mode and screenshot it
-5. With 101 running and `VITE_USE_MOCK=false`: open the Lender view and screenshot the same result from the real backend
-6. `pnpm build` passes with no type errors
-7. Paste the screenshot paths into RESULT
+1. `cd app/frontend && pnpm dev --host` with `VITE_USE_MOCK=true`. Playwright WebKit `iPhone 15` portrait first, then desktop 1440x900
+2. With Playwright MCP, run the whole mock chat with "Use sample" for each file: greet, report, bank, skip letter, three answers, report messages (one card per failing reason, chips open the drawer), paper slides and opens, coach chips. Screenshot each step (wait a second and take it twice) into `app/frontend/screens/`
+3. Keyboard only (no mouse): run the same flow with Tab, Enter and space. Note any step that needs the mouse
+4. Reduced motion (Playwright `reducedMotion: "reduce"`): no animation, flow still works. Largest text size: screenshot, nothing overlaps
+5. `?mock=error`: the error message and Retry chip show
+6. When the backend is up: `VITE_USE_MOCK=false`, run the flow once against `localhost:8000`, no console errors
 
 ---
 
@@ -74,18 +90,5 @@ A Vite + React + TypeScript + Tailwind app in `app/frontend/` with the Start scr
 - What was built:
 - Files changed:
 - Verification run and output:
-- Follow-ups needed after the first prompt (prompt deltas): what extra guidance was needed, or "none"
-- Practice review (practice runs only, fill in as you go; Cowork turns it into `prep/<concept>/review.md`):
-  | Component | Planned | Actual | What took the time |
-  |---|---|---|---|
-  | Setup (repo, env, keys) | | | |
-  | Data in (API / fixtures) | | | |
-  | Core logic | | | |
-  | AI parts (prompts, parsing) | | | |
-  | UI | | | |
-  | Demo path polish | | | |
-  | Devpost, screenshots, pitch | | | |
-  - Files Claude read, and how many times:
-  - Files read but not needed:
-  - Context used at the end of the session (`/context`):
+- Follow-ups needed after the first prompt (prompt deltas):
 - Open issues / follow-ups:
