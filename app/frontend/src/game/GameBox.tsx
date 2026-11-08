@@ -244,6 +244,9 @@ export function GameBox(props: {
             aria-label={props.scrollable ? `${AGENT_NAME}'s line, scrolls with the up and down arrow keys` : undefined}
             onKeyDown={onWindowKey}
             onWheel={onWheel}
+            // a tap never moves focus here (it would close a phone's keyboard with the text field open); the keyboard
+            // reaches it with Tab when it can scroll
+            onMouseDown={(e) => e.preventDefault()}
           >
             <p
               className="gbox__text"

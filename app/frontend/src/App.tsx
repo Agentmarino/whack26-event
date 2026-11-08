@@ -539,7 +539,9 @@ export default function App() {
           : !state.expects
             ? { kind: 'idle' }
             : state.expects.kind === 'none'
-              ? { kind: 'continue' }
+              ? isText && !atEnd
+                ? { kind: 'next', typing: false, more: 0, scroll: true } // 118: More first, then Continue at the end
+                : { kind: 'continue' }
               : { kind: 'input', expects: state.expects }
 
   // Not during the intro: the card has the stage to itself.
