@@ -1,21 +1,23 @@
 // 114 checks the walk does not cover: the live region and canvas label, the error and upload-failure
 // states, a letter at any step, the typewriter at 1x, read aloud (speechSynthesis, en-GB), the mic
-// button, the settings sheet and colour modes. WebKit, iPhone 15. Screens to screens/check-*.png.
-//   node scripts/checks.mjs [--base http://localhost:5173] [--live-base http://localhost:5175]
+// button, the settings sheet and colour modes. WebKit, iPhone 15 (118: or --desktop, Chromium 1440x900). Screens to
+// screens/check-*.png (desktop: check-desktop-*.png).
+//   node scripts/checks.mjs [--base http://localhost:5173] [--live-base http://localhost:5175] [--desktop]
 // --live-base: a dev server started with VITE_USE_MOCK=false (backend up) for the HTTP error checks.
-import { devices, webkit } from 'playwright'
+import { chromium, devices, webkit } from 'playwright'
 import { fileURLToPath } from 'node:url'
 
 const args = process.argv.slice(2)
 const base = args.includes('--base') ? args[args.indexOf('--base') + 1] : 'http://localhost:5173'
 const liveBase = args.includes('--live-base') ? args[args.indexOf('--live-base') + 1] : null
 const out = fileURLToPath(new URL('../screens/', import.meta.url))
-const browser = await webkit.launch()
+const desktop = args.includes('--desktop')
+const browser = desktop ? await chromium.launch() : await webkit.launch()
 const results = []
 const ok = (name, pass, detail = '') => results.push({ name, pass: !!pass, detail })
 
 async function open(query = '', settings = { speed: 'instant' }, at = base, routes = null) {
-  const ctx = await browser.newContext({ ...devices['iPhone 15'] })
+  const ctx = await browser.newContext(desktop ? { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 } : { ...devices['iPhone 15'] })
   if (routes) await routes(ctx)
   await ctx.addInitScript((s) => {
     try {
@@ -44,7 +46,7 @@ async function settle(page) {
   }
 }
 async function drain(page) {
-  // 116: long lines page, so a plan takes more taps than it has lines
+  // 118: a line typing at 1x takes two taps (finish, then Next)
   for (let i = 0; i < 100; i++) {
     await settle(page)
     if ((await mode(page)) !== 'next') return
@@ -98,9 +100,9 @@ async function reveal(page, selector) {
 }
 const shot = async (page, name) => {
   await page.waitForTimeout(400)
-  await page.screenshot({ path: `${out}check-${name}.png` })
+  await page.screenshot({ path: `${out}check-${desktop ? 'desktop-' : ''}${name}.png` })
   await page.waitForTimeout(250)
-  await page.screenshot({ path: `${out}check-${name}.png` })
+  await page.screenshot({ path: `${out}check-${desktop ? 'desktop-' : ''}${name}.png` })
 }
 
 // 1. live region, canvas label, typewriter at 1x
@@ -156,7 +158,7 @@ const shot = async (page, name) => {
 {
   const { ctx, page, errors } = await open()
   // 117: Cap is close, so the file menu's box (up to his chin) covers the desk; the tray shows while the box is
-  // at rest, on the request line's pages before the menu. Tap it there, where it is uncovered.
+  // at rest, on the lines before the menu (118: or while the request line types). Tap it there, where it is uncovered.
   await closeCard(page)
   await drain(page)
   await page.locator('[data-chip="Nice to meet you, Cap!"]').click()

@@ -968,7 +968,8 @@ dialog.bizcard-dialog::backdrop {
   right: 0.125rem;
   bottom: 0;
   display: flex;
-  font-size: var(--t-ui);
+  /* 118: at most 1rem, so it never touches a full line's last letter in the 1.75rem gutter (desktop's --t-ui is 24px) */
+  font-size: min(var(--t-ui), 1rem);
   line-height: 1;
 }
 .gbox__more--blink {
@@ -995,13 +996,13 @@ dialog.bizcard-dialog::backdrop {
   position: absolute;
   top: 0;
   right: 0.125rem;
-  bottom: calc(var(--t-ui) + var(--pf) / 4);
-  width: var(--t-ui);
+  bottom: calc(min(var(--t-ui), 1rem) + 0.25rem);
+  width: min(var(--t-ui), 1rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(var(--pf) / 8);
-  font-size: var(--t-ui);
+  gap: 0.125rem;
+  font-size: min(var(--t-ui), 1rem);
   line-height: 1;
   pointer-events: none;
 }
@@ -1011,14 +1012,14 @@ dialog.bizcard-dialog::backdrop {
 .gbox__track {
   position: relative;
   flex: 1;
-  width: calc(var(--pf) / 4);
+  width: 0.25em;
   background: var(--panel-deep);
 }
 .gbox__thumb {
   position: absolute;
-  left: calc(var(--pf) / -8);
-  right: calc(var(--pf) / -8);
-  min-height: calc(var(--pf) / 2);
+  left: -0.125em;
+  right: -0.125em;
+  min-height: 0.5em;
   background: var(--text);
 }
 .gbox__status {

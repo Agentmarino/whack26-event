@@ -1,22 +1,26 @@
 // The demo script (deliverables/pitch/demo-script.md) as a walk: WebKit iPhone 15, Demo mode ON (it moves on by
 // itself), Plain English ON (preset, as before judging), framing B. Taps exactly what the script taps, counts and
-// times every beat, logs every page shown, and reports requests to any other host (none expected offline).
+// times every beat, logs every line shown (118: each types out whole, the box scrolling; logged with its line count
+// and how long it took to type), and reports requests to any other host (none expected offline).
+//   env SPEED=2x: the text speed setting (default 1x, as on the phone).
 //   node scripts/demo-walk.mjs [base] [outdir, default <tmp>/demo-walk] [framing]
 //   base: the phone URL, e.g. http://$(ipconfig getifaddr en0):5173 (default http://127.0.0.1:5173)
 //   env SKIP=steps,reasons,plan: the script's three Skip all taps (the 20-tap path). NOWHY=1: no Why? drawer.
 //   The rehearsal: SKIP=steps,reasons,plan NOWHY=1 node scripts/demo-walk.mjs http://<ip>:5173
 //   A PROBLEM line (or exit 1) means a beat failed or Demo mode did not hold where it should.
-import { webkit, devices } from 'playwright'
+import { chromium, webkit, devices } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 const [base = 'http://127.0.0.1:5173', out = join(tmpdir(), 'demo-walk'), framing = 'B'] = process.argv.slice(2)
 mkdirSync(out, { recursive: true })
-const browser = await webkit.launch()
-const ctx = await browser.newContext({ ...devices['iPhone 15'] })
-await ctx.addInitScript(() => {
-  try { localStorage.setItem('whack26.settings.v1', JSON.stringify({ speed: '1x', demo: true, plainEnglish: true, textSize: 100, colour: 'standard', readAloud: false, voiceRate: 1, framing: 'B' })) } catch {}
-})
+// 118: env DESKTOP=1 walks it in Chromium at 1440x900 instead of the iPhone
+const desktop = !!process.env.DESKTOP
+const browser = desktop ? await chromium.launch() : await webkit.launch()
+const ctx = await browser.newContext(desktop ? { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 } : { ...devices['iPhone 15'] })
+await ctx.addInitScript((speed) => {
+  try { localStorage.setItem('whack26.settings.v1', JSON.stringify({ speed, demo: true, plainEnglish: true, textSize: 100, colour: 'standard', readAloud: false, voiceRate: 1, framing: 'B' })) } catch {}
+}, process.env.SPEED || '1x')
 const page = await ctx.newPage()
 const problems = []
 const external = []
@@ -31,10 +35,12 @@ let beat = null
 const beats = []
 const start = (name) => { beat = { name, taps: [], t0: Date.now() }; beats.push(beat) }
 const tap = async (loc, label) => { await loc.click(); beat.taps.push(label) }
-// log every page that shows (polling)
-const seen = new Set()
+// log every line that shows (polling). 118: progress is a new line, or the line typing on or scrolling.
+const seen = new Map()
 const lines = []
 let lastPageAt = Date.now()
+let words = 0
+let progress = ''
 let polling = true
 ;(async () => {
   while (polling) {
@@ -42,14 +48,21 @@ let polling = true
       const t = document.querySelector('[data-testid="dialogue-text"]')?.textContent
       const g = document.querySelector('.gbox')
       const w = document.querySelector('[data-testid="data-window"]')
-      return t ? { t, id: g?.dataset.messageId, p: g?.dataset.page, w: w && !w.hidden ? w.dataset.window : '' } : null
+      return t ? { t, id: g?.dataset.messageId, n: g?.dataset.lines, top: g?.dataset.top, typed: g?.dataset.typed, w: w && !w.hidden ? w.dataset.window : '' } : null
     }).catch(() => null)
-    if (r && !seen.has(`${r.id}:${r.p}`)) { lastPageAt = Date.now(); seen.add(`${r.id}:${r.p}`); lines.push(`${sec().padStart(6)}s [${r.p}]${r.w ? ` {${r.w}}` : ''} ${r.t}`) }
+    if (r) {
+      const sig = `${r.id}:${r.typed}:${r.top}`
+      if (sig !== progress) { progress = sig; lastPageAt = Date.now() }
+      words = r.t.split(/\s+/).filter(Boolean).length
+      if (!seen.has(r.id)) { seen.set(r.id, { at: Date.now(), i: lines.length }); lines.push(`${sec().padStart(6)}s [${r.n} lines]${r.w ? ` {${r.w}}` : ''} ${r.t}`) }
+      const s0 = seen.get(r.id)
+      if (r.typed === 'done' && !s0.typedIn) { s0.typedIn = ((Date.now() - s0.at) / 1000).toFixed(1); lines[s0.i] = lines[s0.i].replace(' lines]', ` lines, typed ${s0.typedIn}s]`) }
+    }
     await page.waitForTimeout(100)
   }
 })()
 // wait for a locator to be visible; demo mode should get there by itself. A Next tap (counted, a PROBLEM) only
-// when no new page has shown for 12 s while the box says Next.
+// when nothing has moved for 12 s plus the line's reading pause (250 ms a word) while the box says Next.
 const reach = async (loc, label, maxMs = 240000) => {
   const tEnd = Date.now() + maxMs
   while (Date.now() < tEnd) {
@@ -57,8 +70,9 @@ const reach = async (loc, label, maxMs = 240000) => {
     const mode = await page.getByTestId('dock').getAttribute('data-mode').catch(() => null)
     const more = page.locator('[data-action="menu-more"]')
     if (label.startsWith('"') && mode === 'input' && (await more.isVisible().catch(() => false))) { await tap(more, 'More'); continue }
-    if (mode === 'next' && Date.now() - lastPageAt > 12000) {
+    if (mode === 'next' && Date.now() - lastPageAt > 12000 + 250 * words) {
       problems.push(`stuck before ${label} (${beat.name}); tapped Next`)
+      problems.push(`  state then: ${await page.evaluate(() => { const g = document.querySelector('.gbox'); const d = document.querySelector('.game'); return JSON.stringify({ id: g?.dataset.messageId, typed: g?.dataset.typed, top: g?.dataset.top, lines: g?.dataset.lines, demo: d?.dataset.demo, step: d?.dataset.step, dialog: !!document.querySelector('dialog[open]'), focus: document.activeElement?.getAttribute('data-action') ?? document.activeElement?.tagName }) }).catch((e) => e.message)}`)
       lastPageAt = Date.now()
       await tap(page.locator('[data-action="next"]'), 'Next (stuck)')
     }
@@ -144,7 +158,7 @@ for (let i = 0; i < beats.length - 1; i++) {
   console.log(`${b.name.padEnd(38)} ${String((ms / 1000).toFixed(1)).padStart(5)}s  ${b.taps.length} taps: ${b.taps.join(', ')}`)
 }
 console.log(`TOTAL ${total} taps, ${sec()}s`)
-console.log('--- pages (time, page) ---')
+console.log('--- lines (time shown, line count, time to type) ---')
 for (const l of lines) console.log(l)
 console.log(`requests to other hosts: ${external.length}${external.length ? ' ' + [...new Set(external)].join(' ') : ''}`)
 for (const p of problems) console.log('PROBLEM', p)

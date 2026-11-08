@@ -101,8 +101,10 @@ export function GameBox(props: {
   onLines: (key: string, starts: number[]) => void
   /** A tap on the text: finish typing, scroll on, or next (App decides). */
   onTextTap: () => void
-  /** 118: the message can be scrolled by hand (whole message shown, longer than the box): the indicator and keys. */
+  /** 118: the message can be scrolled by hand (typed out, longer than the box): focusable, keys, the wheel. */
   scrollable: boolean
+  /** 118: show the scroll indicator (shown whole at once, or scrolled back from the end). */
+  indicator: boolean
   /** 118: scroll by this many lines (±Infinity: to the start or the end). */
   onScroll: (delta: number) => void
   /** Thinking, an error, or a notice: shown in the text area instead of a line. */
@@ -193,13 +195,15 @@ export function GameBox(props: {
   const terms = current && props.done ? termsIn(current.msg.text, ...cardTexts(current.msg, ctx)) : []
   // 118: the window is the box's lines tall (at least two, as before; fewer when the message is shorter)
   const rows = Math.max(Math.min(props.lines, 2), Math.min(total || props.lines, props.lines))
-  // Scroll smoothly only for a one-line step (typing on, an arrow key); a jump (tap to finish, a box-full) is instant.
-  // The choice is kept between scrolls, so a re-render mid-scroll (the next letter) does not cut it short.
-  const anim = useRef({ key: '', top: 0, smooth: false })
+  // Scroll smoothly only for a one-line step (typing on, an arrow key); a jump (a tap that finishes the line, Skip
+  // all, a box-full) is instant, even when it is a single line. The choice is kept between scrolls, so a re-render
+  // mid-scroll (the next letter) does not cut it short.
+  const anim = useRef({ key: '', top: 0, done: false, smooth: false })
   const key = current?.key ?? ''
-  const smooth = anim.current.key === key && anim.current.top === top ? anim.current.smooth : anim.current.key === key && Math.abs(top - anim.current.top) === 1
+  const prev = anim.current
+  const smooth = prev.key === key && prev.top === top ? prev.smooth : prev.key === key && Math.abs(top - prev.top) === 1 && !(props.done && !prev.done)
   useLayoutEffect(() => {
-    anim.current = { key, top, smooth }
+    anim.current = { key, top, done: props.done, smooth }
   })
   const wheelAt = useRef(0)
   const onWindowKey = (e: KeyboardEvent) => {
@@ -250,7 +254,7 @@ export function GameBox(props: {
               <span className="unprinted">{text.slice(props.printed)}</span>
             </p>
           </div>
-          {props.scrollable && (
+          {props.indicator && (
             <span className="gbox__scroll" aria-hidden="true" data-testid="scroll-indicator">
               <PixelArrow dir="up" className={top > 0 ? undefined : 'is-off'} />
               <span className="gbox__track">
@@ -308,6 +312,7 @@ export function GameBox(props: {
       data-lines={current ? total : undefined}
       data-top={current ? top : undefined}
       data-typed={current ? (props.done ? 'done' : 'typing') : undefined}
+      data-more={current && props.more ? '' : undefined}
       data-rows-fit={rowsFit}
       data-text-in={inBubble ? 'bubble' : 'box'}
       aria-label="Cap's dialogue"

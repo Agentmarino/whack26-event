@@ -313,8 +313,10 @@ export default function App() {
     (d: number) => setScrolled({ key: curKey, top: Math.min(maxTop, Math.max(0, top + d)) }),
     [curKey, maxTop, top],
   )
-  // the indicator and scroll keys: a message longer than the box, shown whole (or scrolled back by hand)
-  const scrollable = isText && tw.done && total > lines && (showWhole || (byHand && scrolled!.top < maxTop))
+  // a typed-out message longer than the box scrolls by hand (arrow keys, the wheel; a tap or Space scrolls on); the
+  // indicator shows when it is shown whole at once, or scrolled back from its end
+  const scrollable = isText && tw.done && total > lines
+  const indicator = scrollable && (showWhole || top < maxTop)
 
   useSpeech(current?.msg.text ?? null, current?.key ?? null, settings.readAloud, settings.voiceRate)
   // 116: the letter sound was switched on in an earlier visit: unlock audio on the first tap or key
@@ -623,6 +625,7 @@ export default function App() {
         data-layout={cam?.layout ?? 'standard'}
         data-fill={cam ? cam.fill.toFixed(3) : undefined}
         data-k={cam?.k}
+        data-demo={settings.demo ? (demoPause === null ? 'hold' : `${demoPause}${tw.done ? '' : ' typing'}`) : undefined}
       >
         <div className="game__stage" style={{ width: stageW }}>
           {/* 116: the scene fills the stage; Cap's desk ends just above the box's room */}
@@ -702,6 +705,7 @@ export default function App() {
               onLines={onLines}
               onTextTap={() => advance(true)}
               scrollable={scrollable}
+              indicator={indicator}
               onScroll={scrollBy}
               status={status}
               layoutKey={`${settings.textSize}:${boxVt}:${pf}:${stageW}:${bubble ? `bubble${Math.round(bubble.width)}` : 'box'}`}

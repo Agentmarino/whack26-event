@@ -11,7 +11,7 @@ export type FramingSetting = 'A' | 'B' | 'C' | 'full'
 
 export interface Settings {
   speed: Speed
-  /** Instant text, samples auto-picked (Priya), "none" turns move on by themselves. */
+  /** Samples auto-picked (Priya); each line moves on by itself after a reading pause (118: it types out first). */
   demo: boolean
   textSize: TextSize
   /** Sent to the backend as settings.plainEnglish. */

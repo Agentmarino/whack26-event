@@ -151,7 +151,7 @@ export function SettingsSheet(props: { open: boolean; onClose: () => void; onRes
           )}
           <Toggle
             label="Demo mode"
-            hint="Instant text, samples picked for you, and the agent moves on by himself when nothing is needed."
+            hint="Samples picked for you, and he moves on by himself after each line when nothing is needed."
             checked={settings.demo}
             onChange={(v) => set('demo', v)}
             testId="toggle-demo"
