@@ -107,14 +107,15 @@ function place(inp: CameraInput, k: number, reserve: number, topPad: number, bot
   let x0 = cx - win / 2
   let layout: DeskLayout = 'standard'
   const std = want('standard')
-  if (win < std.x1 - std.x0) layout = 'close'
-  if (keepLogo) {
+  // too narrow for the desk monitor (a phone): no monitor at all, Cap centred (the badge on his chest has the logo)
+  if (win < std.x1 - std.x0) layout = 'none'
+  if (keepLogo && layout === 'standard') {
     const span = want(layout)
     if (win >= span.x1 - span.x0) x0 = Math.min(Math.max(x0, span.x1 - win), span.x0)
     else x0 = Math.min(span.x0 - 1, CAP_MARKS.head.x0 - 2) // keep the monitor; his far arm may be cut
   }
   // a bubble beside him on a short screen: Cap (and the monitor) to the left edge, the room to his right
-  if (toLeft) x0 = Math.min(want(layout).x0 - 1, CAP_MARKS.head.x0 - 2)
+  if (toLeft) x0 = layout === 'none' ? CAP_MARKS.body.x0 - 2 : Math.min(want(layout).x0 - 1, CAP_MARKS.head.x0 - 2)
   // never lose his head
   x0 = Math.min(Math.max(x0, CAP_MARKS.head.x1 + 2 - win), CAP_MARKS.head.x0 - 2)
   // vertical: the framing's bottom row on the box's top edge; if that pushes his head off the top, the head wins

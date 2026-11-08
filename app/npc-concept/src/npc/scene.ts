@@ -36,10 +36,12 @@ export const SCREEN = { x: 7, y: 49, w: 36, h: 17 }
  * smaller monitor right next to Cap's left arm (his arm passes in front of its right bezel, never the screen),
  * so the logo stays in frame. Only the monitor moves; the tray, keyboard, paper and card keep their places.
  */
-export type DeskLayout = 'standard' | 'close'
+export type DeskLayout = 'standard' | 'close' | 'none'
 export const MONITOR_CLOSE = { x: 29, y: 53, w: 18, h: 15 }
 export const SCREEN_CLOSE = { x: 30, y: 54, w: 15, h: 10 }
+/** 'none' (117 follow-up, phone portrait): no desk monitor at all; the Capital One badge on his chest carries the logo. */
 export function monitorFor(layout: DeskLayout) {
+  if (layout === 'none') return null
   return layout === 'close' ? { monitor: MONITOR_CLOSE, screen: SCREEN_CLOSE } : { monitor: MONITOR, screen: SCREEN }
 }
 export const MUG = { x: 95, y: 69 }
@@ -255,7 +257,9 @@ export function buildDesk(): IndexBuffer {
 
 /** Desk monitor facing the customer: slim bezel, chin, stand. The screen is white; the logo file sits on top as DOM. */
 export function drawMonitor(b: IndexBuffer, logo: boolean, layout: DeskLayout = 'standard') {
-  const { monitor, screen } = monitorFor(layout)
+  const m = monitorFor(layout)
+  if (!m) return
+  const { monitor, screen } = m
   const { x, y, w, h } = monitor
   const mid = x + (w >> 1)
   b.rect(mid - 3, y + h, 6, COUNTER_TOP_Y - (y + h) + 1, IDX.standFrameShade) // neck

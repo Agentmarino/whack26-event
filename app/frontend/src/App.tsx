@@ -150,8 +150,8 @@ export default function App() {
             bubbleTop: 3.5 * rem + 3 * lineLh + 5.5 * rem,
             bubbleSide: Math.min(18 * rem, 15 * (boxVt ? 0.55 * lineLh : pf) + 3 * rem),
             topPad: 4,
-            // the left corner holds the gear and, until a letter is in, the envelope: always keep room for both
-            corner: { left: 6.5 * rem, right: 3.5 * rem, h: 3.5 * rem },
+            // one icon wide on each side: the left corner stacks the gear and the envelope in a column
+            corner: { left: 3.5 * rem, right: 3.5 * rem, h: 3.5 * rem },
             minFill: vp.h > stageW ? 0.55 : 0.5,
           }),
     [settings.framing, stageW, vp.h, dpr, rem, lineLh, fine, boxVt, pf],

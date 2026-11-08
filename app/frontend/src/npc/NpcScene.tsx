@@ -117,7 +117,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
     if (props.background) engineRef.current?.setBackground(props.background)
   }, [props.background])
   useEffect(() => engineRef.current?.setLayout(props.layout ?? 'standard'), [props.layout])
-  const SCREEN = monitorFor(props.layout ?? 'standard').screen
+  const SCREEN = monitorFor(props.layout ?? 'standard')?.screen ?? null
 
   // Put the scene's top-left corner on a whole CSS pixel. Centring can leave it at x.5 device px
   // (iPhone 15: 9.83 CSS px = 29.48 device px), and WebKit could then paint the canvas one device px
@@ -221,7 +221,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   return (
     <div ref={sceneRef} className="npc-scene" style={size}>
       <canvas ref={canvasRef} className="npc-canvas" style={size} role="img" aria-label={describeAgent(snap)} />
-      {props.wordmarkSrc && (
+      {props.wordmarkSrc && SCREEN && (
         <div
           className="npc-logo"
           style={{ left: SCREEN.x * s, top: SCREEN.y * s, width: SCREEN.w * s, height: SCREEN.h * s, visibility: logoOk ? 'visible' : 'hidden' }}

@@ -1396,3 +1396,10 @@ dialog.bizcard-dialog::backdrop {
     animation: none;
   }
 }
+
+/* 117 follow-up: with the camera, the left corner stacks its icons (gear, then the envelope) so each top corner is
+   one icon wide and Cap sits centred between them */
+.game:not([data-framing='full']) .game__corner--left {
+  flex-direction: column;
+  align-items: flex-start;
+}

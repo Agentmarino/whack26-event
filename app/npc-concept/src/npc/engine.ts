@@ -614,8 +614,9 @@ export class NpcEngine {
     b.toRGBA(this.out, this.colors, IDX.officeWall)
     // The logo image sits under the canvas: let the white screen show through, so arms and held
     // items drawn over the monitor stay on top of the logo.
-    if (!this.wordmark) {
-      const SCREEN = monitorFor(this.layoutV).screen
+    const mon = monitorFor(this.layoutV)
+    if (!this.wordmark && mon) {
+      const SCREEN = mon.screen
       for (let y = SCREEN.y; y < SCREEN.y + SCREEN.h; y++) {
         for (let x = SCREEN.x; x < SCREEN.x + SCREEN.w; x++) {
           const i = y * NATIVE_W + x
