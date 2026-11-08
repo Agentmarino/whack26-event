@@ -52,6 +52,10 @@ Why it is missing:
 - So I ran the two live walks through your own `pnpm dev` (:5173/:8000, Claude on). It cached the reworded Classic step (2 entries, 08:54, committed). Then the backend on :8000 stopped at about 08:57, at the "Sum it up" beat of both walks. The frontend on :5173 stayed up; I can't see the backend's log, so I don't know why it stopped.
 - My offline backend ran the same path at 2x without a problem, and the paper renders (`make-paper.ts priya 3m`: 2 pages), so the engine change does not look like the cause.
 - It was still down at 09:12. I did not restart it, because it is your terminal's process.
+- It came back at 09:26. I ran the rehearsal walk through it in both Plain English modes:
+  - Plain English on: `TOTAL 20 taps, 133.4s`, exit 0.
+  - Plain English off: `TOTAL 20 taps, 132.6s`, exit 0.
+  - Both still list `template [step] 9 Nov 2026: One application at a time.`, and `ai-cache.json` gained 0 entries. So that backend was most likely started with `DEMO_OFFLINE=true`, or it can't reach Claude either. That left no way to cache the step before 09:45, so I didn't merge.
 
 To finish (about 10 minutes):
 1. `pnpm dev` from the repo root. The backend line must say `Claude on`.
@@ -65,7 +69,7 @@ To finish (about 10 minutes):
 4. `grep -c "One application" app/backend/data/ai-cache.json` should be 2 or more. Check the new entries don't say "thin". Commit `app/backend/data/ai-cache.json` on `mihael/119`, then merge with `--no-ff` and push.
 
 - Status: blocked on the re-cache. Every other requirement is done and checked.
-- Time taken: 08:46 to 09:15 (2026-11-08).
+- Time taken: 08:46 to 09:30 (2026-11-08).
 
 ### What was built
 1. **Engine wording.** `app/backend/engine/engine.js`, a **Cowork-approved change to Jag's engine**, wording only. Applies to someone whose oldest account is 1 year or older:
