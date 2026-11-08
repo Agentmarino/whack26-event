@@ -178,6 +178,8 @@ export class NpcEngine {
   private backgroundV: Background = 'day'
   /** 117: where the monitor stands (a close camera uses 'close'). */
   private layoutV: DeskLayout = 'standard'
+  /** 117 follow-up: false when the app shows the business card as a DOM card instead of the pixel card. */
+  private cardSpriteV = true
 
   private raf = 0
   private last: number | undefined
@@ -310,6 +312,10 @@ export class NpcEngine {
   setAmbient(on: boolean) {
     this.ambient = on
     this.emit()
+  }
+  /** 117 follow-up: draw the pixel business card on the desk (true) or leave it to the app (false). */
+  setCardSprite(on: boolean) {
+    this.cardSpriteV = on
   }
   /** 117: move the monitor for a close camera ('close') or back ('standard'). */
   setLayout(layout: DeskLayout) {
@@ -609,7 +615,7 @@ export class NpcEngine {
     drawTray(b)
     if (this.trayDoc) b.blit(TRAY_DOC, TRAY.x + 3, TRAY.y + 1)
     if (this.paper !== 'none') this.drawPaper()
-    if (this.card !== 'none') this.drawCard()
+    if (this.card !== 'none' && this.cardSpriteV) this.drawCard()
     if (this.dropHover) {
       const phase = this.reduced ? 0 : Math.floor(t / 120)
       b.dashed(TRAY.x - 2, TRAY.y - 2, TRAY.w + 4, TRAY.h + 4, IDX.glow, phase)

@@ -1,7 +1,7 @@
 // 115: Cap's business card. He slides it across the desk; when it lands it grows from there into a full
 // screen card (a native modal <dialog>: focus moves in, Escape closes). Tap anywhere, Enter or Space puts it
 // away. In the history it stays as a small card row that opens it again.
-import { useId, useLayoutEffect, useRef } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { NpcPortrait, type FacialHair } from '../npc'
 
 export const CARD_FACE = { name: 'Cap', title: 'Credit Coach', line: 'Here to make your credit make sense' }
@@ -13,6 +13,69 @@ export type Rect = { x: number; y: number; width: number; height: number }
 
 const GROW_MS = 460
 const AWAY_MS = 160
+
+/** 117 follow-up: a real business card, ISO/IEC 7810 ID-1: 85.6 x 54 mm, landscape. */
+export const CARD_RATIO = 85.6 / 54
+/** The full card's width in CSS px: the same for the card on the desk (scaled down) and the full card. */
+export function cardWidth() {
+  const w = typeof window === 'undefined' ? 400 : window.innerWidth
+  return Math.round(Math.min(w - 32, w >= 640 ? 560 : 416))
+}
+/** The card on the desk: native scene px. 12 px wide, sliding 4 rows towards you; its bottom ends just above the box. */
+export const DESK_CARD = { x: 54, w: 12, bottomFrom: 77, bottomTo: 81 }
+/** The engine's slide: it starts 250 ms into the gesture and takes 750 ms (engine.drawCard). */
+const SLIDE_DELAY_MS = 250
+const SLIDE_MS = 750
+
+/**
+ * The card face: logo, portrait, name, title, line, the band. Every size comes from the card's own width (--cw), so
+ * it only ever changes size as a whole (uniform scale), never shape. Crisp: a DOM element, the portrait at whole
+ * device pixels, the logo file unchanged.
+ */
+export function CardFace(props: { width: number; facialHair: FacialHair; nameId?: string; ref?: Ref<HTMLElement>; style?: CSSProperties; className?: string }) {
+  const { width } = props
+  return (
+    <article
+      ref={props.ref}
+      className={`bcard ${props.className ?? ''}`}
+      style={{ width, height: width / CARD_RATIO, '--cw': `${width}px`, ...props.style } as CSSProperties}
+      aria-labelledby={props.nameId}
+    >
+      <div className="bcard__logo">
+        <img src={LOGO} alt="Capital One" draggable={false} />
+      </div>
+      <NpcPortrait width={Math.round(width * 0.28)} facialHair={props.facialHair} className="bcard__portrait" />
+      <div className="bcard__who">
+        <h2 id={props.nameId} className="bcard__name">
+          {CARD_FACE.name}
+        </h2>
+        <span className="bcard__rule" aria-hidden="true" />
+        <p className="bcard__title">{CARD_FACE.title}</p>
+        <p className="bcard__line">{CARD_FACE.line}</p>
+      </div>
+      <div className="bcard__band" aria-hidden="true" />
+    </article>
+  )
+}
+
+/**
+ * The small card sliding across the desk: the same face at full size, scaled down uniformly (transform only),
+ * moved from `from` to `to` (viewport px, top-left) on the engine's slide timing. Purely visual.
+ */
+export function DeskCard(props: { from: Rect; to: Rect; facialHair: FacialHair }) {
+  const W = cardWidth()
+  const m = props.to.width / W
+  const [at, setAt] = useState(props.from)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setAt(props.to)))
+    return () => cancelAnimationFrame(id)
+  }, [props.to])
+  return (
+    <div className="deskcard" aria-hidden="true" data-testid="desk-card" style={{ transform: `translate(${at.x}px, ${at.y}px) scale(${m})`, transitionDelay: `${SLIDE_DELAY_MS}ms`, transitionDuration: `${SLIDE_MS}ms` }}>
+      <CardFace width={W} facialHair={props.facialHair} />
+    </div>
+  )
+}
 
 export function BusinessCardOverlay(props: {
   /** Where the card grows from (the card on the desk, or the history row); null grows from the middle. */
@@ -31,7 +94,7 @@ export function BusinessCardOverlay(props: {
   const grown = useRef(false)
   const nameId = useId()
   const descId = useId()
-  const wide = typeof window !== 'undefined' && window.matchMedia('(min-width: 40rem)').matches
+  const W = cardWidth()
 
   useLayoutEffect(() => {
     const d = dialog.current
@@ -43,15 +106,16 @@ export function BusinessCardOverlay(props: {
     // Once only (StrictMode runs this twice in dev; a second run would measure the card mid-grow).
     if (grown.current || props.reduced || typeof c.animate !== 'function') return
     grown.current = true
-    // Grow from where the card landed: invert the final box onto the origin box, then play it back.
+    // Grow from where the card landed: one uniform scale (never a stretch), from the origin box to the full card.
+    // The desk card has the card's own proportions, so it lines up exactly; any other origin (the history row) is
+    // matched by width and centred on it.
     const to = c.getBoundingClientRect()
     const from = props.origin ?? { x: to.x + to.width * 0.4, y: to.y + to.height * 0.4, width: to.width * 0.2, height: to.height * 0.2 }
-    const sx = Math.max(0.02, from.width / to.width)
-    const sy = Math.max(0.02, from.height / to.height)
+    const sc = Math.max(0.02, from.width / to.width)
     const dx = from.x - to.x
-    const dy = from.y - to.y
+    const dy = from.y + from.height / 2 - (to.y + (to.height * sc) / 2)
     c.animate(
-      [{ transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` }, { transform: 'none' }],
+      [{ transform: `translate(${dx}px, ${dy}px) scale(${sc})` }, { transform: 'none' }],
       { duration: GROW_MS, easing: 'cubic-bezier(0.2, 0.75, 0.25, 1)' },
     )
     d.querySelector('.bizcard-dialog__shade')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: GROW_MS * 0.7, easing: 'ease-out' })
@@ -99,23 +163,7 @@ export function BusinessCardOverlay(props: {
     >
       <div className="bizcard-dialog__shade" aria-hidden="true" />
       <div className="bizcard-dialog__stage">
-        <article ref={card} className="bizcard" aria-labelledby={nameId}>
-          <div className="bizcard__logo">
-            <img src={LOGO} alt="Capital One" draggable={false} />
-          </div>
-          <div className="bizcard__body">
-            <NpcPortrait width={wide ? 205 : 128} facialHair={props.facialHair} className="bizcard__portrait" />
-            <div className="bizcard__who">
-              <h2 id={nameId} className="bizcard__name">
-                {CARD_FACE.name}
-              </h2>
-              <span className="bizcard__rule" aria-hidden="true" />
-              <p className="bizcard__title">{CARD_FACE.title}</p>
-              <p className="bizcard__line">{CARD_FACE.line}</p>
-            </div>
-          </div>
-          <div className="bizcard__band" aria-hidden="true" />
-        </article>
+        <CardFace ref={card} width={W} facialHair={props.facialHair} nameId={nameId} />
         <button ref={closeBtn} type="button" className="btn bizcard-dialog__hint" onClick={putAway} data-action="card-close">
           Put the card away
         </button>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FileKind, Persona } from 'shared'
 import { createApi, createMockApi, mockFromEnv, type Api } from './api/client'
-import { BusinessCardOverlay, CARD_TEXT, type Rect } from './cards/BusinessCard'
+import { BusinessCardOverlay, CARD_RATIO, CARD_TEXT, DESK_CARD, DeskCard, type Rect } from './cards/BusinessCard'
 import { CardContext, type CardCtx, type WhyTrail } from './cards/context'
 import { lineDone, presentError, presentMessage, presentWaiting } from './chat/agent'
 import { Dock, type DockMode } from './chat/Dock'
@@ -330,20 +330,35 @@ export default function App() {
     // a new conversation (restart, offline switch): drop a card still waiting or open from the last one
     if (cardTimer.current.run !== state.run) window.clearTimeout(cardTimer.current.id)
     setBizCard((b) => (b && b.run !== state.run ? null : b))
+    setDeskCard((d) => (d && d.run !== state.run ? null : d))
   }, [state.run])
+  // 117 follow-up: the card on the desk is a DOM card (CardFace scaled down), not the pixel sprite: it slides with
+  // his hand, then the full card grows from exactly where it stopped (one uniform scale).
+  const [deskCard, setDeskCard] = useState<{ from: Rect; to: Rect; run: number } | null>(null)
+  const deskCardRef = useRef(deskCard)
+  deskCardRef.current = deskCard
   const onNpcChange = useCallback(
     (s: NpcSnapshot) => {
       const was = cardPhase.current
       cardPhase.current = s.card
       const run = runNow.current
+      if (s.card === 'sliding' && was !== 'sliding' && !reduced && cardShownFor.current !== run) {
+        const h = DESK_CARD.w / CARD_RATIO
+        const at = (bottom: number) => npc.current?.nativeRect({ x: DESK_CARD.x, y: bottom - h, w: DESK_CARD.w, h }) ?? null
+        const from = at(DESK_CARD.bottomFrom)
+        const to = at(DESK_CARD.bottomTo)
+        if (from && to) setDeskCard({ from, to, run })
+      }
       if (s.card !== 'landed' || was === 'landed' || cardShownFor.current === run) return
       cardShownFor.current = run
-      const origin = npc.current?.cardRect() ?? null
+      const desk = deskCardRef.current
+      const origin = desk && desk.run === run ? desk.to : (npc.current?.cardRect() ?? null)
       window.clearTimeout(cardTimer.current.id)
       const id = window.setTimeout(
         () => {
           npc.current?.clearCard()
           setBizCard({ origin, text: cardTextRef.current(), run })
+          setDeskCard(null)
         },
         reduced ? 0 : CARD_REST_MS,
       )
@@ -537,10 +552,12 @@ export default function App() {
               onFileDrop={onTrayFile}
               onPaperClick={() => setSheet('paper')}
               onChange={onNpcChange}
+              cardSprite={false}
             />
           </div>
           {/* 117: the speech bubble, over the scene and under the corner icons and the box */}
           <div className="game__bubbles" ref={setBubbleHost} />
+          {deskCard && !bizCard && <DeskCard from={deskCard.from} to={deskCard.to} facialHair={FACIAL_HAIR} />}
 
           <div className="game__corner game__corner--left">
             <button type="button" className="gicon" onClick={() => setSheet('settings')} aria-label="Settings: text speed, size, font, voice, colours" data-action="settings">

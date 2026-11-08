@@ -20,6 +20,8 @@ export interface NpcHandle {
   clearCard(): void
   /** 115: where the business card lands on the desk, in viewport CSS px (null before the scene mounts). */
   cardRect(): { x: number; y: number; width: number; height: number } | null
+  /** 117 follow-up: a box in native scene px, in viewport CSS px (null before the scene mounts). */
+  nativeRect(r: { x: number; y: number; w: number; h: number }): { x: number; y: number; width: number; height: number } | null
   setPalette(overrides: Partial<Record<ColorName, string>>): void
   /** Facial hair layer: 'moustache-stubble' (default since 111), 'moustache', 'none'. The 110 name 'stubble' still works. */
   setFacialHair(f: FacialHair | 'stubble'): void
@@ -50,6 +52,8 @@ export interface NpcSceneProps {
   background?: Background
   /** 117: where the desk monitor stands: 'standard' (default) or 'close' for a tight camera (see camera.ts). */
   layout?: DeskLayout
+  /** 117 follow-up: false when the app shows the business card itself (a DOM card); default true (the pixel card). */
+  cardSprite?: boolean
 }
 
 // Hit areas in native pixels for the touch/keyboard/mouse hotspots over the canvas.
@@ -146,6 +150,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
     if (props.background) engineRef.current?.setBackground(props.background)
   }, [props.background])
   useEffect(() => engineRef.current?.setLayout(props.layout ?? 'standard'), [props.layout])
+  useEffect(() => engineRef.current?.setCardSprite(props.cardSprite ?? true), [props.cardSprite])
   const SCREEN = monitorFor(props.layout ?? 'standard')?.screen ?? null
 
   // Put the scene's top-left corner on a whole CSS pixel. Centring can leave it at x.5 device px
@@ -190,6 +195,12 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
       const k = propsRef.current.scale
       if (!r) return null
       return { x: r.left + CARD_END.x * k, y: r.top + CARD_END.y * k, width: CARD_SIZE.w * k, height: CARD_SIZE.h * k }
+    },
+    nativeRect: (n) => {
+      const r = sceneRef.current?.getBoundingClientRect()
+      const k = propsRef.current.scale
+      if (!r) return null
+      return { x: r.left + n.x * k, y: r.top + n.y * k, width: n.w * k, height: n.h * k }
     },
     setPalette: (o) => engineRef.current?.setPalette(o),
     setFacialHair: (f) => engineRef.current?.setFacialHair(f),

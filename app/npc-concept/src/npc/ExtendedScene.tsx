@@ -172,6 +172,7 @@ export const ExtendedScene = forwardRef<NpcHandle, ExtendedSceneProps>(function 
     clearPaper: () => npcRef.current?.clearPaper(),
     clearCard: () => npcRef.current?.clearCard(),
     cardRect: () => npcRef.current?.cardRect() ?? null,
+    nativeRect: (r) => npcRef.current?.nativeRect(r) ?? null,
     setPalette: (o) => {
       npcRef.current?.setPalette(o)
       setPalette(o)

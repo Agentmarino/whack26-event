@@ -1403,3 +1403,104 @@ dialog.bizcard-dialog::backdrop {
   flex-direction: column;
   align-items: flex-start;
 }
+
+/* 117 follow-up: Cap's business card as a real card. 85.6 x 54 mm (landscape), corners 3.18 mm (3.7% of the width),
+   every size a share of the card's own width (--cw), so it scales only as a whole. The same face is the small card
+   on the desk (scaled down) and the full card in the dialog (it grows from the desk card with one uniform scale). */
+.bcard {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  align-items: center;
+  column-gap: calc(var(--cw) * 0.05);
+  row-gap: calc(var(--cw) * 0.025);
+  padding: calc(var(--cw) * 0.055) calc(var(--cw) * 0.06) calc(var(--cw) * 0.085);
+  overflow: hidden;
+  text-align: left;
+  color: var(--ink);
+  background: var(--card-face);
+  border: max(1px, calc(var(--cw) * 0.004)) solid rgba(21, 19, 28, 0.25);
+  border-radius: calc(var(--cw) * 0.037);
+  transform-origin: 0 0;
+}
+:root[data-colour='contrast'] .bcard {
+  border: 2px solid #000000;
+  outline: 2px solid #ffffff;
+}
+/* The logo file's artwork is the box (5, 71) to (226, 147) of 231x218 on white: show that box, unchanged. */
+.bcard__logo {
+  position: relative;
+  grid-column: 1 / -1;
+  width: calc(var(--cw) * 0.36);
+  aspect-ratio: 221 / 76;
+  overflow: hidden;
+}
+.bcard__logo img {
+  position: absolute;
+  left: calc(-5 / 221 * 100%);
+  top: calc(-71 / 76 * 100%);
+  width: calc(231 / 221 * 100%);
+  height: auto;
+  max-width: none;
+}
+.bcard__portrait {
+  display: block;
+  box-shadow: 0 0 0 max(1px, calc(var(--cw) * 0.005)) var(--halo);
+}
+.bcard__who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--cw) * 0.014);
+}
+.bcard__name {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: calc(var(--cw) * 0.1);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+}
+.bcard__rule {
+  width: calc(var(--cw) * 0.08);
+  height: calc(var(--cw) * 0.012);
+  background: var(--card-stripe);
+}
+.bcard__title {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: calc(var(--cw) * 0.03);
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.bcard__line {
+  margin: 0;
+  font-size: calc(var(--cw) * 0.045);
+  line-height: 1.25;
+  color: var(--ink-muted);
+}
+.bcard__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--cw) * 0.035);
+  background: var(--card-band);
+  border-top: calc(var(--cw) * 0.012) solid var(--card-stripe);
+}
+/* the small card on the desk: the full face, scaled down, sliding on the engine's timing (transform only) */
+.deskcard {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  transform-origin: 0 0;
+  transition-property: transform;
+  transition-timing-function: linear;
+  pointer-events: none;
+}
