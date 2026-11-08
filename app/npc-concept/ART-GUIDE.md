@@ -86,15 +86,17 @@ const cam = frameCamera({ w, h, dpr, framing: 'B', restBox, dockBox, bubbleTop, 
   - It is never below what makes rows 13..72 (head top to desk top) fill `minFill` of the height. That floor is 0.55 on a phone in portrait and 0.5 elsewhere.
   - It is never so big that his shoulders and arms (A: his torso) are wider than the stage.
   - C is at least B's k, and A at least C's k.
+- **Corner icons** (`corner: { left, right, h }`): his head stays between the top corner icons, else moves below them. The app keeps room for two icons on the left (the gear and the envelope).
 - **Placement:**
   - Horizontally, the window centres on his head. With the logo kept, it shifts to keep the monitor through his right arm in frame. When even that span does not fit, it keeps the monitor and his far arm may be cut.
   - Vertically, the framing's last row sits on the box's top edge. If that would push his head off the top, the head wins and the desk goes behind the box.
   - When his head is up among the corner icons, it stays between them.
 - **Modes**: 'box' when the box at rest fits under his chin and leaves the framing's rows in view. Otherwise 'bubble': the camera frames for the inputs alone and the app shows the line in a speech bubble.
   - The bubble goes beside his head if there is room: right first, because the monitor is on the left.
+  - If the bubble does not fit beside him centred, Cap moves to the left edge (the monitor kept) with the bubble on his right.
   - On a narrow screen where the box still fits under his chin (big text on a phone), it stays 'box' over his chest and the desk.
-  - Otherwise the bubble goes above his head.
-- **Desk layouts** (`DeskLayout`, `monitorFor`; `NpcScene` / `ExtendedScene` prop `layout`, `engine.setLayout`): 'standard' is the 110 desk. **'close'** is a smaller monitor at x 29..46, y 53..67, screen 30..44 x 54..63, right next to his left arm. His arm (the engine's front pass) covers only its right bezel, never the screen. The camera picks it when the window is narrower than the standard monitor-to-arm span (91 px), so the logo stays in frame on a phone. The logo file is shown unchanged on that screen, scaled to fit as before. Only the monitor moves; the tray, keyboard, paper, card, mug and plant keep their places.
+  - Otherwise the bubble goes above his head, but only if he still fits under it with the inputs below him; if not, the widest side bubble there is.
+- **Desk layouts** (`DeskLayout`, `monitorFor`; `NpcScene` / `ExtendedScene` prop `layout`, `engine.setLayout`): 'standard' is the 110 desk. **'close'** is a smaller monitor at x 29..46, y 53..67, screen 30..44 x 54..63, right next to his left arm. At rest his arm (the engine's front pass) covers only its right bezel; a raised hand (the file request, the wave) can cover the logo's right end for a moment. The camera picks it when the window is narrower than the standard monitor-to-arm span (91 px), so the logo stays in frame on a phone. The logo file is shown unchanged on that screen, scaled to fit as before. Only the monitor moves; the tray, keyboard, paper, card, mug and plant keep their places.
 
 ## Style
 Target: indie pixel-art avatars (the user's style refs, kept locally in `refs/`, never in the app or the repo). "Do more with less": few, chunky pixels, each one deliberate.

@@ -33,9 +33,10 @@ export interface BubblePlace {
 /** A stepped pixel tail in the box's edge and panel colours. */
 function Tail({ place }: { place: BubblePlace }) {
   const down = place.tail === 'down'
+  // beside: at his mouth, but never below the bubble's own bottom edge (a one-line bubble is short)
   const style: CSSProperties = down
     ? { left: Math.round(place.tailAt - 9), bottom: -16 }
-    : { top: Math.round(Math.max(6, place.tailAt - 9)), [place.tail]: -16 }
+    : { top: `min(${Math.round(Math.max(6, place.tailAt - 9))}px, calc(100% - 1.75rem))`, [place.tail]: -16 }
   // drawn pointing left; mirrored or turned for the other sides
   const transform = place.tail === 'right' ? 'scale(-1,1)' : down ? 'rotate(-90 9 9)' : undefined
   return (
@@ -268,7 +269,12 @@ export function GameBox(props: {
   )
   const bub = props.bubble
   const bubbleStyle: CSSProperties | undefined = bub
-    ? { left: Math.round(bub.left), width: Math.round(bub.width), top: bub.top === undefined ? undefined : Math.round(bub.top), bottom: bub.bottom === undefined ? undefined : Math.round(bub.bottom) }
+    ? {
+        left: Math.round(bub.left),
+        width: Math.round(bub.width),
+        // a landscape iPhone with viewport-fit=cover: stay clear of the right safe area
+        maxWidth: `calc(100vw - ${Math.round(bub.left)}px - env(safe-area-inset-right) - 0.5rem)`,
+        top: bub.top === undefined ? undefined : Math.round(bub.top), bottom: bub.bottom === undefined ? undefined : Math.round(bub.bottom) }
     : undefined
 
   return (

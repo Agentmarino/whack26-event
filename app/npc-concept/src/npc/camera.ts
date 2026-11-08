@@ -66,8 +66,8 @@ export interface CameraInput {
   bubbleSide: number
   /** CSS px of air over his head. */
   topPad: number
-  /** CSS px the top corner icons take from each top corner: his head stays between them, or below them. */
-  corner: { w: number; h: number }
+  /** CSS px the top corner icons take from the left and right top corners: his head stays between them, or below. */
+  corner: { left: number; right: number; h: number }
   /** The least share of the height his head-to-desk-top region fills (0.55 on a phone, 0.5 on a desktop). */
   minFill: number
 }
@@ -98,7 +98,7 @@ function want(layout: DeskLayout) {
   return { x0: (layout === 'close' ? MONITOR_CLOSE : MONITOR).x, x1: CAP_MARKS.body.x1 }
 }
 
-function place(inp: CameraInput, k: number, reserve: number, topPad: number, bottomRow: number, keepLogo: boolean) {
+function place(inp: CameraInput, k: number, reserve: number, topPad: number, bottomRow: number, keepLogo: boolean, toLeft = false) {
   const { w, h, dpr } = inp
   const s = k / dpr
   const win = (w * dpr) / k
@@ -113,6 +113,8 @@ function place(inp: CameraInput, k: number, reserve: number, topPad: number, bot
     if (win >= span.x1 - span.x0) x0 = Math.min(Math.max(x0, span.x1 - win), span.x0)
     else x0 = Math.min(span.x0 - 1, CAP_MARKS.head.x0 - 2) // keep the monitor; his far arm may be cut
   }
+  // a bubble beside him on a short screen: Cap (and the monitor) to the left edge, the room to his right
+  if (toLeft) x0 = Math.min(want(layout).x0 - 1, CAP_MARKS.head.x0 - 2)
   // never lose his head
   x0 = Math.min(Math.max(x0, CAP_MARKS.head.x1 + 2 - win), CAP_MARKS.head.x0 - 2)
   // vertical: the framing's bottom row on the box's top edge; if that pushes his head off the top, the head wins
@@ -120,8 +122,8 @@ function place(inp: CameraInput, k: number, reserve: number, topPad: number, bot
   if (y12 < topPad) y12 = topPad
   // the corner icons: his head between them, else below them
   if (y12 + (CAP_MARKS.headTop - TOP_ROW) * s < inp.corner.h) {
-    const lo = CAP_MARKS.head.x1 - (w - inp.corner.w) / s
-    const hi = CAP_MARKS.head.x0 - inp.corner.w / s
+    const lo = CAP_MARKS.head.x1 - (w - inp.corner.right) / s
+    const hi = CAP_MARKS.head.x0 - inp.corner.left / s
     if (lo <= hi) x0 = Math.min(Math.max(x0, lo), hi)
     else y12 = inp.corner.h - (CAP_MARKS.headTop - TOP_ROW) * s
   }
@@ -177,11 +179,18 @@ export function frameCamera(inp: CameraInput): Camera {
   const roomLeft = side.head.left
   if (roomRight >= inp.bubbleSide) return finish(inp, side, 'bubble', 'right')
   if (roomLeft >= inp.bubbleSide) return finish(inp, side, 'bubble', 'left')
+  // not enough room centred: Cap to the left edge, the bubble on his right
+  const shifted = place(inp, kSide, inp.dockBox, inp.topPad, spec.bottom, spec.keepLogo, true)
+  if (inp.w - shifted.head.right >= inp.bubbleSide) return finish(inp, shifted, 'bubble', 'right')
   // a narrow screen (big text on a phone): the box still fits under his chin, over his chest and the desk
   if (underChin) return finish(inp, box, 'box', 'right')
+  // above his head, only if he still fits under it with the inputs below him
   const top = inp.topPad + inp.bubbleTop
   const kAbove = pickK(inp, inp.framing, inp.dockBox, top)
-  return finish(inp, place(inp, kAbove, inp.dockBox, top, spec.bottom, spec.keepLogo), 'bubble', 'above')
+  const above = place(inp, kAbove, inp.dockBox, top, spec.bottom, spec.keepLogo)
+  if (above.chinY + 8 + inp.dockBox <= inp.h) return finish(inp, above, 'bubble', 'above')
+  // nothing fits well: the widest side bubble there is
+  return finish(inp, shifted, 'bubble', 'right')
 }
 
 function finish(inp: CameraInput, p: ReturnType<typeof place>, mode: Camera['mode'], side: Camera['side']): Camera {
