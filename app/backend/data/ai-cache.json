@@ -1088,5 +1088,15 @@
   "purpose": "wording",
   "text": "On 9 Apr 2027, every published criterion for the Capital One Balance Transfer card should be green. Run QuickCheck, a soft search, to see if you're likely to be accepted and what limit you might get.",
   "at": "2026-11-08T00:59:34.290Z"
+ },
+ "wording:0fdf121c305608919c7367339f06108c": {
+  "purpose": "wording",
+  "text": "From 9 Jan 2027, run QuickCheck for the Capital One Classic card. It's a soft search, so it won't affect your score. If it says yes, apply once.",
+  "at": "2026-11-08T08:54:04.871Z"
+ },
+ "wording:81f151f424f3d3153262dc3834f5181b": {
+  "purpose": "wording",
+  "text": "From 9 Jan 2027, run QuickCheck for the Capital One Classic card. It is a soft search, so it won't touch your score. If it says yes, apply once.",
+  "at": "2026-11-08T08:54:04.914Z"
  }
 }
