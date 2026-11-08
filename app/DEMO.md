@@ -49,3 +49,12 @@ Other branches from the opening: **I've got a credit report I want help with** (
 - Port 5173 must be free: on 2026-11-07 the old `app/npc-concept` dev server from the main checkout was still on it. Stop it (Ctrl+C in its terminal) before starting the frontend
 - Checks: `node scripts/walk.mjs` (whole flow, WebKit iPhone 15, screenshots in `app/frontend/screens/`; flags `--keyboard`, `--reduced`, `--text 150`, `--colour okabe|contrast`, `--desktop`, `--live`, `--base <url>`), `node scripts/checks.mjs` (live region, error and upload-failure states, letter at any step, read aloud, mic, settings), `node scripts/contrast.mjs` (WCAG AA for every colour pair in each colour mode)
 - On the phone: the text box pins above the keyboard; the mic uses the browser's speech recognition where it exists, else it points at the keyboard's dictation key
+
+## Rehearsals
+- **2026-11-08 ~01:00, offline, on the Mac** (`app/frontend/scripts/demo-walk.mjs`, WebKit iPhone 15 profile):
+  - **Stack:** a second stack beside `pnpm dev`. The backend ran with `PORT=8001 DEMO_OFFLINE=true ANTHROPIC_API_KEY=` and printed "Claude OFF (DEMO_OFFLINE=true: cache, then templates); 214 cached outputs". The frontend was `VITE_USE_MOCK=false API_TARGET=http://localhost:8001 vite --port 5174 --host`.
+  - **URL walked:** the LAN address http://100.65.209.5:5174/ (en0), the way a phone reaches it.
+  - **Result:** `TOTAL 20 taps, 113.3s`, exit 0, no PROBLEM line. Demo mode held at the Why? moment and at the paper; the paper PDF opened.
+  - **No network:** 0 requests from the page to any other host, and 0 outbound connections from the backend process (`lsof` every second during the walk).
+  - **Same words:** every page matched the live walk's word for word, so all of the demo path is in `ai-cache.json` and no line fell back to a template. Page breaks: 46, 0 mid-clause.
+  - **Not done, needs the phone:** the Mac was not on the iPhone hotspot (en0 was 100.65.209.5, not 172.20.10.x), mobile data was not switched off, and the walk ran in WebKit, not Safari on the phone. Do the device run with the steps under "Start for judging".
