@@ -23,3 +23,4 @@ Owner: `mihael` or `partner`. Only take your own. Pull before you start.
 | 116 | Full-screen scene, 8-bit game dialogue text, expandable side panel | mihael | done | 2026-11-07 |
 | 117 | Cap closer, framing options, speech bubble fallback, demo-mode auto-advance | mihael | done | 2026-11-07 |
 | 118 | Continuous typing in one message, the box scrolls line by line (no page breaks) | mihael | done | 2026-11-08 |
+| 119 | Engine wording for a narrow file, re-cache, deliverables, Demo mode at 2x | mihael | blocked (re-cache of one step needs Claude) | 2026-11-08 |
