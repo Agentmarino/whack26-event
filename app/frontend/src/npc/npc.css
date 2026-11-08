@@ -391,3 +391,20 @@
 .npc-dialogue--still .npc-next__arrow--blink {
   animation: none;
 }
+
+/* 117 follow-up: the Capital One badge on his chest. Under the canvas like the monitor's logo: the badge card's white
+   inside is see-through, so the logo shows there and a hand drawn in front still covers it. Moved every frame. */
+.npc-badge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #ffffff;
+  pointer-events: none;
+}
+.npc-badge img {
+  position: absolute;
+  max-width: none;
+  image-rendering: auto;
+}

@@ -44,6 +44,13 @@ export function monitorFor(layout: DeskLayout) {
   if (layout === 'none') return null
   return layout === 'close' ? { monitor: MONITOR_CLOSE, screen: SCREEN_CLOSE } : { monitor: MONITOR, screen: SCREEN }
 }
+/**
+ * 117 follow-up: the Capital One badge on his chest, replacing the 110 name badge. Torso-local (the torso sprite's
+ * top-left), so it moves with him (breathing, leaning). A 1 px outline and a white card; the official logo file
+ * shows through the white (NpcScene puts it under the canvas, the engine makes those pixels see-through), so a hand
+ * passing in front still covers it. Its top row is torso row 15, below the business-card portrait's crop.
+ */
+export const BADGE = { x: 6, y: 15, w: 10, h: 7 }
 export const MUG = { x: 95, y: 69 }
 export const PLANT = { x: 107, y: 62 }
 export const BUBBLE_AT = { x: 82, y: 5 }

@@ -3,7 +3,7 @@ import { describeAgent } from './describe'
 import { NpcEngine, type AgentState, type Emote, type Gesture, type NpcSnapshot } from './engine'
 import type { Background, ColorName } from './palette'
 import { NATIVE_H, NATIVE_W } from './raster'
-import { CARD_END, CARD_SIZE, monitorFor, PAPER_END, PAPER_SIZE, TRAY, type DeskLayout } from './scene'
+import { BADGE, CARD_END, CARD_SIZE, monitorFor, PAPER_END, PAPER_SIZE, TRAY, type DeskLayout } from './scene'
 import type { FacialHair } from './sprites/character'
 
 export interface NpcHandle {
@@ -71,6 +71,21 @@ function logoStyle(s: number, SCREEN: { w: number; h: number }): CSSProperties {
     height: LOGO_FILE.h * k,
   }
 }
+/**
+ * 117 follow-up: the logo on the badge card's white inside (BADGE less its 1 px outline), scaled to fit, centred.
+ * The same unchanged file as the monitor; only its size and place differ.
+ */
+const BADGE_IN = { w: BADGE.w - 2, h: BADGE.h - 2 }
+function badgeLogoStyle(s: number): CSSProperties {
+  const box = { w: BADGE_IN.w * s, h: BADGE_IN.h * s }
+  const k = Math.min((box.w * 0.9) / LOGO_FILE.art.w, (box.h * 0.8) / LOGO_FILE.art.h)
+  return {
+    left: box.w / 2 - (LOGO_FILE.art.x + LOGO_FILE.art.w / 2) * k,
+    top: box.h / 2 - (LOGO_FILE.art.y + LOGO_FILE.art.h / 2) * k,
+    width: LOGO_FILE.w * k,
+    height: LOGO_FILE.h * k,
+  }
+}
 /** Touch targets are at least 44x44 CSS px (Apple HIG 44pt), grown around their centre. */
 const MIN_TARGET = 44
 const box = (r: { x: number; y: number; w: number; h: number }, s: number): CSSProperties => {
@@ -88,6 +103,16 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   propsRef.current = props
   const [snap, setSnap] = useState<NpcSnapshot | null>(null)
   const [logoOk, setLogoOk] = useState(false)
+  // 117 follow-up: the badge logo follows the badge every frame (breathing, leaning) without a React render
+  const badgeRef = useRef<HTMLDivElement>(null)
+  const badgeAt = useRef({ x: -1, y: -1 })
+  const placeBadge = () => {
+    const el = badgeRef.current
+    const k = propsRef.current.scale
+    if (el) el.style.transform = `translate(${badgeAt.current.x * k}px, ${badgeAt.current.y * k}px)`
+  }
+  const placeBadgeRef = useRef(placeBadge)
+  placeBadgeRef.current = placeBadge
 
   useEffect(() => {
     const engine = new NpcEngine(canvasRef.current!, {
@@ -96,6 +121,10 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
       onChange: (s) => {
         setSnap(s)
         propsRef.current.onChange?.(s)
+      },
+      onBadge: (x, y) => {
+        badgeAt.current = { x, y }
+        placeBadgeRef.current()
       },
     })
     engineRef.current = engine
@@ -123,6 +152,7 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   // (iPhone 15: 9.83 CSS px = 29.48 device px), and WebKit could then paint the canvas one device px
   // narrow and draw one native column a pixel thinner (seen at 7x in 109). A relative offset is exact in layout units.
   const s = props.scale
+  useLayoutEffect(() => placeBadgeRef.current(), [s])
   useLayoutEffect(() => {
     const el = sceneRef.current
     if (!el) return
@@ -220,6 +250,11 @@ export const NpcScene = forwardRef<NpcHandle, NpcSceneProps>(function NpcScene(p
   useEffect(() => engineRef.current?.setOutput(deviceScale, backingW, backingH), [deviceScale, backingW, backingH])
   return (
     <div ref={sceneRef} className="npc-scene" style={size}>
+      {props.wordmarkSrc && (
+        <div ref={badgeRef} className="npc-badge" style={{ width: BADGE_IN.w * s, height: BADGE_IN.h * s, visibility: logoOk ? 'visible' : 'hidden' }}>
+          <img src={props.wordmarkSrc} alt="" style={badgeLogoStyle(s)} onLoad={() => setLogoOk(true)} onError={() => setLogoOk(false)} />
+        </div>
+      )}
       <canvas ref={canvasRef} className="npc-canvas" style={size} role="img" aria-label={describeAgent(snap)} />
       {props.wordmarkSrc && SCREEN && (
         <div

@@ -3,7 +3,7 @@
 import { BACKGROUNDS, buildColorTable, IDX, type Background, type ColorName } from './palette'
 import { IndexBuffer, NATIVE_H, NATIVE_W } from './raster'
 import {
-  AGENT_ORIGIN, BUBBLE_AT, buildDesk, buildOffice, BUSINESS_CARD, CALC, CALCULATOR, CARD_END, CARD_START, DESK_PLANT, drawGlass,
+  AGENT_ORIGIN, BADGE, BUBBLE_AT, buildDesk, buildOffice, BUSINESS_CARD, CALC, CALCULATOR, CARD_END, CARD_START, DESK_PLANT, drawGlass,
   drawMonitor, drawOfficeLife, monitorFor, type DeskLayout,
   drawTray, DROP_ARROW, KEYBOARD, KEYBOARD_SPRITE, MUG, MUG_SPRITE, PAPER, PAPER_END, PAPER_SIZE, PAPER_START, PLANT,
   TRAY, TRAY_DOC,
@@ -152,6 +152,8 @@ export interface NpcEngineOptions {
   ambient?: boolean
   reducedMotion?: boolean
   onChange?: (s: NpcSnapshot) => void
+  /** 117 follow-up: the badge card's white inside moved (native px, top-left); called from the frame loop. */
+  onBadge?: (x: number, y: number) => void
 }
 
 export class NpcEngine {
@@ -204,6 +206,9 @@ export class NpcEngine {
   private glanceDir: EyeKey = 'left'
 
   private onChange?: (s: NpcSnapshot) => void
+  private onBadge?: (x: number, y: number) => void
+  /** Where the badge's white inside is this frame (native px). */
+  private badgeAt = { x: -1, y: -1 }
 
   constructor(canvas: HTMLCanvasElement, opts: NpcEngineOptions = {}) {
     canvas.width = NATIVE_W
@@ -222,6 +227,7 @@ export class NpcEngine {
     this.ambient = opts.ambient ?? true
     this.reduced = opts.reducedMotion ?? false
     this.onChange = opts.onChange
+    this.onBadge = opts.onBadge
   }
 
   // ---------- public API ----------
@@ -579,6 +585,15 @@ export class NpcEngine {
 
     // 3 agent, back pass: torso then the head group
     b.blit(TORSO, ox + TORSO_POS.x, oy + TORSO_POS.y + bob)
+    // the Capital One badge card over the old name badge: outline, then white (the logo shows through the white)
+    const bx = ox + TORSO_POS.x + BADGE.x
+    const by = oy + TORSO_POS.y + BADGE.y + bob
+    b.rect(bx, by, BADGE.w, BADGE.h, IDX.outline)
+    b.rect(bx + 1, by + 1, BADGE.w - 2, BADGE.h - 2, IDX.screenWhite)
+    if (bx + 1 !== this.badgeAt.x || by + 1 !== this.badgeAt.y) {
+      this.badgeAt = { x: bx + 1, y: by + 1 }
+      this.onBadge?.(bx + 1, by + 1)
+    }
     this.drawHead(f, ox, oy + bob + f.headDy)
 
     // 4 desk, 5 desk props (monitor with the logo area, keyboard, tray, calculator, mug, plant), 6 drop zone
@@ -614,6 +629,15 @@ export class NpcEngine {
     b.toRGBA(this.out, this.colors, IDX.officeWall)
     // The logo image sits under the canvas: let the white screen show through, so arms and held
     // items drawn over the monitor stay on top of the logo.
+    // the badge's white inside is see-through too, where nothing (a hand) is drawn over it
+    if (!this.wordmark) {
+      for (let y = this.badgeAt.y; y < this.badgeAt.y + BADGE.h - 2; y++) {
+        for (let x = this.badgeAt.x; x < this.badgeAt.x + BADGE.w - 2; x++) {
+          const i = y * NATIVE_W + x
+          if (x >= 0 && y >= 0 && x < NATIVE_W && y < NATIVE_H && b.px[i] === IDX.screenWhite) this.out[i] = 0
+        }
+      }
+    }
     const mon = monitorFor(this.layoutV)
     if (!this.wordmark && mon) {
       const SCREEN = mon.screen
