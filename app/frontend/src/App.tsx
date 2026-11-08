@@ -75,6 +75,33 @@ function useKeyboard() {
   return k
 }
 
+/** PWA (117 follow-up): the safe-area insets in CSS px (the --safe-* variables: env(), or ?inset= in a test). */
+function useSafeArea() {
+  const read = () => {
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left)'
+    document.body.appendChild(probe)
+    const cs = getComputedStyle(probe)
+    const v = { top: parseFloat(cs.paddingTop) || 0, right: parseFloat(cs.paddingRight) || 0, bottom: parseFloat(cs.paddingBottom) || 0, left: parseFloat(cs.paddingLeft) || 0 }
+    probe.remove()
+    return v
+  }
+  const [v, setV] = useState(read)
+  useEffect(() => {
+    const on = () => setV((p) => {
+      const n = read()
+      return n.top === p.top && n.right === p.right && n.bottom === p.bottom && n.left === p.left ? p : n
+    })
+    window.addEventListener('resize', on)
+    window.addEventListener('orientationchange', on)
+    return () => {
+      window.removeEventListener('resize', on)
+      window.removeEventListener('orientationchange', on)
+    }
+  }, [])
+  return v
+}
+
 function useMedia(query: string) {
   const [v, setV] = useState(() => window.matchMedia(query).matches)
   useEffect(() => {
@@ -132,6 +159,9 @@ export default function App() {
   // and the fine print (measured in WebKit: 7.25rem of padding, plate and buttons, plus the lines, plus the
   // fine print at 0.875rem a line, two lines on a phone). 'full' is 116's whole desk.
   const kbd = useKeyboard()
+  const safe = useSafeArea()
+  // the box sits on the home bar's inset (HUD padding: the larger of 0.5rem and the inset)
+  const homeBar = Math.max(0, safe.bottom - 8)
   const rem = 16 * (settings.textSize / 100)
   const lineLh = boxVt ? 1.2 * (wide ? 1.75 : 1.375) * rem : pf * 1.5
   const fine = (stageW < 600 ? (settings.textSize > 100 ? 3 : 2) : 1) * 0.875 * rem
@@ -144,17 +174,18 @@ export default function App() {
             h: vp.h,
             dpr,
             framing: settings.framing,
-            restBox: 7.25 * rem + 3 * lineLh + fine,
-            dockBox: 4.5 * rem + fine,
+            restBox: 7.25 * rem + 3 * lineLh + fine + homeBar,
+            dockBox: 4.5 * rem + fine + homeBar,
             // a bubble above his head: under the corner icons, the plate, three lines, padding and the tail
             bubbleTop: 3.5 * rem + 3 * lineLh + 5.5 * rem,
             bubbleSide: Math.min(18 * rem, 15 * (boxVt ? 0.55 * lineLh : pf) + 3 * rem),
-            topPad: 4,
+            // below the status bar and the Dynamic Island in the home-screen app
+            topPad: 4 + safe.top,
             // one icon wide on each side: the left corner stacks the gear and the envelope in a column
-            corner: { left: 3.5 * rem, right: 3.5 * rem, h: 3.5 * rem },
+            corner: { left: 3.5 * rem + safe.left, right: 3.5 * rem + safe.right, h: 3.5 * rem + Math.max(0, safe.top - 8) },
             minFill: vp.h > stageW ? 0.55 : 0.5,
           }),
-    [settings.framing, stageW, vp.h, dpr, rem, lineLh, fine, boxVt, pf],
+    [settings.framing, stageW, vp.h, dpr, rem, lineLh, fine, boxVt, pf, safe, homeBar],
   )
   // 116: 2 to 4 lines a page (at most 4 on a phone): fewer when the text is big. 117: 3 with the camera, so
   // the box at rest leaves his hands and the desk strip in view.

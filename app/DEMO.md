@@ -28,6 +28,15 @@ Do this in order, about 10 minutes before judging. Every command runs from the r
    - Portrait.
 8. **The demo:** `deliverables/pitch/demo-script.md`, 20 taps, about 2:10.
 
+## Add to Home Screen (optional: full screen, no Safari bars)
+Cap is a web app (manifest `app/frontend/public/manifest.json`, icon from Cap's pixel face). On the iPhone, after step 5 above:
+1. Open the phone URL in **Safari**. It must be Safari, not a browser inside another app.
+2. Tap **Share** (the square with the arrow) → scroll down → **Add to Home Screen**. The name shows as **Cap**, with his face as the icon. Tap **Add**.
+3. Open **Cap** from the home screen. It runs full screen. The status bar sits over the scene; the corner icons, Cap's head and the dialogue box stay clear of the Dynamic Island and the home bar.
+4. Settings inside the app are separate from Safari's, so set them again: **Demo mode** on, **Plain English** on, Camera **B**, **Start again**.
+- The icon remembers the exact URL (the Mac's address and port). If the hotspot gives the Mac a new address, delete the icon (press and hold → Remove App → Delete from Home Screen) and add it again from the new URL.
+- If the home-screen app shows "Safari cannot open the page", the Mac's server is down or on another address. Use Safari with the new URL.
+
 ## Fallback order
 1. **Offline mode** (the live backend or Claude fails, or the network goes): Ctrl+C, then `DEMO_OFFLINE=true pnpm dev`, and reload the same phone URL.
    - Every line of the demo path is cached in Claude's own words; the 2026-11-08 rehearsal matched the live walk word for word.

@@ -1,3 +1,12 @@
+/* PWA (117 follow-up): the safe areas as variables, so the camera can read them and ?inset= can stand in for a notch
+   in a test browser. In Safari they are 0 in portrait; in the home-screen app they keep clear of the status bar,
+   the Dynamic Island and the home bar. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------------------------------------
@@ -151,7 +160,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  padding: var(--safe-top) var(--safe-right) 0 var(--safe-left);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -523,8 +532,8 @@ dialog.bizcard-dialog::backdrop {
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
-    max(1rem, env(safe-area-inset-left));
+  padding: max(1rem, var(--safe-top)) max(1rem, var(--safe-right)) max(1rem, var(--safe-bottom))
+    max(1rem, var(--safe-left));
 }
 .bizcard {
   position: relative;
@@ -820,18 +829,18 @@ dialog.bizcard-dialog::backdrop {
 .game__corner {
   position: absolute;
   z-index: 6;
-  top: max(0.5rem, env(safe-area-inset-top));
+  top: max(0.5rem, var(--safe-top));
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 .game__corner--left {
-  left: 0.5rem;
+  left: max(0.5rem, var(--safe-left));
   /* never under the notebook icon, whatever the text size: the letter button wraps instead */
   max-width: calc(100% - 4.75rem);
 }
 .game__corner--right {
-  right: 0.5rem;
+  right: max(0.5rem, var(--safe-right));
 }
 
 /* pixel icon buttons and game buttons */
@@ -899,7 +908,7 @@ dialog.bizcard-dialog::backdrop {
   gap: 0.625rem;
   max-width: 46rem;
   margin: 0 auto;
-  padding: 0 0.5rem max(0.5rem, env(safe-area-inset-bottom));
+  padding: 0 0.5rem max(0.5rem, var(--safe-bottom));
   pointer-events: none;
 }
 .game__hud > * {
@@ -1271,7 +1280,7 @@ dialog.bizcard-dialog::backdrop {
   align-items: flex-end;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem 0;
+  padding: max(0.5rem, var(--safe-top)) 0.5rem 0;
   background: var(--panel);
   border-bottom: 0.25rem solid var(--edge);
 }
@@ -1302,7 +1311,7 @@ dialog.bizcard-dialog::backdrop {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0.75rem 0.75rem calc(2rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 0.75rem calc(2rem + var(--safe-bottom));
 }
 .panel__list {
   display: flex;

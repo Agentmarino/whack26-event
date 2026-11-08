@@ -1,0 +1,15 @@
+{
+  "name": "Cap",
+  "short_name": "Cap",
+  "description": "Cap, a credit coach at the Capital One desk: why you were declined, and a plan week by week.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1d2e",
+  "theme_color": "#0b1d2e",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

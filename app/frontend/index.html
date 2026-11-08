@@ -3,10 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#10141c" />
+    <meta name="theme-color" content="#0b1d2e" />
+    <!-- PWA (117 follow-up): Add to Home Screen opens Cap full screen; the status bar sits over the scene (the safe areas keep it clear) -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Cap" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="description" content="Cap, a credit coach at the Capital One desk, reads your credit the way a lender would, then coaches you week by week." />
     <title>Credit check at the Capital One desk</title>
-    <link rel="icon" href="data:," />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
   </head>
   <body>
     <div id="root"></div>
