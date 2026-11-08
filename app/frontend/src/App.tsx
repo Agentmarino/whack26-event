@@ -469,8 +469,9 @@ export default function App() {
 
   // ---------- 117: Demo mode moves on by itself ----------
   // Each page waits a reading pause (250 ms a word, at least 1.2 s; at least 2.5 s with an item window), then
-  // goes on. It stops only where the presenter acts: choices (the turn waits for an answer), the paper (until
-  // it has been opened), the business card, and the first reason's Why? (until Why? has been opened). A sheet,
+  // goes on. It stops only where the presenter acts: choices (the turn waits for an answer), the paper (on the
+  // line's last page, until it has been opened), the business card, and the first reason's Why? (on that line's
+  // last page, until Why? has been opened). A sheet,
   // the notebook or a Why? drawer open pauses it; with read aloud on it waits for the voice. A tap still skips.
   const paperOpened = useRef<string | null>(null)
   const whyStop = useRef<{ run: number; key: string | null; done: boolean }>({ run: -1, key: null, done: false })
@@ -488,9 +489,9 @@ export default function App() {
       ? null
       : lastPage && !state.queue.length && state.expects?.kind !== 'none'
         ? null // choices, a file, typing: the presenter answers
-        : current.msg.kind === 'paper' && paperOpened.current !== current.key
+        : current.msg.kind === 'paper' && lastPage && paperOpened.current !== current.key
           ? null
-          : whyStop.current.key === current.key && !whyStop.current.done
+          : whyStop.current.key === current.key && lastPage && !whyStop.current.done
             ? null
             : Math.max(windowMsg ? 2500 : 1200, 250 * (pages[page] ?? '').split(/\s+/).filter(Boolean).length)
   useEffect(() => {

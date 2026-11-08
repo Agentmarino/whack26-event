@@ -155,8 +155,28 @@ const shot = async (page, name) => {
 // 4. a real upload through the tray, then a letter at another step
 {
   const { ctx, page, errors } = await open()
-  await toReport(page)
+  // 117: Cap is close, so the file menu's box (up to his chin) covers the desk; the tray shows while the box is
+  // at rest, on the request line's pages before the menu. Tap it there, where it is uncovered.
+  await closeCard(page)
+  await drain(page)
+  await page.locator('[data-chip="Nice to meet you, Cap!"]').click()
   await settle(page)
+  await drain(page)
+  await page.locator(`[data-chip="I've got a credit report I want help with"]`).click()
+  await settle(page)
+  const trayFree = () =>
+    page.evaluate(() => {
+      const t = document.querySelector('[data-npc-hotspot="tray"]')
+      if (!t) return false
+      const r = t.getBoundingClientRect()
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      return hit === t
+    })
+  for (let i = 0; i < 40 && !(await trayFree()) && (await mode(page)) === 'next'; i++) {
+    await page.locator('[data-action="next"]').click()
+    await page.waitForTimeout(100)
+  }
+  ok('117: the tray is uncovered and tappable while the box is at rest', await trayFree())
   const chooser = page.waitForEvent('filechooser')
   await page.locator('[data-npc-hotspot="tray"]').click()
   const fc = await chooser
