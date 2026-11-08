@@ -1068,5 +1068,25 @@
   "purpose": "goal",
   "text": "{\"goal\":\"build\"}",
   "at": "2026-11-07T21:57:14.206Z"
+ },
+ "wording:a7c839999d52948ec405f0e53a45abcb": {
+  "purpose": "wording",
+  "text": "Your credit isn't bad, there's just very little of it so far. This plan helps you build it up from zero, one step at a time.",
+  "at": "2026-11-08T00:59:31.088Z"
+ },
+ "wording:7bc6e9be2bc863a7f54c714c4dcd781e": {
+  "purpose": "wording",
+  "text": "You have no late payments on file, which is great. Do keep it that way, because one missed payment can cost up to 130 points.",
+  "at": "2026-11-08T00:59:31.090Z"
+ },
+ "wording:58ae43387d09ff366785987c13fcfff1": {
+  "purpose": "wording",
+  "text": "By 9 Nov 2026, steer clear of the thin-file traps. Apply for one thing at a time, check with a soft search first, and skip payday loans and stacked buy now, pay later plans.",
+  "at": "2026-11-08T00:59:33.872Z"
+ },
+ "wording:f5378663b312c208689865775c2b9ca6": {
+  "purpose": "wording",
+  "text": "On 9 Apr 2027, every published criterion for the Capital One Balance Transfer card should be green. Run QuickCheck, a soft search, to see if you're likely to be accepted and what limit you might get.",
+  "at": "2026-11-08T00:59:34.290Z"
  }
 }
