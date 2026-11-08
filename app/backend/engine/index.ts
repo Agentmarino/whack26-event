@@ -1,4 +1,5 @@
-// Typed wrapper around Jag's credit engine (engine.js, copied unchanged from prep-incoming/credit-coach).
+// Typed wrapper around Jag's credit engine (engine.js, copied from prep-incoming/credit-coach; 119 changed its wording
+// for a narrow file, Cowork-approved, so the two copies now differ: do not re-copy over it).
 // No logic here: only types, and toJSON() on the two calls that return Date objects.
 // Types come from the shared contract (typed from the engine's real output on 2026-11-07).
 //

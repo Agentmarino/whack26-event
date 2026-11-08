@@ -41,7 +41,7 @@ From the engine as merged on main (engine.js, run 2026-11-08 01:45, plan start M
 | 13% asked an AI for money advice in the last year; 49% got something wrong (28%) or can't be sure (21%) | Capital One UK blog, OnePoll 2,000 adults, March 2026 https://www.capitalone.co.uk/blog/ai-matches-parents-personal-finance-advice |
 
 ## Watch out on stage (engine wording)
-- Changed 2026-11-08 (handoff 119, a Cowork-approved wording change to Jag's engine; scores, dates and every figure above unchanged). Priya has had a card for 2 years, so the engine no longer calls her file thin:
+- Changed 2026-11-08 (handoff 119, a Cowork-approved wording change to Jag's engine; scores, dates and every figure above unchanged). Priya has had a card for 2 years, so the engine no longer tells her she has very little UK credit history (behind Why?, one step's data line still says "Thin file" and the track is still called "Build-from-zero track"):
   - The decoder reason is now "Only one credit account": "You have one card, so lenders have little to compare. A second account, used well, helps." It used to be "Very little UK credit history"
   - The plan step "Avoid the thin-file traps" is now "One application at a time"
   - The Capital One Classic step no longer says Capital One is less likely to accept people with no UK credit history. That sentence stays only for someone new to the UK (or with less than a year of history)
