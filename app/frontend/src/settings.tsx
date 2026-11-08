@@ -40,6 +40,9 @@ export const DEFAULT_SETTINGS: Settings = {
   framing: 'B',
 }
 
+/** 119: the text speed Demo mode starts at when it is turned on (the person can still change it). */
+export const DEMO_SPEED: Speed = '2x'
+
 const KEY = 'whack26.settings.v1'
 
 function load(): Settings {
@@ -47,11 +50,13 @@ function load(): Settings {
     const raw = window.localStorage.getItem(KEY)
     const q = new URLSearchParams(window.location.search)
     const fr = q.get('framing')
+    const stored = raw ? (JSON.parse(raw) as Partial<Settings>) : {}
     const fromUrl = {
-      ...(q.get('demo') === '1' ? { demo: true } : {}),
+      // 119: ?demo=1 turning Demo mode on starts it at its own text speed (2x); a speed picked after that stays
+      ...(q.get('demo') === '1' ? { demo: true, ...(stored.demo ? {} : { speed: DEMO_SPEED }) } : {}),
       ...(fr === 'A' || fr === 'B' || fr === 'C' || fr === 'full' ? { framing: fr as FramingSetting } : {}),
     }
-    return { ...DEFAULT_SETTINGS, ...(raw ? (JSON.parse(raw) as Partial<Settings>) : {}), ...fromUrl }
+    return { ...DEFAULT_SETTINGS, ...stored, ...fromUrl }
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -78,7 +83,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     html.dataset.textSize = String(settings.textSize)
   }, [settings])
   const value = useMemo<Ctx>(
-    () => ({ settings, set: (key, value) => setSettings((s) => ({ ...s, [key]: value })) }),
+    () => ({
+      settings,
+      // 119: turning Demo mode on also sets its text speed (2x); turning it off leaves the speed as it is
+      set: (key, value) =>
+        setSettings((s) => ({ ...s, ...(key === 'demo' && value === true && !s.demo ? { speed: DEMO_SPEED } : {}), [key]: value })),
+    }),
     [settings],
   )
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
