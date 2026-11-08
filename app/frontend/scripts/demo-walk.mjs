@@ -80,6 +80,17 @@ const reach = async (loc, label, maxMs = 240000) => {
   }
   throw new Error(`never reached ${label}`)
 }
+// 118: a line types out before Demo mode decides; wait for it, then check Demo mode says it holds (data-demo="hold") and
+// the line is still there after longer than its reading pause would be
+const typedOut = async () => { for (let i = 0; i < 300 && (await page.locator('.gbox').getAttribute('data-typed')) !== 'done'; i++) await page.waitForTimeout(100) }
+const holds = async (what) => {
+  await typedOut()
+  const id = await page.locator('.gbox').getAttribute('data-message-id')
+  const words = (await page.getByTestId('dialogue-text').textContent()).split(/\s+/).filter(Boolean).length
+  if ((await page.locator('.game').getAttribute('data-demo')) !== 'hold') problems.push(`demo mode is not holding at ${what}`)
+  await page.waitForTimeout(Math.max(2500, 250 * words) + 1500)
+  if ((await page.locator('.gbox').getAttribute('data-message-id')) !== id) problems.push(`demo mode did not hold at ${what}`)
+}
 const skipAll = async (label) => { const l = await reach(page.locator('[data-action="show-all"]'), 'Skip all'); await tap(l, `Skip all (${label})`) }
 const SKIP = new Set((process.env.SKIP ?? '').split(',').filter(Boolean))
 const chip = async (t) => tap(await reach(page.locator(`[data-chip="${t}"]`), `"${t}"`), `"${t}"`)
@@ -110,11 +121,8 @@ try {
   await chip('No')
   start('plan built, reasons (stops at Why?)')
   const why = await reach(page.locator('[data-testid="data-window"] [data-action="why"]'), 'Why?', 90000)
-  await page.waitForTimeout(3000) // demo mode must be holding here
+  await holds('the Why? moment')
   await shot('why-stop')
-  const heldOn = await page.locator('.gbox').getAttribute('data-message-id')
-  await page.waitForTimeout(2000)
-  if ((await page.locator('.gbox').getAttribute('data-message-id')) !== heldOn) problems.push('demo mode did not hold at the Why? moment')
   if (!process.env.NOWHY) {
     await tap(why, 'Why?')
     await page.getByTestId('why-sheet').waitFor({ state: 'visible' })
@@ -126,11 +134,8 @@ try {
   await chip('Sum it up for me')
   start('paper (stops)')
   const paper = await reach(page.locator('[data-npc-hotspot="paper"]'), 'paper on the desk')
-  await page.waitForTimeout(2500)
+  await holds('the paper')
   await shot('paper-stop')
-  const paperMsg = await page.locator('.gbox').getAttribute('data-message-id')
-  await page.waitForTimeout(2000)
-  if ((await page.locator('.gbox').getAttribute('data-message-id')) !== paperMsg) problems.push('demo mode did not hold at the paper')
   await tap(paper, 'paper on the desk')
   await page.getByTestId('paper-sheet').waitFor({ state: 'visible' })
   await tap(page.getByTestId('paper-sheet').locator('header button').first(), 'close paper')
@@ -141,7 +146,8 @@ try {
   start('what-if £400')
   await chip('What if I pay £400 a month?')
   await reach(page.locator('[data-testid="data-window"][data-window="whatif"]'), 'what-if window', 60000)
-  await page.waitForTimeout(3500)
+  await typedOut()
+  await page.waitForTimeout(500)
   await shot('whatif')
   start('end')
 } catch (e) {

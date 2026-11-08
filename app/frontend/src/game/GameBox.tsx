@@ -238,9 +238,10 @@ export function GameBox(props: {
             className="gbox__window"
             style={{ height: `calc(${rows} * 1lh)` }}
             data-testid="dialogue-window"
-            tabIndex={props.scrollable ? 0 : undefined}
+            // -1, not none, when it cannot scroll: a window that had focus keeps it as the next line comes in
+            tabIndex={props.scrollable ? 0 : -1}
             role={props.scrollable ? 'region' : undefined}
-            aria-label={props.scrollable ? "Cap's line: scroll it with the up and down arrow keys" : undefined}
+            aria-label={props.scrollable ? `${AGENT_NAME}'s line, scrolls with the up and down arrow keys` : undefined}
             onKeyDown={onWindowKey}
             onWheel={onWheel}
           >
@@ -253,6 +254,8 @@ export function GameBox(props: {
               <span>{text.slice(0, props.printed)}</span>
               <span className="unprinted">{text.slice(props.printed)}</span>
             </p>
+            {/* the region's content for a screen reader that moves into it (the live region already said it once) */}
+            {props.scrollable && <span className="sr-only">{text}</span>}
           </div>
           {props.indicator && (
             <span className="gbox__scroll" aria-hidden="true" data-testid="scroll-indicator">

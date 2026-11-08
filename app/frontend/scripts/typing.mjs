@@ -225,7 +225,8 @@ const shot = async (page, name) => {
 // 3. Reduced motion: the whole line at once; tap and arrow keys scroll it, with the indicator; a tap at the end goes on
 {
   const { ctx, page, errors } = await open({ reduced: true })
-  const b = await toLongLine(page, 4, { typing: false })
+  // a line with more after it, so its Next button and "a tap at the end goes on" are both exercised
+  const b = await toLongLine(page, 4, { typing: false, more: true })
   const s0 = await page.evaluate(() => {
     const p = document.querySelector('[data-testid="dialogue-text"]')
     const ind = document.querySelector('[data-testid="scroll-indicator"]')
@@ -240,6 +241,14 @@ const shot = async (page, name) => {
   await page.keyboard.press('ArrowUp')
   const g2 = await box(page)
   ok('reduced motion: the down and up arrow keys scroll it a line', g1.top === 1 && g2.top === 0, `${g0.top} -> ${g1.top} -> ${g2.top}`)
+  // the Dock's button says More while lines are below the box, scrolls on without leaving the line, then says Next
+  const label = () => page.locator('[data-action="next"]').textContent().then((t) => t.trim()).catch(() => null)
+  const l0 = await label()
+  await page.locator('[data-action="next"]').click()
+  const gm = await box(page)
+  const l1 = await label()
+  ok('reduced motion: the big button says More while lines are below, scrolls on a box-full, then says Next', l0 === 'More' && gm.id === b.id && gm.top === Math.min(3, g0.lines - 3) && (gm.top < g0.lines - 3 || l1 === 'Next'), `${l0} -> top ${gm.top}/${gm.lines} -> ${l1}`)
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowUp')
   await page.locator('[data-testid="dialogue-window"]').click()
   const g3 = await box(page)
   ok('reduced motion: a tap scrolls on a box-full (never past the end)', g3.top === Math.min(3, g0.lines - 3) && g3.id === b.id, `top ${g3.top} of ${g3.lines}`)
@@ -253,6 +262,9 @@ const shot = async (page, name) => {
     await page.waitForTimeout(300)
     const g5 = await box(page)
     ok('reduced motion: a tap at the end goes on', g5?.id !== b.id, `${b.id} -> ${g5?.id}`)
+    // the tapped window had focus: it keeps it on the next line (a keyboard user's next Tab goes on from there)
+    const focus = await page.evaluate(() => document.activeElement?.dataset.testid ?? document.activeElement?.tagName)
+    ok('focus stays on the text when the next line comes in (not dropped to the page)', focus === 'dialogue-window', `focus: ${focus}`)
   } else ok('reduced motion: a tap at the end goes on (choices are up: nothing to go on to)', true, `mode ${g4.mode}`)
   ok('no console errors (3)', errors.length === 0, errors.join(' | '))
   await ctx.close()

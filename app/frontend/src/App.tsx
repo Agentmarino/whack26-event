@@ -344,8 +344,9 @@ export default function App() {
 
   // ---------- moving on ----------
   // 118: a tap while typing finishes the message (scrolled to its end). Then, with `scrollFirst` (a tap on the
-  // text, Space or Enter, Demo mode), a message whose end is not in view scrolls on a box-full first; the Dock's
-  // Next button goes straight on (screen readers already have the whole line).
+  // text, Space or Enter, the Dock's button, Demo mode), a message whose end is not in view scrolls on a box-full
+  // first: shown whole at once (reduced motion, Instant text), the Dock's button says More until the end is in view,
+  // so nobody skips the lines below the box.
   const advance = useCallback(
     (scrollFirst = false) => {
       if (state.pending) return
@@ -534,7 +535,7 @@ export default function App() {
       : current && !typed
         ? { kind: 'next', typing: true, more: state.queue.length }
         : state.queue.length
-          ? { kind: 'next', typing: false, more: state.queue.length }
+          ? { kind: 'next', typing: false, more: state.queue.length, scroll: isText && !atEnd }
           : !state.expects
             ? { kind: 'idle' }
             : state.expects.kind === 'none'
@@ -717,7 +718,7 @@ export default function App() {
               {(rowsFit) => (
                 <Dock
                   mode={mode}
-                  onNext={() => advance()}
+                  onNext={() => advance(true)}
                   onShowAll={showAll}
                   onContinue={() => conv.skip()}
                   onChip={(v, how) => conv.choose(v, how)}
