@@ -2,29 +2,58 @@
 
 Read by `/demo-check`. Keep this current from the first working screen.
 
-## Start command
+## Start for judging (iPhone hotspot)
+Do this in order, about 10 minutes before judging. Every command runs from the repo root.
+
+1. **Hotspot.**
+   - On the iPhone: Settings → Personal Hotspot → **Allow Others to Join** on. Leave that screen open until the Mac has joined.
+   - On the Mac: Wi-Fi menu → join the iPhone's hotspot. A USB cable to the iPhone also works and is steadier.
+   - Venue wifi often blocks phone-to-laptop traffic, so use the hotspot, not the venue network.
+2. **Check the Mac is on the hotspot:** `ipconfig getifaddr en0` prints `172.20.10.x` on an iPhone hotspot (172.20.10.6 on 2026-11-07). Any other address means the Mac is still on another network.
+3. **No mobile data (the offline run).** On the iPhone: Settings → Mobile Data → off.
+   - Not tried yet: iOS may switch Personal Hotspot off with mobile data off.
+   - If it does, leave data on. With `DEMO_OFFLINE=true` the app makes no outside calls: the 2026-11-08 rehearsal saw 0 requests to other hosts and 0 outbound connections from the backend.
+4. **Start the app:**
+   - Offline (the safe default for judging): `DEMO_OFFLINE=true pnpm dev`. The backend line must say `Claude OFF (DEMO_OFFLINE=true: cache, then templates); 214 cached outputs` (or more).
+   - Live, with Claude: `pnpm dev`. The backend line says `Claude on`.
+   - Both start the backend on :8000 and the frontend on :5173 with `--host`. Ctrl+C stops both.
+5. **Phone URL:** `echo "http://$(ipconfig getifaddr en0):5173/"`. Open it in Safari on the iPhone; Vite also prints it as the `Network:` line for en0.
+6. **Warm and check:**
+   - From the Mac: `cd app/frontend && SKIP=steps,reasons,plan NOWHY=1 node scripts/demo-walk.mjs "http://$(ipconfig getifaddr en0):5173"`.
+   - It must end `TOTAL 20 taps` (about 113 s) and `requests to other hosts: 0`, with no `PROBLEM` line.
+   - It also warms the backend.
+7. **On the iPhone:**
+   - Settings (the gear, top left): **Demo mode** on, **Plain English** on, Read aloud off, Camera **B**, then **Start again**.
+   - Ring/silent switch off and volume up, for the optional read-aloud beat.
+   - Portrait.
+8. **The demo:** `deliverables/pitch/demo-script.md`, 20 taps, about 2:10.
+
+## Fallback order
+1. **Offline mode** (the live backend or Claude fails, or the network goes): Ctrl+C, then `DEMO_OFFLINE=true pnpm dev`, and reload the same phone URL.
+   - Every line of the demo path is cached in Claude's own words; the 2026-11-08 rehearsal matched the live walk word for word.
+   - If the backend itself will not start: the app offers **Use the offline demo** (the mock conversation in the browser, no backend), or open the phone URL with `?mock=on`. It is the same flow on sample data, in the mock's own wording (not Claude's).
+2. **The recorded video**, if the phone or the Mac fails.
+   - **There is none in the repo yet** (checked 2026-11-08). Record one after the device rehearsal: iPhone Control Centre → Screen Recording, walk `demo-script.md` with offline mode on.
+   - Keep it on the Mac and the phone, not in git (too big). Write its path here: ____
+
+## Start command (development)
 From the repo root (`pnpm install` once): `pnpm dev`. It starts the backend (port 8000, see "Backend (handoff 113)" below) and the frontend on the real backend (port 5173, `--host`; the phone opens the frontend's `Network:` URL). Ctrl+C stops both.
 
 Separately, two terminals: `pnpm --filter backend dev`, and `cd app/frontend && VITE_USE_MOCK=false pnpm dev`.
 
 No backend? `cd app/frontend && pnpm dev` runs the whole chat on the mock conversation (Priya), which is the default.
 
-## Steps (the live demo, 115: declined branch with Priya; the full script with every line is `deliverables/pitch/demo-script.md`)
-1. Phone, portrait, `http://<Mac LAN IP>:5173/`. Cap slides his business card across the desk and it fills the screen: tap it to put it away. Settings (top right) → **Plain English** on
-2. **Nice to meet you, Cap!** → **I've been declined already**
-3. **Use a sample** three times: Priya's letter, her report, her bank data (demo mode picks Priya)
-4. The decline first: likely reasons ranked, the one fix, when to reapply, your rights. **What can I do?** → three first steps
-5. Four questions: **The Balance Transfer card**, **3 months**, **Yes, I can**, **No**. He thinks, then the diagnosis: tap **Why?** on a reason
-6. **Sum it up for me**: the summary slides across the desk (tap it for the PDF)
-7. **Make me a plan** → **3 months** (**Skip to end**): the projection chart, the card ladder
-8. What-if: type or say "what if I pay 300 a month?", or **Sliders**
-9. Read aloud on its own: Settings → **Read replies aloud** (he says "I'll read my replies aloud."), then tap **What if I pay £400 a month?** and let him read it
-Other branches from the opening: **I've got a credit report I want help with** (Priya), **I want to get ready before I apply** (pick a card first), **I'm new to credit or new to the UK** (Mei Lin)
+## Steps (the live demo: the declined branch with Priya)
+The full script, with every tap and line, is `deliverables/pitch/demo-script.md`. In short, with Demo mode on (it moves on by itself and stops only where you act):
+1. Put the business card away. **Nice to meet you, Cap!** → **I've been declined already**
+2. **Use a sample** three times: Priya's letter, her report, her bank data
+3. The decline plays by itself (likely reasons, the one fix, when to reapply, her rights). **What can I do?** → **Skip all**
+4. Four questions: **The Balance Transfer card**, **3 months**, **Yes, I can**, **No**. He builds the plan and stops on Reason 1 (its **Why?** is optional) → **Skip all**
+5. **Sum it up for me**: the summary slides onto the desk; tap it, then close it
+6. **Make me a plan** → **3 months** → **Skip all**
+7. **What if I pay £400 a month?**
 
-## Fallbacks
-- If the live API is down: the app says so and offers **Use the offline demo** (the mock conversation, no backend). Or open `http://<Mac LAN IP>:5173/?mock=on`
-- Backend without network: `DEMO_OFFLINE=true` (see below)
-- Recorded backup: 
+Other branches from the opening: **I've got a credit report I want help with** (Priya), **I want to get ready before I apply** (pick a card first), **I'm new to credit or new to the UK** (Mei Lin).
 
 ## NPC concept on the iPhone (handoff 109)
 - Start on the Mac: `cd app/npc-concept && pnpm install && pnpm dev --host`
@@ -45,7 +74,7 @@ Other branches from the opening: **I've got a credit report I want help with** (
 
 ## Frontend (handoff 114)
 - Start: `cd app/frontend && pnpm dev --host` (mock, the default) or `VITE_USE_MOCK=false pnpm dev --host` (the backend on `API_TARGET`, default `http://localhost:8000`, through the Vite proxy). Settings in `app/frontend/.env` (see `.env.example`)
-- URL switches for the phone (no restart): `?mock=off` real backend, `?mock=on` mock, `?mock=error` the error state, `?mock=uploadfail` a failed upload, `?demo=1` demo mode (instant text, Priya picked for you, the agent moves on by himself)
+- URL switches for the phone (no restart): `?mock=off` real backend, `?mock=on` mock, `?mock=error` the error state, `?mock=uploadfail` a failed upload, `?demo=1` demo mode (Priya picked for you; Cap moves on page by page by himself and stops where you act), `?framing=A|B|C|full` the camera (B is the default)
 - Port 5173 must be free: on 2026-11-07 the old `app/npc-concept` dev server from the main checkout was still on it. Stop it (Ctrl+C in its terminal) before starting the frontend
 - Checks: `node scripts/walk.mjs` (whole flow, WebKit iPhone 15, screenshots in `app/frontend/screens/`; flags `--keyboard`, `--reduced`, `--text 150`, `--colour okabe|contrast`, `--desktop`, `--live`, `--base <url>`), `node scripts/checks.mjs` (live region, error and upload-failure states, letter at any step, read aloud, mic, settings), `node scripts/contrast.mjs` (WCAG AA for every colour pair in each colour mode)
 - On the phone: the text box pins above the keyboard; the mic uses the browser's speech recognition where it exists, else it points at the keyboard's dictation key
