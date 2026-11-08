@@ -977,6 +977,50 @@ dialog.bizcard-dialog::backdrop {
 .gbox__more--dim {
   opacity: 0.45;
 }
+/* 118: the text window: the box's lines tall (1lh is the text's line height, so it holds whole lines); a longer
+   message moves up inside it, one line at a time while it types */
+.gbox__window {
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-game);
+  font-size: var(--t-dlg);
+  line-height: var(--lh-dlg);
+}
+.gbox__window .gbox__text {
+  will-change: transform;
+}
+/* 118: the scroll indicator (a long message shown whole: reduced motion, Instant text, or scrolled back by hand),
+   in the ▼ gutter: ▲, a pixel track with the part in view, and the ▼ below it (more below, or Next) */
+.gbox__scroll {
+  position: absolute;
+  top: 0;
+  right: 0.125rem;
+  bottom: calc(var(--t-ui) + var(--pf) / 4);
+  width: var(--t-ui);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--pf) / 8);
+  font-size: var(--t-ui);
+  line-height: 1;
+  pointer-events: none;
+}
+.gbox__scroll .is-off {
+  opacity: 0.3;
+}
+.gbox__track {
+  position: relative;
+  flex: 1;
+  width: calc(var(--pf) / 4);
+  background: var(--panel-deep);
+}
+.gbox__thumb {
+  position: absolute;
+  left: calc(var(--pf) / -8);
+  right: calc(var(--pf) / -8);
+  min-height: calc(var(--pf) / 2);
+  background: var(--text);
+}
 .gbox__status {
   display: flex;
   align-items: center;

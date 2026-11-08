@@ -1,9 +1,11 @@
 // 116: the classic RPG dialogue box over the scene. Chunky pixel border, the "Cap" name plate, the
-// current line in pixel text, page by page (2 to 4 lines a page, never scrolling inside the box), a
-// blinking ▼ when a page is done. Below the text: the inputs (the Dock, as a game menu).
-// The text is real DOM text. The letter-by-letter reveal is visual only (aria-hidden spans); screen
-// readers get each whole line once from the app's live region.
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+// current line in pixel text, a blinking ▼ when it is done. Below the text: the inputs (the Dock, as a game menu).
+// 118: one message types out continuously. The box shows its usual lines; when the typewriter reaches the end of
+// the last one, the text scrolls up a line (150 ms) and typing goes on. No pages. With the whole message shown at
+// once (reduced motion, Instant text) a long one scrolls by tap, the arrow keys or the wheel, with an indicator.
+// The text is real DOM text. The letter-by-letter reveal is visual only (aria-hidden); screen readers get each
+// whole line once from the app's live region.
+import { useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type WheelEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { AgentMessage } from 'shared'
 import { Card } from '../cards/Card'
@@ -49,106 +51,60 @@ function Tail({ place }: { place: BubblePlace }) {
   )
 }
 
-// Where a page may end (117): never mid-clause. Best first: a sentence end; a colon or semicolon; a comma or
-// a dash; before a joining word (and, but, because...). Only a clause with none of these breaks at the last
-// word that fits.
-const SENTENCE = /[.!?]["'’”)\]]*$/
-const CLAUSE = /[:;]["'’”)\]]*$/
-const COMMA = /[,—–]["'’”)\]]*$|^[-—–]$/
-const JOIN = /^(and|but|or|so|because|if|when|while|until|then|which|who|where|unless|though|although|since|whereas)$/i
-/** A clause with no punctuation that is longer than a page: break before a phrase ("towards the card"), not inside it. */
-const PREP = /^(from|to|at|of|for|with|towards|in|on|by|about|under|over|into|after|before|without|through|across)$/i
-const bare = (w: string | undefined) => (w ?? '').replace(/[^A-Za-z]/g, '')
-const joins = (w: string | undefined) => JOIN.test(bare(w))
-
-/** How many words of a full page to keep on it: up to its best break (at least one word). */
-function cutAt(ws: string[]): number {
-  for (const re of [SENTENCE, CLAUSE, COMMA]) {
-    for (let j = ws.length; j >= 1; j--) if (re.test(ws[j - 1])) return j
-  }
-  // no punctuation: before a joining word, else before a preposition, keeping at least a quarter of the page
-  const min = Math.max(1, Math.ceil(ws.length / 4))
-  for (const re of [JOIN, PREP]) {
-    for (let j = ws.length - 1; j >= min; j--) if (re.test(bare(ws[j]))) return j
-  }
-  return ws.length
-}
-
-/** A clean break after word j-1 (before word j). */
-const cleanAt = (ws: string[], j: number) =>
-  SENTENCE.test(ws[j - 1] ?? '') || CLAUSE.test(ws[j - 1] ?? '') || COMMA.test(ws[j - 1] ?? '') || joins(ws[j]) || PREP.test(bare(ws[j]))
+/** 118: how long the box takes to scroll up one line (the typewriter waits this long before the new line's first letter). */
+export const SCROLL_MS = 150
 
 /**
- * Split `text` into pages that each fit `lines` lines in `measurer` (same width and font as the box).
- * 117: a full page ends at its best break (cutAt): a sentence end, else a colon or semicolon, else a comma or
- * dash, else before a joining word; a sentence longer than a page breaks at the last comma that fits. A last
- * page of a word or two that continues the page before takes words back only at such a break.
+ * 118: where each visual line of `text` starts (char indices; the first is 0), laid out in `measurer` (same width
+ * and font as the box's text). Spaces are skipped: the one a line wraps at belongs to the line before.
  */
-function paginate(text: string, measurer: HTMLElement, lines: number, extraLine: boolean): string[] {
-  const lh = parseFloat(getComputedStyle(measurer).lineHeight) || 24
-  const fitsIn = (ws: string[], n: number) => {
-    measurer.textContent = ws.join(' ')
-    return measurer.offsetHeight <= lh * n + lh * 0.4
-  }
-  const fits = (ws: string[]) => fitsIn(ws, lines)
-  const words = text.split(/\s+/).filter(Boolean)
-  const pages: string[][] = []
-  let cur: string[] = []
-  for (const w of words) {
-    if (!cur.length || fits([...cur, w])) {
-      cur.push(w)
-      continue
-    }
-    // the page is full: end it at its best break and carry the rest over (again if the rest is still too long)
-    while (cur.length && !fits([...cur, w])) {
-      const j = cutAt(cur)
-      pages.push(cur.slice(0, j))
-      cur = cur.slice(j)
-    }
-    cur.push(w)
-  }
-  if (cur.length) pages.push(cur)
-
-  const tail = pages[pages.length - 1]
-  const prev = pages[pages.length - 2]
-  // a last page of a word or two that finishes the page before's sentence ("report."): balance them
-  if (tail && prev && tail.length <= 2 && !SENTENCE.test(prev[prev.length - 1] ?? '') && !CLAUSE.test(prev[prev.length - 1] ?? '') && !COMMA.test(prev[prev.length - 1] ?? '')) {
-    if (extraLine && lines < 4 && fitsIn([...prev, ...tail], lines + 1)) {
-      // 2 or 3 lines a page (116's whole-desk layout): one more line is fine
-      pages.splice(-2, 2, [...prev, ...tail])
-    } else {
-      // take back the end of the page before, from a clean break that keeps at least half of it
-      const keep = Math.ceil(prev.length / 2)
-      let moved = false
-      for (let j = prev.length - 1; j >= keep; j--) {
-        if (!cleanAt(prev, j)) continue
-        if (fits([...prev.slice(j), ...tail])) {
-          pages.splice(-2, 2, prev.slice(0, j), [...prev.slice(j), ...tail])
-          moved = true
-        }
-        break
+function lineStarts(text: string, measurer: HTMLElement): number[] {
+  measurer.textContent = text
+  const node = measurer.firstChild
+  const starts = [0]
+  if (node) {
+    const lh = parseFloat(getComputedStyle(measurer).lineHeight) || 24
+    const range = document.createRange()
+    let lastTop: number | null = null
+    for (let i = 0; i < text.length; i++) {
+      const c = text.charCodeAt(i)
+      if ((c >= 0xdc00 && c <= 0xdfff) || /\s/.test(text[i])) continue // a pair's second half, or a space
+      range.setStart(node, i)
+      range.setEnd(node, Math.min(text.length, c >= 0xd800 && c <= 0xdbff ? i + 2 : i + 1))
+      const r = range.getBoundingClientRect()
+      if (!r.width && !r.height) continue
+      if (lastTop === null) lastTop = r.top
+      else if (r.top > lastTop + lh / 2) {
+        starts.push(i)
+        lastTop = r.top
       }
-      // no clean break to move ("…holding you back" / "most."): one page with a line more, never an orphan
-      if (!moved && lines < 4 && fitsIn([...prev, ...tail], lines + 1)) pages.splice(-2, 2, [...prev, ...tail])
     }
   }
   measurer.textContent = ''
-  return pages.length ? pages.map((p) => p.join(' ')) : ['']
+  return starts
 }
 
 export function GameBox(props: {
   /** The line on screen (null while thinking, on an error, or idle). */
   current: { key: string; msg: AgentMessage } | null
-  /** The page on screen and how much of it is printed. */
-  page: number
+  /** How much of the message is printed, and whether all of it is (118: the whole message, not a page). */
   printed: number
-  pageDone: boolean
-  /** More to read after this page: further pages, or queued lines. */
+  done: boolean
+  /** More to read after this message: queued lines. */
   more: boolean
+  /** The box's text lines (118: the window's height; longer messages scroll). */
   lines: number
-  onPages: (key: string, pages: string[]) => void
-  pages: string[]
-  onAdvance: () => void
+  /** 118: the first line in view, and how many lines the message has (from onLines). */
+  top: number
+  total: number
+  /** 118: where each visual line starts, measured before paint whenever the message or the layout change. */
+  onLines: (key: string, starts: number[]) => void
+  /** A tap on the text: finish typing, scroll on, or next (App decides). */
+  onTextTap: () => void
+  /** 118: the message can be scrolled by hand (whole message shown, longer than the box): the indicator and keys. */
+  scrollable: boolean
+  /** 118: scroll by this many lines (±Infinity: to the start or the end). */
+  onScroll: (delta: number) => void
   /** Thinking, an error, or a notice: shown in the text area instead of a line. */
   status: { kind: 'pending' | 'error' | 'notice'; text: string } | null
   /** Re-measure when these change (text size, font, width). */
@@ -159,8 +115,6 @@ export function GameBox(props: {
   maxPx: number
   /** The inputs, told how many menu rows fit under the text. */
   children: (rowsFit: number) => ReactNode
-  /** 117: never page one line over `lines` (the camera framed for the box at that height). */
-  strictLines?: boolean
   /** 117: the line shows in a speech bubble here (portal into `bubbleHost`); the box keeps the inputs. */
   bubble?: BubblePlace | null
   bubbleHost?: HTMLElement | null
@@ -171,36 +125,36 @@ export function GameBox(props: {
   const [openTerm, setOpenTerm] = useState<string | null>(null)
   const text = current && current.msg.kind !== 'card' ? current.msg.text : ''
 
-  // Page the line whenever it, the font, the text size or the width change. Before paint, so the first
-  // page is what types.
+  // 118: measure where its lines start whenever the line, the font, the text size or the width change. Before
+  // paint, so the first frame already has the right height and the typewriter knows where the box scrolls.
   useLayoutEffect(() => {
     const el = measurer.current
     if (!el || !current) return
-    const measure = () => props.onPages(current.key, paginate(text, el, props.lines, !props.strictLines))
+    const measure = () => props.onLines(current.key, lineStarts(text, el))
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
-    // a line that came before the pixel font loaded was measured in the fallback font: page it again
+    // a line that came before the pixel font loaded was measured in the fallback font: measure it again
     let live = true
     void document.fonts?.ready.then(() => live && measure())
     return () => {
       live = false
       ro.disconnect()
     }
-  }, [current?.key, text, props.lines, props.layoutKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [current?.key, text, props.layoutKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // How many menu rows fit under what is showing: the box's room minus the text, the explain line,
   // the name plate, padding and the fine print. 116: the menu pages rather than cover the question.
-  const top = useRef<HTMLDivElement>(null)
+  const textTop = useRef<HTMLDivElement>(null)
   const [topH, setTopH] = useState(0)
   // Measured after every render, before paint (a layout effect's update re-renders at once), so no frame
   // shows a menu paged for the last line's height; the observer catches changes from outside (fonts, width).
   useLayoutEffect(() => {
-    const h = top.current?.offsetHeight ?? 0
+    const h = textTop.current?.offsetHeight ?? 0
     if (h !== topH) setTopH(h)
   })
   useLayoutEffect(() => {
-    const el = top.current
+    const el = textTop.current
     if (!el) return
     const ro = new ResizeObserver(() => setTopH(el.offsetHeight))
     ro.observe(el)
@@ -214,9 +168,8 @@ export function GameBox(props: {
   // The estimate cannot know how many lines each choice wraps to: if the box still overflows, take one
   // row off the menu's page and try again (from scratch for each line, page and layout).
   const box = useRef<HTMLElement>(null)
-  // (the page count is in it: the line shows whole for one render before it is paged, and a cut made
-  // then must not stick)
-  const fitKey = `${current?.key ?? status?.kind ?? 'none'}:${props.page}/${props.pages.length}:${props.inputKey}:${props.lines}:${props.layoutKey}:${props.maxPx}`
+  // (the line count is in it: a new line has no count for its first render, and a cut made then must not stick)
+  const fitKey = `${current?.key ?? status?.kind ?? 'none'}:${props.total}:${props.inputKey}:${props.lines}:${props.layoutKey}:${props.maxPx}`
   const [cut, setCut] = useState({ key: fitKey, n: 0 })
   const n = cut.key === fitKey ? cut.n : 0
   const rowsFit = Math.max(1, estimate - n)
@@ -235,10 +188,36 @@ export function GameBox(props: {
     return () => ro.disconnect()
   })
 
-  const pageText = props.pages[props.page] ?? text
-  const chars = [...pageText]
-  const lastPage = props.page >= props.pages.length - 1
-  const terms = current && lastPage && props.pageDone ? termsIn(current.msg.text, ...cardTexts(current.msg, ctx)) : []
+  const { top, total } = props
+  const atEnd = top >= total - props.lines
+  const terms = current && props.done ? termsIn(current.msg.text, ...cardTexts(current.msg, ctx)) : []
+  // 118: the window is the box's lines tall (at least two, as before; fewer when the message is shorter)
+  const rows = Math.max(Math.min(props.lines, 2), Math.min(total || props.lines, props.lines))
+  // Scroll smoothly only for a one-line step (typing on, an arrow key); a jump (tap to finish, a box-full) is instant.
+  // The choice is kept between scrolls, so a re-render mid-scroll (the next letter) does not cut it short.
+  const anim = useRef({ key: '', top: 0, smooth: false })
+  const key = current?.key ?? ''
+  const smooth = anim.current.key === key && anim.current.top === top ? anim.current.smooth : anim.current.key === key && Math.abs(top - anim.current.top) === 1
+  useLayoutEffect(() => {
+    anim.current = { key, top, smooth }
+  })
+  const wheelAt = useRef(0)
+  const onWindowKey = (e: KeyboardEvent) => {
+    if (!props.scrollable) return
+    const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : e.key === 'PageDown' ? props.lines : e.key === 'PageUp' ? -props.lines : e.key === 'End' ? Infinity : e.key === 'Home' ? -Infinity : 0
+    if (!d) return
+    e.preventDefault()
+    props.onScroll(d)
+  }
+  const onWheel = (e: WheelEvent) => {
+    if (!props.scrollable || !e.deltaY) return
+    // one line a notch; a trackpad's stream of small deltas moves a line at most every 90 ms
+    if (e.timeStamp - wheelAt.current < 90) return
+    wheelAt.current = e.timeStamp
+    props.onScroll(e.deltaY > 0 ? 1 : -1)
+  }
+  const showNext = props.done && atEnd && props.more
+  const showDown = props.scrollable && !atEnd
 
   const linePart = (
     <>
@@ -250,16 +229,37 @@ export function GameBox(props: {
         </div>
       )}
       {current && current.msg.kind !== 'card' && (
-        <div className="gbox__textwrap" onClick={props.onAdvance}>
-          <p className="gbox__text" aria-hidden="true" data-testid="dialogue-text" style={{ minHeight: `calc(${Math.min(props.lines, 2)} * 1lh)` }}>
-            {chars.map((c, i) => (
-              <span key={i} className={i < props.printed ? undefined : 'unprinted'}>
-                {c}
+        <div className="gbox__textwrap" onClick={props.onTextTap}>
+          <div
+            className="gbox__window"
+            style={{ height: `calc(${rows} * 1lh)` }}
+            data-testid="dialogue-window"
+            tabIndex={props.scrollable ? 0 : undefined}
+            role={props.scrollable ? 'region' : undefined}
+            aria-label={props.scrollable ? "Cap's line: scroll it with the up and down arrow keys" : undefined}
+            onKeyDown={onWindowKey}
+            onWheel={onWheel}
+          >
+            <p
+              className="gbox__text"
+              aria-hidden="true"
+              data-testid="dialogue-text"
+              style={{ transform: top ? `translateY(calc(${-top} * 1lh))` : undefined, transition: smooth ? `transform ${SCROLL_MS}ms ease-out` : 'none' }}
+            >
+              <span>{text.slice(0, props.printed)}</span>
+              <span className="unprinted">{text.slice(props.printed)}</span>
+            </p>
+          </div>
+          {props.scrollable && (
+            <span className="gbox__scroll" aria-hidden="true" data-testid="scroll-indicator">
+              <PixelArrow dir="up" className={top > 0 ? undefined : 'is-off'} />
+              <span className="gbox__track">
+                <span className="gbox__thumb" style={{ top: `${(top / total) * 100}%`, height: `${(Math.min(props.lines, total) / total) * 100}%` }} />
               </span>
-            ))}
-          </p>
-          {(!props.pageDone || props.more) && (
-            <span className={props.pageDone ? 'gbox__more gbox__more--blink' : 'gbox__more gbox__more--dim'} aria-hidden="true">
+            </span>
+          )}
+          {(showNext || showDown) && (
+            <span className={showNext ? 'gbox__more gbox__more--blink' : 'gbox__more'} aria-hidden="true">
               <PixelArrow dir="down" />
             </span>
           )}
@@ -305,7 +305,9 @@ export function GameBox(props: {
       data-current={current ? '' : undefined}
       data-kind={current?.msg.kind}
       data-message-id={current?.msg.id}
-      data-page={current ? `${props.page + 1}/${props.pages.length}` : undefined}
+      data-lines={current ? total : undefined}
+      data-top={current ? top : undefined}
+      data-typed={current ? (props.done ? 'done' : 'typing') : undefined}
       data-rows-fit={rowsFit}
       data-text-in={inBubble ? 'bubble' : 'box'}
       aria-label="Cap's dialogue"
@@ -320,7 +322,7 @@ export function GameBox(props: {
       {inBubble ? (
         statusPart
       ) : (
-        <div ref={top}>
+        <div ref={textTop}>
           {linePart}
           {statusPart}
         </div>
@@ -333,7 +335,7 @@ export function GameBox(props: {
               {AGENT_NAME}
             </span>
             <p ref={measurer} className="gbox__text gbub__measure" aria-hidden="true" />
-            <div ref={top}>{linePart}</div>
+            <div ref={textTop}>{linePart}</div>
             <Tail place={bub!} />
           </div>,
           props.bubbleHost!,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { FileKind, Persona } from 'shared'
 import { createApi, createMockApi, mockFromEnv, type Api } from './api/client'
 import { BusinessCardOverlay, CARD_RATIO, CARD_TEXT, DESK_CARD, DeskCard, type Rect } from './cards/BusinessCard'
@@ -15,7 +15,7 @@ import {
 import { blip, primeBlip } from './game/blip'
 import { Guard } from './ui/Guard'
 import { DataWindow } from './game/DataWindow'
-import { GameBox, type BubblePlace } from './game/GameBox'
+import { GameBox, SCROLL_MS, type BubblePlace } from './game/GameBox'
 import { GearIcon, LetterIcon, NotebookIcon, SidePanel, type PanelTab } from './game/SidePanel'
 import { useSettings } from './settings'
 import { PaperSheet } from './sheets/PaperSheet'
@@ -187,8 +187,8 @@ export default function App() {
           }),
     [settings.framing, stageW, vp.h, dpr, rem, lineLh, fine, boxVt, pf, safe, homeBar],
   )
-  // 116: 2 to 4 lines a page (at most 4 on a phone): fewer when the text is big. 117: 3 with the camera, so
-  // the box at rest leaves his hands and the desk strip in view.
+  // 116: 2 to 4 lines in the box (at most 4 on a phone): fewer when the text is big. 117: 3 with the camera, so
+  // the box at rest leaves his hands and the desk strip in view. 118: a longer message scrolls inside them.
   const lines = cam ? 3 : boxVt ? (settings.textSize === 150 ? 3 : 4) : wide ? 3 : pf > 16 ? 3 : 4
   // The line goes to a speech bubble when the box has no room for it under his chin, or a keyboard is open.
   const bubble = useMemo<BubblePlace | null>(() => {
@@ -243,47 +243,78 @@ export default function App() {
     conv.start()
   }, [api, conv])
 
-  // ---------- 116: the current line, page by page ----------
-  // GameBox measures the line into pages (2 to 4 lines each); each page types on its own. The business
-  // card is not typed out (and does not move his mouth): it is a card, not a line.
+  // ---------- 118: the current line, typed out in one go; the box scrolls ----------
+  // GameBox measures where the line's visual lines start. The typewriter types the whole message; when it reaches
+  // the end of the box's last line, the text scrolls up one line (SCROLL_MS) and typing goes on. With the whole
+  // message shown at once (reduced motion, Instant text) the box starts at the top and scrolls by hand. The
+  // business card is not typed out (and does not move his mouth): it is a card, not a line.
   const curKey = current?.key ?? 'none'
-  const [paged, setPaged] = useState<{ key: string; pages: string[] }>({ key: '', pages: [] })
-  const [pageAt, setPageAt] = useState<{ key: string; page: number }>({ key: '', page: 0 })
-  const pages = current?.msg.kind === 'card' ? [''] : paged.key === curKey && paged.pages.length ? paged.pages : [current?.msg.text ?? '']
-  const page = pageAt.key === curKey ? Math.min(pageAt.page, pages.length - 1) : 0
-  const lastPage = page >= pages.length - 1
-  const onPages = useCallback((key: string, next: string[]) => {
-    setPaged((p) => (p.key === key && p.pages.join('\u0000') === next.join('\u0000') ? p : { key, pages: next }))
+  const isText = !!current && current.msg.kind !== 'card'
+  const lineText = isText ? current!.msg.text : ''
+  const [lineInfo, setLineInfo] = useState<{ key: string; starts: number[] }>({ key: '', starts: [] })
+  const onLines = useCallback((key: string, starts: number[]) => {
+    setLineInfo((p) => (p.key === key && p.starts.join(',') === starts.join(',') ? p : { key, starts }))
   }, [])
-  // 116: "Skip all" lands on the last page of the turn's last line: at once when it is on screen, else as
-  // soon as the last line has been paged.
+  const starts = useMemo(() => (isText && lineInfo.key === curKey ? lineInfo.starts : null), [isText, lineInfo, curKey])
+  const total = starts?.length ?? 0
+  const maxTop = Math.max(0, total - lines)
+  /** The visual line char i is on. */
+  const lineOf = useCallback((i: number) => {
+    if (!starts) return 0
+    let l = 0
+    while (l + 1 < starts.length && starts[l + 1] <= i) l++
+    return l
+  }, [starts])
+  // the first letter of each line past the box's last one: the box scrolls up a line before it types
+  const scrollsAt = useMemo(() => new Set((starts ?? []).filter((_, l) => l >= lines)), [starts, lines])
+  const showWhole = reduced || settings.speed === 'instant'
+  // 118: "Skip all" lands on the turn's last line already typed out (scrolled to its end): at once when it is on
+  // screen, else as soon as the last line shows.
   const toEnd = useRef(false)
-  useEffect(() => {
-    if (!toEnd.current || state.queue.length || paged.key !== curKey) return
-    toEnd.current = false
-    setPageAt({ key: curKey, page: Math.max(0, paged.pages.length - 1) })
-  }, [paged, curKey, state.queue.length])
-  const showAll = useCallback(() => {
-    if (state.queue.length) {
-      toEnd.current = true
-      conv.showAll()
-    } else setPageAt({ key: curKey, page: Math.max(0, pages.length - 1) })
-  }, [state.queue.length, conv, curKey, pages.length])
-  const instant = reduced || settings.demo || settings.speed === 'instant' || current?.msg.kind === 'card'
+  const instant = showWhole || current?.msg.kind === 'card'
   const blipOn = settings.blip && !settings.readAloud && !reduced
-  const tw = useTypewriter(pages[page] ?? '', `${curKey}:${page}`, {
+  const tw = useTypewriter(lineText, curKey, {
     speed: settings.speed,
     instant,
+    pauseBefore: (i) => (scrollsAt.has(i) ? SCROLL_MS : 0),
     onChar: (c) => {
       npc.current?.talk(c)
       if (blipOn) blip(c)
     },
-    onDone: () => {
-      if (lastPage) lineDone(npc.current, current?.msg ?? null)
-      else npc.current?.stopTalking()
-    },
+    onDone: () => lineDone(npc.current, current?.msg ?? null),
   })
-  const typed = !!current && tw.done && lastPage
+  const twRef = useRef(tw)
+  twRef.current = tw
+  useLayoutEffect(() => {
+    if (!toEnd.current || state.queue.length || !current) return
+    toEnd.current = false
+    twRef.current.finish()
+    npc.current?.stopTalking()
+  }, [curKey, state.queue.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  const showAll = useCallback(() => {
+    if (state.queue.length) {
+      toEnd.current = true
+      conv.showAll()
+    } else if (current && !tw.done) {
+      tw.finish()
+      npc.current?.stopTalking()
+    }
+  }, [state.queue.length, conv, current, tw])
+  const typed = !!current && tw.done
+
+  // Which lines are in view. While typing: the line being typed is the box's last. Typed out: its end (or, shown
+  // whole at once, its start), unless scrolled by hand (tap, arrow keys, the wheel).
+  const [scrolled, setScrolled] = useState<{ key: string; top: number } | null>(null)
+  const autoTop = !starts ? 0 : !tw.done ? Math.min(maxTop, Math.max(0, lineOf(tw.printed) - lines + 1)) : showWhole ? 0 : maxTop
+  const byHand = !!scrolled && scrolled.key === curKey && tw.done
+  const top = byHand ? Math.min(maxTop, Math.max(0, scrolled!.top)) : autoTop
+  const atEnd = top >= maxTop
+  const scrollBy = useCallback(
+    (d: number) => setScrolled({ key: curKey, top: Math.min(maxTop, Math.max(0, top + d)) }),
+    [curKey, maxTop, top],
+  )
+  // the indicator and scroll keys: a message longer than the box, shown whole (or scrolled back by hand)
+  const scrollable = isText && tw.done && total > lines && (showWhole || (byHand && scrolled!.top < maxTop))
 
   useSpeech(current?.msg.text ?? null, current?.key ?? null, settings.readAloud, settings.voiceRate)
   // 116: the letter sound was switched on in an earlier visit: unlock audio on the first tap or key
@@ -310,21 +341,26 @@ export default function App() {
   }, [state.error])
 
   // ---------- moving on ----------
-  const advance = useCallback(() => {
-    if (state.pending) return
-    if (current && !tw.done) {
-      tw.finish()
-      npc.current?.stopTalking()
-      return
-    }
-    // 116: the next page of a long line
-    if (current && !lastPage) {
-      setPageAt({ key: curKey, page: page + 1 })
-      return
-    }
-    if (state.queue.length) return conv.advance()
-    if (current && state.expects?.kind === 'none') conv.skip()
-  }, [state.pending, state.queue.length, state.expects, current, tw, conv, lastPage, curKey, page])
+  // 118: a tap while typing finishes the message (scrolled to its end). Then, with `scrollFirst` (a tap on the
+  // text, Space or Enter, Demo mode), a message whose end is not in view scrolls on a box-full first; the Dock's
+  // Next button goes straight on (screen readers already have the whole line).
+  const advance = useCallback(
+    (scrollFirst = false) => {
+      if (state.pending) return
+      if (current && !tw.done) {
+        tw.finish()
+        npc.current?.stopTalking()
+        return
+      }
+      if (scrollFirst && current && !atEnd) {
+        scrollBy(lines)
+        return
+      }
+      if (state.queue.length) return conv.advance()
+      if (current && state.expects?.kind === 'none') conv.skip()
+    },
+    [state.pending, state.queue.length, state.expects, current, tw, conv, atEnd, scrollBy, lines],
+  )
 
   // Space or Enter anywhere outside a control (and with no sheet open) is "next".
   const advanceRef = useRef(advance)
@@ -336,7 +372,25 @@ export default function App() {
       // 116: keys inside the open notebook are the notebook's (Space scrolls it), not "next"
       if (e.target instanceof Element && e.target.closest('[data-testid="side-panel"]')) return
       e.preventDefault()
-      advanceRef.current()
+      advanceRef.current(true)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  // 118: the up and down arrow keys (Page Up/Down, Home/End) scroll a long line shown whole, wherever focus is,
+  // except in a text field, a slider, a menu (its own arrows) or the notebook
+  const scrollRef = useRef({ scrollable, scrollBy, lines })
+  scrollRef.current = { scrollable, scrollBy, lines }
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const { scrollable: can, scrollBy: by, lines: n } = scrollRef.current
+      if (!can || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
+      const t = e.target instanceof Element ? e.target : null
+      if (t?.closest('input, textarea, select, [contenteditable="true"], [data-testid="side-panel"]') || document.querySelector('dialog[open]')) return
+      const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : e.key === 'PageDown' ? n : e.key === 'PageUp' ? -n : 0
+      if (!d) return
+      e.preventDefault()
+      by(d)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -476,7 +530,7 @@ export default function App() {
     : state.error
       ? { kind: 'error', canGoOffline: api.mode === 'live', sessionGone: state.sessionGone }
       : current && !typed
-        ? { kind: 'next', typing: !tw.done, more: state.queue.length + (pages.length - 1 - page) }
+        ? { kind: 'next', typing: true, more: state.queue.length }
         : state.queue.length
           ? { kind: 'next', typing: false, more: state.queue.length }
           : !state.expects
@@ -515,10 +569,11 @@ export default function App() {
   const openDetails = useCallback((msgId: string) => setPanel({ open: true, tab: 'plan', focus: msgId }), [])
 
   // ---------- 117: Demo mode moves on by itself ----------
-  // Each page waits a reading pause (250 ms a word, at least 1.2 s; at least 2.5 s with an item window), then
-  // goes on. It stops only where the presenter acts: choices (the turn waits for an answer), the paper (on the
-  // line's last page, until it has been opened), the business card, and the first reason's Why? (on that line's
-  // last page, until Why? has been opened). A sheet,
+  // 118: each message types out in full, then waits a reading pause for its length (250 ms a word, at least 1.2 s;
+  // at least 2.5 s with an item window), then goes on. Shown whole at once (reduced motion, Instant text), a long
+  // one scrolls on a box-full at a time, each with the pause for the words in view. It stops only where the
+  // presenter acts: choices (the turn waits for an answer), the paper (until it has been opened), the business card,
+  // and the first reason's Why? (until Why? has been opened), each once the message's end is in view. A sheet,
   // the notebook or a Why? drawer open pauses it; with read aloud on it waits for the voice. A tap still skips.
   const paperOpened = useRef<string | null>(null)
   const whyStop = useRef<{ run: number; key: string | null; done: boolean }>({ run: -1, key: null, done: false })
@@ -530,28 +585,29 @@ export default function App() {
   useEffect(() => {
     if (why && whyStop.current.key === current?.key) whyStop.current.done = true
   }, [why, current?.key])
+  const inView = starts && showWhole && total > lines ? lineText.slice(starts[top], starts[top + lines] ?? lineText.length) : lineText
   const demoPause = !current
     ? null
     : current.msg.kind === 'card' || bizCard || sheet || why || panel.open || state.pending
       ? null
-      : lastPage && !state.queue.length && state.expects?.kind !== 'none'
+      : atEnd && !state.queue.length && state.expects?.kind !== 'none'
         ? null // choices, a file, typing: the presenter answers
-        : current.msg.kind === 'paper' && lastPage && paperOpened.current !== current.key
+        : current.msg.kind === 'paper' && atEnd && paperOpened.current !== current.key
           ? null
-          : whyStop.current.key === current.key && lastPage && !whyStop.current.done
+          : whyStop.current.key === current.key && atEnd && !whyStop.current.done
             ? null
-            : Math.max(windowMsg ? 2500 : 1200, 250 * (pages[page] ?? '').split(/\s+/).filter(Boolean).length)
+            : Math.max(windowMsg ? 2500 : 1200, 250 * inView.split(/\s+/).filter(Boolean).length)
   useEffect(() => {
     if (!settings.demo || !tw.done || demoPause === null) return
     let id = 0
     const go = () => {
       // read aloud: let the voice finish first
       if (settings.readAloud && window.speechSynthesis?.speaking) id = window.setTimeout(go, 400)
-      else advanceRef.current()
+      else advanceRef.current(true)
     }
     id = window.setTimeout(go, demoPause)
     return () => window.clearTimeout(id)
-  }, [settings.demo, settings.readAloud, tw.done, demoPause, curKey, page])
+  }, [settings.demo, settings.readAloud, tw.done, demoPause, curKey, top])
 
   return (
     <CardContext.Provider value={cardCtx}>
@@ -637,26 +693,27 @@ export default function App() {
             )}
             <GameBox
               current={current ? { key: current.key, msg: current.msg } : null}
-              page={page}
               printed={current ? tw.printed : 0}
-              pageDone={tw.done}
-              more={!lastPage || state.queue.length > 0}
+              done={tw.done}
+              more={state.queue.length > 0}
               lines={lines}
-              pages={pages}
-              onPages={onPages}
-              onAdvance={advance}
+              top={top}
+              total={total}
+              onLines={onLines}
+              onTextTap={() => advance(true)}
+              scrollable={scrollable}
+              onScroll={scrollBy}
               status={status}
               layoutKey={`${settings.textSize}:${boxVt}:${pf}:${stageW}:${bubble ? `bubble${Math.round(bubble.width)}` : 'box'}`}
               bubble={bubble}
               bubbleHost={bubbleHost}
-              strictLines={!!cam}
               inputKey={mode.kind}
               maxPx={boxMax}
             >
               {(rowsFit) => (
                 <Dock
                   mode={mode}
-                  onNext={advance}
+                  onNext={() => advance()}
                   onShowAll={showAll}
                   onContinue={() => conv.skip()}
                   onChip={(v, how) => conv.choose(v, how)}
