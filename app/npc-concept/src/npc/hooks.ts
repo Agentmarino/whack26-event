@@ -67,7 +67,14 @@ export type Speed = '1x' | '2x' | 'instant'
 export function useTypewriter(
   text: string,
   lineKey: string | number,
-  opts: { speed: Speed; instant: boolean; onChar?: (ch: string) => void; onDone?: () => void },
+  opts: {
+    speed: Speed
+    instant: boolean
+    onChar?: (ch: string) => void
+    onDone?: () => void
+    /** 118: extra ms to wait before printing char i (the dialogue box scrolls a line first). */
+    pauseBefore?: (i: number) => number
+  },
 ) {
   const instant = opts.instant || opts.speed === 'instant'
   const [st, setSt] = useState({ key: lineKey, n: 0 })
@@ -75,9 +82,11 @@ export function useTypewriter(
   const done = printed >= text.length
   const onChar = useRef(opts.onChar)
   const onDone = useRef(opts.onDone)
+  const pauseBefore = useRef(opts.pauseBefore)
   useLayoutEffect(() => {
     onChar.current = opts.onChar
     onDone.current = opts.onDone
+    pauseBefore.current = opts.pauseBefore
   })
 
   useEffect(() => {
@@ -95,6 +104,7 @@ export function useTypewriter(
     let delay = printed === 0 ? 120 : base
     if (prev && /[.!?]/.test(prev)) delay = base * 11
     else if (prev && /[,;:]/.test(prev)) delay = base * 5
+    delay += pauseBefore.current?.(printed) ?? 0
     const id = window.setTimeout(() => {
       onChar.current?.(text[printed])
       setSt({ key: lineKey, n: printed + 1 })

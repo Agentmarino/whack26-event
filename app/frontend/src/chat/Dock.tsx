@@ -9,7 +9,7 @@ import { MicButton } from './Mic'
 export type DockMode =
   | { kind: 'busy'; label: string }
   | { kind: 'error'; canGoOffline: boolean; sessionGone: boolean }
-  | { kind: 'next'; typing: boolean; more: number }
+  | { kind: 'next'; typing: boolean; more: number; scroll?: boolean }
   | { kind: 'continue' }
   | { kind: 'input'; expects: Expects }
   | { kind: 'idle' }
@@ -160,9 +160,11 @@ export function Dock(props: {
               className="gbtn gbtn--primary min-w-0 flex-1"
               onClick={props.onNext}
               data-action="next"
-              aria-label={mode.typing ? 'Show all of it' : mode.more > 0 ? `Next (${mode.more} more)` : 'Next'}
+              aria-label={mode.typing ? 'Show all of it' : mode.scroll ? 'More of this line' : mode.more > 0 ? `Next (${mode.more} more)` : 'Next'}
+              data-scroll={mode.scroll ? '' : undefined}
             >
-              <span>{mode.typing ? 'Show all' : 'Next'}</span>
+              {/* 118: a long line shown whole (reduced motion, Instant text) with lines below the box: More scrolls on */}
+              <span>{mode.typing ? 'Show all' : mode.scroll ? 'More' : 'Next'}</span>
               <PixelArrow dir="down" />
             </button>
             {mode.more > 1 && (

@@ -3,6 +3,7 @@
 //
 //   node scripts/walk.mjs [--base http://localhost:5173] [--branch declined|report|prepare|new] [--desktop] [--keyboard]
 //                         [--reduced] [--text 150] [--colour okabe|contrast] [--readable] [--prefix name] [--live] [--cardshots]
+//                         [--speed instant|1x|2x]  (118: 1x types each line out; a Next while it types finishes it)
 //
 // Screens go to app/frontend/screens/<prefix>-NN-<step>.png. Every screenshot is taken twice (the first
 // can lag one action behind) and the second is kept. Exits 1 on a console error or a stuck step.
@@ -28,6 +29,7 @@ const readable = flag('readable')
 const live = flag('live')
 const branch = opt('branch', 'declined')
 const cardShots = flag('cardshots')
+const speed = opt('speed', 'instant')
 const prefix = opt('prefix', `${desktop ? 'desktop' : 'iphone'}-${branch}`)
 const outDir = opt('out', fileURLToPath(new URL('../screens/', import.meta.url))).replace(/\/?$/, '/')
 mkdirSync(outDir, { recursive: true })
@@ -37,17 +39,17 @@ const context = await browser.newContext({
   ...(desktop ? { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 } : devices['iPhone 15']),
   reducedMotion: reduced ? 'reduce' : 'no-preference',
 })
-// Settings before the app loads: instant text so the walk is quick (the typewriter is checked separately).
+// Settings before the app loads: instant text so the walk is quick (the typewriter is checked in typing.mjs).
 await context.addInitScript(
-  ({ textSize, colour, readable }) => {
+  ({ textSize, colour, readable, speed }) => {
     try {
       localStorage.setItem(
         'whack26.settings.v1',
-        JSON.stringify({ speed: 'instant', demo: false, textSize, colour, plainEnglish: false, readAloud: false, voiceRate: 1, readable }),
+        JSON.stringify({ speed, demo: false, textSize, colour, plainEnglish: false, readAloud: false, voiceRate: 1, readable }),
       )
     } catch {}
   },
-  { textSize, colour, readable },
+  { textSize, colour, readable, speed },
 )
 const page = await context.newPage()
 const problems = []
@@ -119,7 +121,7 @@ async function press(locator, what) {
   throw new Error(`keyboard: could not Tab to ${what}`)
 }
 
-/** Tap Next through the queued messages (and 116: the pages of a long line), screenshotting each card once. */
+/** Tap Next through the queued messages (118: a long line is one message; it scrolls), screenshotting each card once. */
 let whyDone = false
 const seen = new Set()
 async function drain(label) {
@@ -182,6 +184,7 @@ async function allChips() {
   return all
 }
 const steps = []
+let paperVia = null
 const step = async () => {
   const s = await page.locator('.game').getAttribute('data-step')
   if (steps[steps.length - 1] !== s) steps.push(s)
@@ -254,7 +257,16 @@ try {
     if (s === 'paper' && !done.has('paper')) {
       done.add('paper')
       await page.waitForTimeout(reduced ? 100 : 1800) // the sheet slides across the desk
-      if (keyboard) await press(action('open-paper'), 'Read it')
+      // 118: tap the sheet on the desk when it can be tapped; at 150% text on a phone the paper's window and the box
+      // cover the desk (on main too, since the 117 follow-ups), and a person uses the window's Read it
+      const deskFree = await page.evaluate(() => {
+        const t = document.querySelector('[data-npc-hotspot="paper"]')
+        if (!t) return false
+        const r = t.getBoundingClientRect()
+        return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === t
+      })
+      paperVia = keyboard ? 'Read it (keyboard)' : deskFree ? 'the sheet on the desk' : 'Read it (the desk is covered)'
+      if (keyboard || !deskFree) await press(action('open-paper'), 'Read it')
       else await page.locator('[data-npc-hotspot="paper"]').click()
       await page.getByTestId('paper-sheet').waitFor({ state: 'visible' })
       await shot('paper-overlay')
@@ -328,7 +340,7 @@ try {
       const g = document.querySelector('.gbox')
       const h = document.querySelector('.game__hud')
       return g && h
-        ? { box: [g.offsetTop, g.offsetHeight, g.clientHeight, g.scrollHeight], hudMax: h.style.maxHeight, rowsFit: g.dataset.rowsFit, page: g.dataset.page, menu: document.querySelector('.gmenu')?.dataset.menuPage, rows: document.querySelectorAll('.mrow').length, kids: [...g.children].map((c) => `${String(c.className || c.tagName).split(' ')[0]}:${c.offsetHeight}`) }
+        ? { box: [g.offsetTop, g.offsetHeight, g.clientHeight, g.scrollHeight], hudMax: h.style.maxHeight, rowsFit: g.dataset.rowsFit, lines: g.dataset.lines, top: g.dataset.top, menu: document.querySelector('.gmenu')?.dataset.menuPage, rows: document.querySelectorAll('.mrow').length, kids: [...g.children].map((c) => `${String(c.className || c.tagName).split(' ')[0]}:${c.offsetHeight}`) }
         : null
     })
     .catch(() => null)
@@ -351,7 +363,7 @@ if (layout.scrollW > layout.vw) problems.push(`horizontal scroll: ${layout.scrol
 if (layout.dockBottom === null || layout.dockBottom > layout.vh) problems.push(`dock off screen: ${JSON.stringify(layout)}`)
 
 for (const t of small) problems.push(`touch target under 44px: ${t}`)
-console.log(JSON.stringify({ prefix, branch, desktop, keyboard, reduced, textSize, colour, live, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
+console.log(JSON.stringify({ prefix, branch, desktop, keyboard, reduced, textSize, colour, speed, live, paperVia, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
 for (const p of problems) console.log('PROBLEM', p)
 await browser.close()
 process.exit(problems.length ? 1 : 0)

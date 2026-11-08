@@ -20,20 +20,20 @@ Do this in order, about 10 minutes before judging. Every command runs from the r
 5. **Phone URL:** `echo "http://$(ipconfig getifaddr en0):5173/"`. Open it in Safari on the iPhone; Vite also prints it as the `Network:` line for en0.
 6. **Warm and check:**
    - From the Mac: `cd app/frontend && SKIP=steps,reasons,plan NOWHY=1 node scripts/demo-walk.mjs "http://$(ipconfig getifaddr en0):5173"`.
-   - It must end `TOTAL 20 taps` (about 113 s) and `requests to other hosts: 0`, with no `PROBLEM` line.
+   - It must end `TOTAL 20 taps` (about 173 s at the default text speed 1x; if you will use 2x on the phone, put `SPEED=2x ` in front of the command: about 133 s) and `requests to other hosts: 0`, with no `PROBLEM` line.
    - It also warms the backend.
 7. **On the iPhone:**
-   - Settings (the gear, top left): **Demo mode** on, **Plain English** on, Read aloud off, Camera **B**, then **Start again**.
+   - Settings (the gear, top left): **Demo mode** on, **Plain English** on, Read aloud off, Camera **B**, Text speed **1x** (or **2x** for a demo about 40 s shorter), then **Start again**.
    - Ring/silent switch off and volume up, for the optional read-aloud beat.
    - Portrait.
-8. **The demo:** `deliverables/pitch/demo-script.md`, 20 taps, about 2:10.
+8. **The demo:** `deliverables/pitch/demo-script.md`, 20 taps, about 3:10 at 1x (about 2:30 at 2x). Since 118 each line types out in one go and the box scrolls; Demo mode moves on after the whole line.
 
 ## Add to Home Screen (optional: full screen, no Safari bars)
 Cap is a web app (manifest `app/frontend/public/manifest.json`, icon from Cap's pixel face). On the iPhone, after step 5 above:
 1. Open the phone URL in **Safari**. It must be Safari, not a browser inside another app.
 2. Tap **Share** (the square with the arrow) → scroll down → **Add to Home Screen**. The name shows as **Cap**, with his face as the icon. Tap **Add**.
 3. Open **Cap** from the home screen. It runs full screen. The status bar sits over the scene; the corner icons, Cap's head and the dialogue box stay clear of the Dynamic Island and the home bar.
-4. Settings inside the app are separate from Safari's, so set them again: **Demo mode** on, **Plain English** on, Camera **B**, **Start again**.
+4. Settings inside the app are separate from Safari's, so set them again: **Demo mode** on, **Plain English** on, Camera **B**, the same Text speed, **Start again**.
 - The icon remembers the exact URL (the Mac's address and port). If the hotspot gives the Mac a new address, delete the icon (press and hold → Remove App → Delete from Home Screen) and add it again from the new URL.
 - If the home-screen app shows "Safari cannot open the page", the Mac's server is down or on another address. Use Safari with the new URL.
 
@@ -83,12 +83,16 @@ Other branches from the opening: **I've got a credit report I want help with** (
 
 ## Frontend (handoff 114)
 - Start: `cd app/frontend && pnpm dev --host` (mock, the default) or `VITE_USE_MOCK=false pnpm dev --host` (the backend on `API_TARGET`, default `http://localhost:8000`, through the Vite proxy). Settings in `app/frontend/.env` (see `.env.example`)
-- URL switches for the phone (no restart): `?mock=off` real backend, `?mock=on` mock, `?mock=error` the error state, `?mock=uploadfail` a failed upload, `?demo=1` demo mode (Priya picked for you; Cap moves on page by page by himself and stops where you act), `?framing=A|B|C|full` the camera (B is the default)
+- URL switches for the phone (no restart): `?mock=off` real backend, `?mock=on` mock, `?mock=error` the error state, `?mock=uploadfail` a failed upload, `?demo=1` demo mode (Priya picked for you; each line types out, then Cap moves on by himself and stops where you act), `?framing=A|B|C|full` the camera (B is the default)
 - Port 5173 must be free: on 2026-11-07 the old `app/npc-concept` dev server from the main checkout was still on it. Stop it (Ctrl+C in its terminal) before starting the frontend
-- Checks: `node scripts/walk.mjs` (whole flow, WebKit iPhone 15, screenshots in `app/frontend/screens/`; flags `--keyboard`, `--reduced`, `--text 150`, `--colour okabe|contrast`, `--desktop`, `--live`, `--base <url>`), `node scripts/checks.mjs` (live region, error and upload-failure states, letter at any step, read aloud, mic, settings), `node scripts/contrast.mjs` (WCAG AA for every colour pair in each colour mode)
+- Checks: `node scripts/walk.mjs` (whole flow, WebKit iPhone 15, screenshots in `app/frontend/screens/`; flags `--keyboard`, `--reduced`, `--text 150`, `--readable`, `--colour okabe|contrast`, `--desktop`, `--live`, `--speed 1x`, `--base <url>`, `--out <dir>`), `node scripts/checks.mjs` (live region, error and upload-failure states, letter at any step, read aloud, mic, settings; `--desktop`), `node scripts/typing.mjs` (118: a line types out whole and the box scrolls a line at a time, tap to finish, reduced motion scrolling and its indicator, 125%/150%/Readable, the speech bubble, Demo mode's pause; `--desktop`), `node scripts/contrast.mjs` (WCAG AA for every colour pair in each colour mode)
 - On the phone: the text box pins above the keyboard; the mic uses the browser's speech recognition where it exists, else it points at the keyboard's dictation key
 
 ## Rehearsals
+- **2026-11-08 ~02:45, offline, on the Mac, after 118 (continuous typing)** (`app/frontend/scripts/demo-walk.mjs`):
+  - **Stack:** as below: backend `PORT=8001 DEMO_OFFLINE=true ANTHROPIC_API_KEY=` ("Claude OFF (DEMO_OFFLINE=true: cache, then templates); 218 cached outputs"), frontend `VITE_USE_MOCK=false API_TARGET=http://localhost:8001 vite --port 5174 --host`, walked on the LAN URL http://172.20.10.6:5174/ (en0 on the iPhone hotspot this time).
+  - **Result:** iPhone 15 at text speed 1x `TOTAL 20 taps, 173.1s`; at 2x `TOTAL 20 taps, 133.3s`; desktop 1440x900 at 1x (`DESKTOP=1`) `TOTAL 20 taps, 174.5s`. Every run exit 0, no PROBLEM line, `requests to other hosts: 0`. Demo mode said `hold` at the Why? moment and at the paper once their lines had typed, and stayed past their reading pause.
+  - **Not done, needs the phone:** Safari on the iPhone itself, mobile data off.
 - **2026-11-08 ~01:00, offline, on the Mac** (`app/frontend/scripts/demo-walk.mjs`, WebKit iPhone 15 profile):
   - **Stack:** a second stack beside `pnpm dev`. The backend ran with `PORT=8001 DEMO_OFFLINE=true ANTHROPIC_API_KEY=` and printed "Claude OFF (DEMO_OFFLINE=true: cache, then templates); 214 cached outputs". The frontend was `VITE_USE_MOCK=false API_TARGET=http://localhost:8001 vite --port 5174 --host`.
   - **URL walked:** the LAN address http://100.65.209.5:5174/ (en0), the way a phone reaches it.
