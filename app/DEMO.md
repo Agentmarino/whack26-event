@@ -20,13 +20,14 @@ Do this in order, about 10 minutes before judging. Every command runs from the r
 5. **Phone URL:** `echo "http://$(ipconfig getifaddr en0):5173/"`. Open it in Safari on the iPhone; Vite also prints it as the `Network:` line for en0.
 6. **Warm and check:**
    - From the Mac: `cd app/frontend && SKIP=steps,reasons,plan NOWHY=1 node scripts/demo-walk.mjs "http://$(ipconfig getifaddr en0):5173"`.
-   - It must end `TOTAL 20 taps` (about 173 s at the default text speed 1x; if you will use 2x on the phone, put `SPEED=2x ` in front of the command: about 133 s) and `requests to other hosts: 0`, with no `PROBLEM` line.
+   - It must end `TOTAL 20 taps` (about 132 s at text speed 2x, Demo mode's default since 119; if you will use 1x on the phone, put `SPEED=1x ` in front of the command: about 173 s) and `requests to other hosts: 0`, with no `PROBLEM` line.
+   - 119: it also prints `WORDING <n> claude, <m> template` and lists every template line. On the offline stack the headline, the reasons and the plan steps must all be claude; the other lines are templates by design.
    - It also warms the backend.
 7. **On the iPhone:**
-   - Settings (the gear, top left): **Demo mode** on, **Plain English** on, Read aloud off, Camera **B**, Text speed **1x** (or **2x** for a demo about 40 s shorter), then **Start again**.
+   - Settings (the gear, top left): **Demo mode** on, **Plain English** on, Read aloud off, Camera **B**, then **Start again**. Turning Demo mode on sets Text speed **2x** (since 119); check it says 2x. **1x** is about 40 s longer.
    - Ring/silent switch off and volume up, for the optional read-aloud beat.
    - Portrait.
-8. **The demo:** `deliverables/pitch/demo-script.md`, 20 taps, about 3:10 at 1x (about 2:30 at 2x). Since 118 each line types out in one go and the box scrolls; Demo mode moves on after the whole line.
+8. **The demo:** `deliverables/pitch/demo-script.md`, 20 taps, about 2:30 at 2x, Demo mode's default (about 3:10 at 1x). Since 118 each line types out in one go and the box scrolls; Demo mode moves on after the whole line.
 
 ## Add to Home Screen (optional: full screen, no Safari bars)
 Cap is a web app (manifest `app/frontend/public/manifest.json`, icon from Cap's pixel face). On the iPhone, after step 5 above:

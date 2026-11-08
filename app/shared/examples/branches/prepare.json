@@ -4,7 +4,7 @@
   "walk": [
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "I want to get ready before I apply"
@@ -12,7 +12,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "questions",
         "messages": [
           {
@@ -50,7 +50,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "Capital One Classic"
@@ -58,7 +58,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "ask_report",
         "messages": [
           {
@@ -84,7 +84,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "sample",
           "fileKind": "credit_report",
@@ -93,7 +93,7 @@
       },
       "resultKey": null,
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "ask_bank",
         "messages": [
           {
@@ -127,7 +127,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "sample",
           "fileKind": "bank"
@@ -135,7 +135,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "goals",
         "messages": [
           {
@@ -183,7 +183,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "The Classic card"
@@ -191,7 +191,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "goals",
         "messages": [
           {
@@ -217,7 +217,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "3 months"
@@ -225,7 +225,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "questions",
         "messages": [
           {
@@ -252,7 +252,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "Yes, I can"
@@ -260,7 +260,7 @@
       },
       "resultKey": "r4",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "questions",
         "messages": [
           {
@@ -287,7 +287,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "No"
@@ -295,7 +295,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "assessing",
         "messages": [
           {
@@ -317,14 +317,14 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "skip"
         }
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "diagnosis",
         "messages": [
           {
@@ -407,7 +407,7 @@
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "What can I do?"
@@ -415,7 +415,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "paper",
         "messages": [
           {
@@ -436,14 +436,14 @@
             "Make me a plan"
           ]
         },
-        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
+        "paperUrl": "/api/paper/fe17062d-1458-413b-9de5-149d6b5fbfcf.pdf",
         "branch": "prepare",
         "result": null
       }
     },
     {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "Make me a plan"
@@ -451,7 +451,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "coach",
         "messages": [
           {
@@ -470,7 +470,7 @@
             "6 months"
           ]
         },
-        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
+        "paperUrl": "/api/paper/fe17062d-1458-413b-9de5-149d6b5fbfcf.pdf",
         "branch": "prepare",
         "result": null
       }
@@ -479,7 +479,7 @@
   "coach": {
     "plan3m": {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "3 months"
@@ -487,7 +487,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "coach",
         "messages": [
           {
@@ -501,7 +501,7 @@
           {
             "id": "plan-3m-step-0",
             "kind": "step",
-            "text": "9 Nov 2026: Avoid the thin-file traps.",
+            "text": "9 Nov 2026: One application at a time.",
             "emote": "neutral",
             "gesture": "explaining",
             "ref": {
@@ -696,14 +696,14 @@
           "placeholder": "What if I…",
           "allowVoice": true
         },
-        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
+        "paperUrl": "/api/paper/fe17062d-1458-413b-9de5-149d6b5fbfcf.pdf",
         "branch": "prepare",
         "result": null
       }
     },
     "plan6m": {
       "request": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "input": {
           "type": "choice",
           "value": "6 months"
@@ -711,7 +711,7 @@
       },
       "resultKey": "r3",
       "response": {
-        "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+        "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
         "step": "coach",
         "messages": [
           {
@@ -725,7 +725,7 @@
           {
             "id": "plan-6m-step-0",
             "kind": "step",
-            "text": "9 Nov 2026: Avoid the thin-file traps.",
+            "text": "9 Nov 2026: One application at a time.",
             "emote": "neutral",
             "gesture": "explaining",
             "ref": {
@@ -959,7 +959,7 @@
           "placeholder": "What if I…",
           "allowVoice": true
         },
-        "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
+        "paperUrl": "/api/paper/fe17062d-1458-413b-9de5-149d6b5fbfcf.pdf",
         "branch": "prepare",
         "result": null
       }
@@ -967,7 +967,7 @@
     "whatIfs": {
       "paydown": {
         "request": {
-          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+          "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
           "input": {
             "type": "choice",
             "value": "What if I pay £300 a month?"
@@ -975,7 +975,7 @@
         },
         "resultKey": "r3",
         "response": {
-          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+          "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
           "step": "coach",
           "messages": [
             {
@@ -1001,7 +1001,7 @@
             "placeholder": "What if I…",
             "allowVoice": true
           },
-          "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
+          "paperUrl": "/api/paper/fe17062d-1458-413b-9de5-149d6b5fbfcf.pdf",
           "whatIf": {
             "id": "wi-1",
             "text": "What if I pay £300 a month?",
@@ -1488,8 +1488,8 @@
                     "steps": [
                       {
                         "date": "2026-11-09T00:00:00.000Z",
-                        "title": "Avoid the thin-file traps",
-                        "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                        "title": "One application at a time",
+                        "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                         "why": "searches",
                         "check": "No new hard searches, BNPL or payday loans",
                         "because": {
@@ -1642,7 +1642,7 @@
                       {
                         "date": "2027-01-09T00:00:00.000Z",
                         "title": "Check Capital One Classic on QuickCheck",
-                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                         "why": "depth",
                         "check": "Card approved",
                         "because": {
@@ -1839,8 +1839,8 @@
                     "steps": [
                       {
                         "date": "2026-11-09T00:00:00.000Z",
-                        "title": "Avoid the thin-file traps",
-                        "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                        "title": "One application at a time",
+                        "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                         "why": "searches",
                         "check": "No new hard searches, BNPL or payday loans",
                         "because": {
@@ -1993,7 +1993,7 @@
                       {
                         "date": "2027-01-09T00:00:00.000Z",
                         "title": "Check Capital One Classic on QuickCheck",
-                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                         "why": "depth",
                         "check": "Card approved",
                         "because": {
@@ -2729,7 +2729,7 @@
       },
       "bnpl": {
         "request": {
-          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+          "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
           "input": {
             "type": "choice",
             "value": "What if I stop buy now, pay later?"
@@ -2737,7 +2737,7 @@
         },
         "resultKey": "r3",
         "response": {
-          "sessionId": "bdc54ab2-0599-46db-aa63-053d63ac4f56",
+          "sessionId": "fe17062d-1458-413b-9de5-149d6b5fbfcf",
           "step": "coach",
           "messages": [
             {
@@ -2763,7 +2763,7 @@
             "placeholder": "What if I…",
             "allowVoice": true
           },
-          "paperUrl": "/api/paper/bdc54ab2-0599-46db-aa63-053d63ac4f56.pdf",
+          "paperUrl": "/api/paper/fe17062d-1458-413b-9de5-149d6b5fbfcf.pdf",
           "whatIf": {
             "id": "wi-2",
             "text": "What if I stop buy now, pay later?",
@@ -3251,8 +3251,8 @@
                     "steps": [
                       {
                         "date": "2026-11-09T00:00:00.000Z",
-                        "title": "Avoid the thin-file traps",
-                        "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                        "title": "One application at a time",
+                        "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                         "why": "searches",
                         "check": "No new hard searches, BNPL or payday loans",
                         "because": {
@@ -3405,7 +3405,7 @@
                       {
                         "date": "2027-01-09T00:00:00.000Z",
                         "title": "Check Capital One Classic on QuickCheck",
-                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                         "why": "depth",
                         "check": "Card approved",
                         "because": {
@@ -3596,8 +3596,8 @@
                     "steps": [
                       {
                         "date": "2026-11-09T00:00:00.000Z",
-                        "title": "Avoid the thin-file traps",
-                        "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                        "title": "One application at a time",
+                        "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                         "why": "searches",
                         "check": "No new hard searches, BNPL or payday loans",
                         "because": {
@@ -3750,7 +3750,7 @@
                       {
                         "date": "2027-01-09T00:00:00.000Z",
                         "title": "Check Capital One Classic on QuickCheck",
-                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                        "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                         "why": "depth",
                         "check": "Card approved",
                         "because": {
@@ -5001,8 +5001,8 @@
             "steps": [
               {
                 "date": "2026-11-09T00:00:00.000Z",
-                "title": "Avoid the thin-file traps",
-                "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                "title": "One application at a time",
+                "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                 "why": "searches",
                 "check": "No new hard searches, BNPL or payday loans",
                 "because": {
@@ -5155,7 +5155,7 @@
               {
                 "date": "2027-01-09T00:00:00.000Z",
                 "title": "Check Capital One Classic on QuickCheck",
-                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                 "why": "depth",
                 "check": "Card approved",
                 "because": {
@@ -5346,8 +5346,8 @@
             "steps": [
               {
                 "date": "2026-11-09T00:00:00.000Z",
-                "title": "Avoid the thin-file traps",
-                "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                "title": "One application at a time",
+                "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                 "why": "searches",
                 "check": "No new hard searches, BNPL or payday loans",
                 "because": {
@@ -5500,7 +5500,7 @@
               {
                 "date": "2027-01-09T00:00:00.000Z",
                 "title": "Check Capital One Classic on QuickCheck",
-                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                 "why": "depth",
                 "check": "Card approved",
                 "because": {
@@ -6661,8 +6661,8 @@
             "steps": [
               {
                 "date": "2026-11-09T00:00:00.000Z",
-                "title": "Avoid the thin-file traps",
-                "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                "title": "One application at a time",
+                "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                 "why": "searches",
                 "check": "No new hard searches, BNPL or payday loans",
                 "because": {
@@ -6815,7 +6815,7 @@
               {
                 "date": "2027-01-09T00:00:00.000Z",
                 "title": "Check Capital One Classic on QuickCheck",
-                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                 "why": "depth",
                 "check": "Card approved",
                 "because": {
@@ -7006,8 +7006,8 @@
             "steps": [
               {
                 "date": "2026-11-09T00:00:00.000Z",
-                "title": "Avoid the thin-file traps",
-                "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+                "title": "One application at a time",
+                "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
                 "why": "searches",
                 "check": "No new hard searches, BNPL or payday loans",
                 "because": {
@@ -7160,7 +7160,7 @@
               {
                 "date": "2027-01-09T00:00:00.000Z",
                 "title": "Check Capital One Classic on QuickCheck",
-                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+                "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
                 "why": "depth",
                 "check": "Card approved",
                 "because": {

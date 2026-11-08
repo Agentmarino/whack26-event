@@ -2,14 +2,16 @@
 // itself), Plain English ON (preset, as before judging), framing B. Taps exactly what the script taps, counts and
 // times every beat, logs every line shown (118: each types out whole, the box scrolling; logged with its line count
 // and how long it took to type), and reports requests to any other host (none expected offline).
-//   env SPEED=2x: the text speed setting (default 1x, as on the phone).
+//   env SPEED=1x: the text speed setting (default 2x, Demo mode's own default since 119).
+//   env PLAIN=0: Plain English off (default on). 119: every message's writtenBy (claude or template) is logged,
+//   counted and saved to <outdir>/wording.json, so an offline walk can be checked against a live one.
 //   node scripts/demo-walk.mjs [base] [outdir, default <tmp>/demo-walk] [framing]
 //   base: the phone URL, e.g. http://$(ipconfig getifaddr en0):5173 (default http://127.0.0.1:5173)
 //   env SKIP=steps,reasons,plan: the script's three Skip all taps (the 20-tap path). NOWHY=1: no Why? drawer.
 //   The rehearsal: SKIP=steps,reasons,plan NOWHY=1 node scripts/demo-walk.mjs http://<ip>:5173
 //   A PROBLEM line (or exit 1) means a beat failed or Demo mode did not hold where it should.
 import { chromium, webkit, devices } from 'playwright'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 const [base = 'http://127.0.0.1:5173', out = join(tmpdir(), 'demo-walk'), framing = 'B'] = process.argv.slice(2)
@@ -18,9 +20,9 @@ mkdirSync(out, { recursive: true })
 const desktop = !!process.env.DESKTOP
 const browser = desktop ? await chromium.launch() : await webkit.launch()
 const ctx = await browser.newContext(desktop ? { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 } : { ...devices['iPhone 15'] })
-await ctx.addInitScript((speed) => {
-  try { localStorage.setItem('whack26.settings.v1', JSON.stringify({ speed, demo: true, plainEnglish: true, textSize: 100, colour: 'standard', readAloud: false, voiceRate: 1, framing: 'B' })) } catch {}
-}, process.env.SPEED || '1x')
+await ctx.addInitScript(([speed, plainEnglish]) => {
+  try { localStorage.setItem('whack26.settings.v1', JSON.stringify({ speed, demo: true, plainEnglish, textSize: 100, colour: 'standard', readAloud: false, voiceRate: 1, framing: 'B' })) } catch {}
+}, [process.env.SPEED || '2x', process.env.PLAIN !== '0'])
 const page = await ctx.newPage()
 const problems = []
 const external = []
@@ -29,6 +31,10 @@ page.on('request', (r) => { try { if (new URL(r.url()).host !== baseHost && !r.u
 page.on('requestfailed', (r) => problems.push(`request failed: ${r.url()} ${r.failure()?.errorText}`))
 page.on('console', (m) => m.type() === 'error' && problems.push(`console error: ${m.text()}`))
 page.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
+// 119: who worded each message the backend sent (claude or template), in the order they first came
+const worded = new Map()
+const findMsgs = (x) => { if (Array.isArray(x)) x.forEach(findMsgs); else if (x && typeof x === 'object') { if (typeof x.writtenBy === 'string' && typeof x.text === 'string' && x.id && !worded.has(x.id)) worded.set(x.id, { writtenBy: x.writtenBy, kind: x.kind, text: x.text }); Object.values(x).forEach(findMsgs) } }
+page.on('response', async (r) => { try { if (r.url().includes('/api/') && (r.headers()['content-type'] || '').includes('json')) findMsgs(await r.json()) } catch {} })
 const t00 = Date.now()
 const sec = () => ((Date.now() - t00) / 1000).toFixed(1)
 let beat = null
@@ -166,6 +172,10 @@ for (let i = 0; i < beats.length - 1; i++) {
 console.log(`TOTAL ${total} taps, ${sec()}s`)
 console.log('--- lines (time shown, line count, time to type) ---')
 for (const l of lines) console.log(l)
+const ws = [...worded.values()]
+writeFileSync(join(out, 'wording.json'), JSON.stringify(ws, null, 1) + '\n')
+console.log(`WORDING ${ws.filter((w) => w.writtenBy === 'claude').length} claude, ${ws.filter((w) => w.writtenBy === 'template').length} template (${process.env.PLAIN === '0' ? 'Plain English off' : 'Plain English on'}, speed ${process.env.SPEED || '2x'})`)
+for (const w of ws) if (w.writtenBy === 'template') console.log(`  template [${w.kind}] ${w.text}`)
 console.log(`requests to other hosts: ${external.length}${external.length ? ' ' + [...new Set(external)].join(' ') : ''}`)
 for (const p of problems) console.log('PROBLEM', p)
 await browser.close()

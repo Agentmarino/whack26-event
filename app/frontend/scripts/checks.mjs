@@ -272,7 +272,7 @@ const shot = async (page, name) => {
 
 // 6. tap-to-explain a credit term
 {
-  const { ctx, page } = await open('?demo=1')
+  const { ctx, page } = await open('?demo=1', { speed: 'instant', demo: true })
   await closeCard(page)
   for (let i = 0; i < 60; i++) {
     if (await page.locator('[data-term]').count()) break

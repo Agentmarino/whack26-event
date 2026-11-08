@@ -8,7 +8,7 @@
     },
     "resultKey": null,
     "response": {
-      "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
+      "sessionId": "e227bb63-0d18-4b6e-90db-9a77dc8a5d9b",
       "step": "intro",
       "messages": [
         {
@@ -41,7 +41,7 @@
   },
   "opening": {
     "request": {
-      "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
+      "sessionId": "e227bb63-0d18-4b6e-90db-9a77dc8a5d9b",
       "input": {
         "type": "choice",
         "value": "Nice to meet you, Cap!"
@@ -49,7 +49,7 @@
     },
     "resultKey": null,
     "response": {
-      "sessionId": "47983535-f9a3-42d5-9db3-976264d61f01",
+      "sessionId": "e227bb63-0d18-4b6e-90db-9a77dc8a5d9b",
       "step": "opening",
       "messages": [
         {
