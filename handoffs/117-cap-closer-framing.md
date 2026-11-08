@@ -206,3 +206,16 @@ Findings and what was done (fixed in `cc3f1e8`):
   - The user asked to show the options PNG path as soon as it existed. It was shown.
   - The user asked to work on `main` without switching branches.
   - The user asked to push and print the phone URL: `main` is pushed after this commit. `ipconfig getifaddr en0` gave `100.65.209.5`, not the hotspot's 172.20.10.6, so the laptop was not on the hotspot at the time.
+
+### After 117: page breaks (2026-11-08, asked by the user)
+- Page breaks never fall mid-clause now (`paginate` in `game/GameBox.tsx`). A full page ends at, in order of preference:
+  1. its last sentence end;
+  2. else the last colon or semicolon;
+  3. else the last comma or dash. A sentence longer than a page breaks at the last comma that fits.
+  4. Else, before a joining word (and, but, because…).
+- Only a clause with no punctuation at all breaks before a preposition ("Give me a moment to build your plan" / "towards the Balance Transfer card."), keeping at least a quarter of the page.
+- A one-word last page that has no clean split joins the page before as a fourth line, rather than standing alone ("…holding you back most.").
+- **Audit** (`audit.py` over every page shown):
+  - Live demo walk: 45 breaks; 40 at a sentence end, colon, comma, dash or joining word; 5 before a preposition; **0 mid-clause**.
+  - The whole declined branch on the mock: 48 breaks, **0 mid-clause** (before the fix: 4 mid-clause on the demo path, all one-word orphans like "report.").
+- Demo re-walked live: `TOTAL 20 taps, 113.2s`, exit 0. `checks.mjs`: `all 20 passed`. Pages are a little shorter, since a page now ends at the sentence end, so the demo is about 5 s longer.

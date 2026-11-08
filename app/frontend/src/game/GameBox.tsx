@@ -49,13 +49,40 @@ function Tail({ place }: { place: BubblePlace }) {
   )
 }
 
-/** A word that ends a sentence (or a clause worth a pause): a good place to end a page. */
-const ENDS = /[.!?:;]["'’”)]*$/
+// Where a page may end (117): never mid-clause. Best first: a sentence end; a colon or semicolon; a comma or
+// a dash; before a joining word (and, but, because...). Only a clause with none of these breaks at the last
+// word that fits.
+const SENTENCE = /[.!?]["'’”)\]]*$/
+const CLAUSE = /[:;]["'’”)\]]*$/
+const COMMA = /[,—–]["'’”)\]]*$|^[-—–]$/
+const JOIN = /^(and|but|or|so|because|if|when|while|until|then|which|who|where|unless|though|although|since|whereas)$/i
+/** A clause with no punctuation that is longer than a page: break before a phrase ("towards the card"), not inside it. */
+const PREP = /^(from|to|at|of|for|with|towards|in|on|by|about|under|over|into|after|before|without|through|across)$/i
+const bare = (w: string | undefined) => (w ?? '').replace(/[^A-Za-z]/g, '')
+const joins = (w: string | undefined) => JOIN.test(bare(w))
+
+/** How many words of a full page to keep on it: up to its best break (at least one word). */
+function cutAt(ws: string[]): number {
+  for (const re of [SENTENCE, CLAUSE, COMMA]) {
+    for (let j = ws.length; j >= 1; j--) if (re.test(ws[j - 1])) return j
+  }
+  // no punctuation: before a joining word, else before a preposition, keeping at least a quarter of the page
+  const min = Math.max(1, Math.ceil(ws.length / 4))
+  for (const re of [JOIN, PREP]) {
+    for (let j = ws.length - 1; j >= min; j--) if (re.test(bare(ws[j]))) return j
+  }
+  return ws.length
+}
+
+/** A clean break after word j-1 (before word j). */
+const cleanAt = (ws: string[], j: number) =>
+  SENTENCE.test(ws[j - 1] ?? '') || CLAUSE.test(ws[j - 1] ?? '') || COMMA.test(ws[j - 1] ?? '') || joins(ws[j]) || PREP.test(bare(ws[j]))
 
 /**
  * Split `text` into pages that each fit `lines` lines in `measurer` (same width and font as the box).
- * Like a game script: a full page ends at its last sentence end when that keeps at least half of it, and
- * a last page of a word or two ("start?" alone) takes the start of its sentence back from the page before.
+ * 117: a full page ends at its best break (cutAt): a sentence end, else a colon or semicolon, else a comma or
+ * dash, else before a joining word; a sentence longer than a page breaks at the last comma that fits. A last
+ * page of a word or two that continues the page before takes words back only at such a break.
  */
 function paginate(text: string, measurer: HTMLElement, lines: number, extraLine: boolean): string[] {
   const lh = parseFloat(getComputedStyle(measurer).lineHeight) || 24
@@ -72,18 +99,11 @@ function paginate(text: string, measurer: HTMLElement, lines: number, extraLine:
       cur.push(w)
       continue
     }
-    let cut = cur.length
-    for (let j = cur.length - 1; j >= Math.ceil(cur.length / 2); j--) {
-      if (ENDS.test(cur[j - 1] ?? '')) {
-        cut = j
-        break
-      }
-    }
-    pages.push(cur.slice(0, cut))
-    cur = cur.slice(cut)
-    if (cur.length && !fits([...cur, w])) {
-      pages.push(cur)
-      cur = []
+    // the page is full: end it at its best break and carry the rest over (again if the rest is still too long)
+    while (cur.length && !fits([...cur, w])) {
+      const j = cutAt(cur)
+      pages.push(cur.slice(0, j))
+      cur = cur.slice(j)
     }
     cur.push(w)
   }
@@ -91,24 +111,25 @@ function paginate(text: string, measurer: HTMLElement, lines: number, extraLine:
 
   const tail = pages[pages.length - 1]
   const prev = pages[pages.length - 2]
-  if (tail && prev && tail.length <= 2) {
+  // a last page of a word or two that finishes the page before's sentence ("report."): balance them
+  if (tail && prev && tail.length <= 2 && !SENTENCE.test(prev[prev.length - 1] ?? '') && !CLAUSE.test(prev[prev.length - 1] ?? '') && !COMMA.test(prev[prev.length - 1] ?? '')) {
     if (extraLine && lines < 4 && fitsIn([...prev, ...tail], lines + 1)) {
-      // 2 or 3 lines a page: one more line is fine
+      // 2 or 3 lines a page (116's whole-desk layout): one more line is fine
       pages.splice(-2, 2, [...prev, ...tail])
     } else {
-      // take back the start of the tail's sentence, or a few words, keeping at least half the page before
+      // take back the end of the page before, from a clean break that keeps at least half of it
       const keep = Math.ceil(prev.length / 2)
-      let k = prev.length
+      let moved = false
       for (let j = prev.length - 1; j >= keep; j--) {
-        if (ENDS.test(prev[j - 1] ?? '')) {
-          if (fits([...prev.slice(j), ...tail])) k = j
-          break
+        if (!cleanAt(prev, j)) continue
+        if (fits([...prev.slice(j), ...tail])) {
+          pages.splice(-2, 2, prev.slice(0, j), [...prev.slice(j), ...tail])
+          moved = true
         }
+        break
       }
-      if (k === prev.length) {
-        while (k > keep && prev.length - k + tail.length < 4 && fits([...prev.slice(k - 1), ...tail])) k--
-      }
-      if (k < prev.length) pages.splice(-2, 2, prev.slice(0, k), [...prev.slice(k), ...tail])
+      // no clean break to move ("…holding you back" / "most."): one page with a line more, never an orphan
+      if (!moved && lines < 4 && fitsIn([...prev, ...tail], lines + 1)) pages.splice(-2, 2, [...prev, ...tail])
     }
   }
   measurer.textContent = ''

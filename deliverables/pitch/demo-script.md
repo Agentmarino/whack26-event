@@ -33,7 +33,7 @@ Taps are numbered. Times are from the real run, with a robot tapping at once; le
 | 1:46 | **20** "What if I pay £400 a month?" | "Paying £400 extra a month: by Feb 2027 your score could be 747 to 854, up from 735 to 836. An estimate. You'd get under 30% by Jan 2027." with the **What if** window | "She can ask what if. Plain English, read aloud, voice in, colour-safe modes. Credit made understandable, one conversation at a time." |
 | 1:51 | End. Optional: the notebook (top right) → **Your plan** | Every card so far in Cap's notebook | |
 
-**Taps**: 20, all listed above (from the real run: `TOTAL 20 taps, 108.2s`). The run took 1:48 with a robot tapping at once, so about 2:05 with your own taps. Every choice the script taps is on the first page of its menu on the iPhone 15.
+**Taps**: 20, all listed above (from the real run: `TOTAL 20 taps, 113.2s`, 2026-11-08 after the page-break fix). The run took 1:53 with a robot tapping at once, so about 2:10 with your own taps. Every choice the script taps is on the first page of its menu on the iPhone 15.
 
 Optional beats, if there is time:
 - **Why? at 1:30** (+2 taps, about 8 s): tap **Why?** on the Reason 1 window, show the because drawer (the rule, her data, the source), close it. Demo mode then moves on by itself; tap Skip all as before.
