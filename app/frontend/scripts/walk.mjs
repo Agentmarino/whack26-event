@@ -184,6 +184,7 @@ async function allChips() {
   return all
 }
 const steps = []
+let paperVia = null
 const step = async () => {
   const s = await page.locator('.game').getAttribute('data-step')
   if (steps[steps.length - 1] !== s) steps.push(s)
@@ -256,7 +257,16 @@ try {
     if (s === 'paper' && !done.has('paper')) {
       done.add('paper')
       await page.waitForTimeout(reduced ? 100 : 1800) // the sheet slides across the desk
-      if (keyboard) await press(action('open-paper'), 'Read it')
+      // 118: tap the sheet on the desk when it can be tapped; at 150% text on a phone the paper's window and the box
+      // cover the desk (on main too, since the 117 follow-ups), and a person uses the window's Read it
+      const deskFree = await page.evaluate(() => {
+        const t = document.querySelector('[data-npc-hotspot="paper"]')
+        if (!t) return false
+        const r = t.getBoundingClientRect()
+        return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === t
+      })
+      paperVia = keyboard ? 'Read it (keyboard)' : deskFree ? 'the sheet on the desk' : 'Read it (the desk is covered)'
+      if (keyboard || !deskFree) await press(action('open-paper'), 'Read it')
       else await page.locator('[data-npc-hotspot="paper"]').click()
       await page.getByTestId('paper-sheet').waitFor({ state: 'visible' })
       await shot('paper-overlay')
@@ -353,7 +363,7 @@ if (layout.scrollW > layout.vw) problems.push(`horizontal scroll: ${layout.scrol
 if (layout.dockBottom === null || layout.dockBottom > layout.vh) problems.push(`dock off screen: ${JSON.stringify(layout)}`)
 
 for (const t of small) problems.push(`touch target under 44px: ${t}`)
-console.log(JSON.stringify({ prefix, branch, desktop, keyboard, reduced, textSize, colour, speed, live, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
+console.log(JSON.stringify({ prefix, branch, desktop, keyboard, reduced, textSize, colour, speed, live, paperVia, steps: steps.join(', '), shots: shots.length, layout }, null, 1))
 for (const p of problems) console.log('PROBLEM', p)
 await browser.close()
 process.exit(problems.length ? 1 : 0)

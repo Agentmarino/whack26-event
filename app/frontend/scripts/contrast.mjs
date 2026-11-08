@@ -4,11 +4,18 @@
 import { readFileSync } from 'node:fs'
 
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+// every block with this exact selector, merged in order (118: the PWA's safe-area :root block comes before the
+// colour tokens' :root block, so reading only the first found no colours at all)
 const block = (sel) => {
-  const i = css.indexOf(`${sel} {`)
+  const out = {}
+  let i = css.indexOf(`\n${sel} {`)
   if (i < 0) throw new Error(`no ${sel} block`)
-  const body = css.slice(i, css.indexOf('}', i))
-  return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1], m[2]]))
+  while (i >= 0) {
+    const body = css.slice(i, css.indexOf('}', i))
+    for (const m of body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)) out[m[1]] = m[2]
+    i = css.indexOf(`\n${sel} {`, i + 1)
+  }
+  return out
 }
 const standard = block(':root')
 const modes = {
