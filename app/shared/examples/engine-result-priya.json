@@ -498,8 +498,8 @@
         "steps": [
           {
             "date": "2026-11-09T00:00:00.000Z",
-            "title": "Avoid the thin-file traps",
-            "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+            "title": "One application at a time",
+            "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
             "why": "searches",
             "check": "No new hard searches, BNPL or payday loans",
             "because": {
@@ -652,7 +652,7 @@
           {
             "date": "2027-01-09T00:00:00.000Z",
             "title": "Check Capital One Classic on QuickCheck",
-            "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+            "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
             "why": "depth",
             "check": "Card approved",
             "because": {
@@ -843,8 +843,8 @@
         "steps": [
           {
             "date": "2026-11-09T00:00:00.000Z",
-            "title": "Avoid the thin-file traps",
-            "instruction": "One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.",
+            "title": "One application at a time",
+            "instruction": "Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.",
             "why": "searches",
             "check": "No new hard searches, BNPL or payday loans",
             "because": {
@@ -997,7 +997,7 @@
           {
             "date": "2027-01-09T00:00:00.000Z",
             "title": "Check Capital One Classic on QuickCheck",
-            "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200. Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.",
+            "instruction": "Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around £200.",
             "why": "depth",
             "check": "Card approved",
             "because": {
@@ -1692,8 +1692,8 @@
       {
         "id": "depth",
         "weight": 3,
-        "title": "Very little UK credit history",
-        "evidence": "Lenders have almost nothing to judge you on yet.",
+        "title": "Only one credit account",
+        "evidence": "You have one card, so lenders have little to compare. A second account, used well, helps.",
         "likelihood": "Most likely"
       },
       {

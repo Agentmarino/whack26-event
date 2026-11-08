@@ -255,7 +255,9 @@
       both(at(0), 'Know where you\'re starting', `Credit history from your home country doesn't transfer, so you're building a UK file from scratch${ukMonths != null ? ' (you\'ve been here about ' + ukMonths + ' months)' : ''}. Step zero is a UK bank account and one fixed address used on everything. Keep your bank, phone and bills on the same address.`, 'identity', 'Same address on every account');
     }
     if (build) {
-      both(at(0), 'Avoid the thin-file traps', 'One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.', 'searches', 'No new hard searches, BNPL or payday loans');
+      // 119 (Cowork-approved wording): a year or more of history is a narrow file, not a thin one (Priya, one card for 2 years)
+      if (p.oldestAccountYears >= 1) both(at(0), 'One application at a time', 'Apply for one thing at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. With few accounts on your file, each of these counts for more.', 'searches', 'No new hard searches, BNPL or payday loans');
+      else both(at(0), 'Avoid the thin-file traps', 'One application at a time, and only after a soft-search check. No stacking buy now, pay later plans. No payday loans. On a thin file each of these counts for more.', 'searches', 'No new hard searches, BNPL or payday loans');
       const phoneDeclined = p.decline && /phone|mobile/i.test(p.decline.product || '');
       if (p.hasPhoneContract === false && phoneDeclined) both(at(12), 'Try a monthly phone contract again', `${p.decline.lender} said no recently. Once Boost and your other quick wins show, ask for a cheap SIM-only monthly plan (easier to get than a handset deal). It's a small credit agreement that builds history.`, 'depth', 'Phone contract shows on your report');
       else if (p.hasPhoneContract === false) both(at(1), 'Move your phone onto a monthly contract', 'Ask your mobile provider to switch you from pay-as-you-go or SIM-only prepay to a monthly contract. It\'s a small credit agreement that builds history. If they say no, ask again in a few months.', 'depth', 'Phone contract shows on your report');
@@ -390,7 +392,7 @@
       if (want) {
         const cardList = build && applyMonth < 3 ? [steps3, steps6] : [steps6];
         cardList.forEach(L => {
-          step(L, applyDate, 'Check Capital One Classic on QuickCheck', `Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around ${gbp(limA)}.` + (build ? ' Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.' : ''), 'depth', 'Card approved');
+          step(L, applyDate, 'Check Capital One Classic on QuickCheck', `Run QuickCheck first (soft search, no score impact). If it says yes, apply once. Expect a starting limit around ${gbp(limA)}.` + (build && (p.oldestAccountYears < 1 || p.newToUK) ? ' Capital One is less likely to accept people with no UK credit history, so if QuickCheck says no, wait 3 months and check again rather than applying anyway.' : ''), 'depth', 'Card approved');
           if (tx.chosen.length) step(L, addDays(applyDate, 14), 'Move these payments onto the Classic card', `${tx.chosen.map(x => x.name + ' ' + gbp2(x.amount)).join(', ')}. That's ${gbp2(tx.total)}/month, ${Math.round(tx.total / limA * 100)}% of a ${gbp(limA)} limit${build ? ' (keep it under 25%)' : ''}. Set a Direct Debit for the FULL balance so you pay £0 interest.`, 'depth', 'Card statement paid in full each month');
         });
         eff({ id: 'builder', label: 'Credit builder card', plan: build && applyMonth < 3 ? 'both' : '6m', fn: tt => {
@@ -549,7 +551,12 @@
     if (p.staleAssociates.length) add('identity2', 1, 'Linked to someone else\'s credit', `Your file is still linked to ${p.staleAssociates.join(', ')}.`);
     if (c.surplus < 100) add('affordability', 2, 'Affordability looked tight', `After rent, bills and debts you have about ${gbp(c.surplus)} a month left.`);
     else if (c.surplus < 300 && dcl.productId === 'bt') add('affordability', 1, 'Not much room in your budget', `About ${gbp(c.surplus)} a month left after everything else.`);
-    if (p.cards.length + (p.loans || []).length < 2 || p.oldestAccountYears < 1) add('depth', 3, 'Very little UK credit history', 'Lenders have almost nothing to judge you on yet.');
+    const nAcc = p.cards.length + (p.loans || []).length;
+    // 119 (Cowork-approved wording): a year or more of history is not 'very little', it is one account (Priya)
+    if (nAcc < 2 && p.oldestAccountYears >= 1) {
+      if (nAcc === 1) add('depth', 3, 'Only one credit account', `You have one ${p.cards.length ? 'card' : 'loan'}, so lenders have little to compare. A second account, used well, helps.`);
+      else add('depth', 3, 'No open credit accounts', 'Lenders have nothing current to compare. One account, used well, helps.');
+    } else if (nAcc < 2 || p.oldestAccountYears < 1) add('depth', 3, 'Very little UK credit history', 'Lenders have almost nothing to judge you on yet.');
     const card = CARDS[dcl.productId];
     if (card) criteriaNow(p, card).filter(x => !x.ok).forEach(x => {
       if (/late|search|utilisation|roll/.test(x.label)) return; // already covered above

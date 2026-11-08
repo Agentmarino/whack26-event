@@ -1,6 +1,6 @@
 {
   "request": {
-    "sessionId": "a27a4c1f-bcb6-42dd-a08e-77289b206c9b",
+    "sessionId": "d2316763-210e-47ea-99b1-17c9dc3dee40",
     "input": {
       "type": "sample",
       "fileKind": "letter"
@@ -8,7 +8,7 @@
   },
   "resultKey": null,
   "response": {
-    "sessionId": "a27a4c1f-bcb6-42dd-a08e-77289b206c9b",
+    "sessionId": "d2316763-210e-47ea-99b1-17c9dc3dee40",
     "step": "questions",
     "messages": [
       {
